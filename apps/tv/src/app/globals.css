@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+
+body {
+  background: #0A0A0F;
+  color: white;
+  overflow: hidden;
+}
+
+@keyframes gallop {
+  0% { background-position: 0 0; }
+  25% { background-position: -32px 0; }
+  50% { background-position: -64px 0; }
+  75% { background-position: -96px 0; }
+  100% { background-position: 0 0; }
+}
+
+.horse-sprite {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+@keyframes pulse-gold {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-pulse-gold {
+  animation: pulse-gold 2s ease-in-out infinite;
+}
+
+@keyframes slide-track {
+  from { background-position-x: 0; }
+  to { background-position-x: -200px; }
+}
+
+.track-bg {
+  background: repeating-linear-gradient(
+    90deg,
+    #2D6A4F 0px,
+    #2D6A4F 2px,
+    transparent 2px,
+    transparent 100px
+  );
+  animation: slide-track 2s linear infinite;
+}

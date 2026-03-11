@@ -1,0 +1,12 @@
+[
+  { "name": "Ex de Thomas",     "speed": 3, "endurance": 4 },
+  { "name": "Gueule de Bois",   "speed": 7, "endurance": 5 },
+  { "name": "Pinte de Trop",    "speed": 5, "endurance": 9 },
+  { "name": "La Derniere",      "speed": 8, "endurance": 3 },
+  { "name": "Eau Gazeuse",      "speed": 2, "endurance": 8 },
+  { "name": "Lendemain Matin",  "speed": 6, "endurance": 6 },
+  { "name": "Shot Sans Filet",  "speed": 9, "endurance": 2 },
+  { "name": "Le Chauffeur",     "speed": 1, "endurance": 10 },
+  { "name": "Kebab 4h",         "speed": 4, "endurance": 7 },
+  { "name": "Pas de Taxi",      "speed": 10, "endurance": 1 }
+]
