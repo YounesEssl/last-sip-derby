@@ -82,15 +82,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   }
 
   handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`)
-    // Send current state immediately
     client.emit('game:stateUpdate', this.gameService.getState())
   }
 
   handleDisconnect(client: Socket) {
     const player = this.gameService.disconnectPlayer(client.id)
     if (player) {
-      console.log(`Player disconnected: ${player.pseudo}`)
       this.broadcastState()
     }
   }
@@ -104,10 +101,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const sanitized = pseudo.trim().slice(0, 20)
 
     const player = this.gameService.joinPlayer(client.id, sanitized)
-    console.log(`Player joined: ${player.pseudo}`)
 
     client.emit('player:joined', player)
     this.broadcastState()
+    this.gameLoop.onPlayerJoined()
   }
 
   @SubscribeMessage('player:bet')
@@ -143,6 +140,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     if (!player?.currentBet || player.currentBet.horseId !== data.horseId) return
 
     this.gameService.boostHorse(data.horseId)
+  }
+
+  @SubscribeMessage('dev:startRace')
+  handleDevStartRace() {
+    this.gameLoop.forceStartRace()
+  }
+
+  @SubscribeMessage('dev:resetRace')
+  handleDevResetRace() {
+    this.gameLoop.forceResetRace()
   }
 
   private broadcastState() {

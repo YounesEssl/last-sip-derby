@@ -2,49 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
-
 body {
-  background: #0A0A0F;
-  color: white;
+  background-color: #000;
+  color: #fff;
   overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
-@keyframes gallop {
-  0% { background-position: 0 0; }
-  25% { background-position: -32px 0; }
-  50% { background-position: -64px 0; }
-  75% { background-position: -96px 0; }
-  100% { background-position: 0 0; }
-}
-
-.horse-sprite {
-  width: 32px;
-  height: 32px;
-  image-rendering: pixelated;
-}
-
-@keyframes pulse-gold {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-.animate-pulse-gold {
-  animation: pulse-gold 2s ease-in-out infinite;
-}
-
-@keyframes slide-track {
+/* Parallax background scroll */
+@keyframes scrollBg {
   from { background-position-x: 0; }
-  to { background-position-x: -200px; }
+  to   { background-position-x: -100vw; }
 }
 
-.track-bg {
-  background: repeating-linear-gradient(
-    90deg,
-    #2D6A4F 0px,
-    #2D6A4F 2px,
-    transparent 2px,
-    transparent 100px
-  );
-  animation: slide-track 2s linear infinite;
+.bg-scroll {
+  animation: scrollBg linear infinite;
+  background-repeat: repeat-x;
+  background-size: 100vw auto;
+}
+
+/* Finish line checkered pattern */
+.checkered-flag {
+  background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+}
+
+/* Glass panel — prairie style */
+.glass-panel {
+  background: rgba(10, 25, 10, 0.88);
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(120, 200, 80, 0.3);
+  border-radius: 10px;
 }

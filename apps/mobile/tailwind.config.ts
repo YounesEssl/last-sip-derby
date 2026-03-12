@@ -7,18 +7,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        derby: {
-          bg: '#0A0A0F',
-          gold: '#C9A84C',
-          red: '#E63946',
-          green: '#2D6A4F',
-          dark: '#141420',
-          muted: '#1E1E2E',
+        pmu: {
+          bg: '#1c1613',
+          board: '#39FF14',
+          dark: '#0f0a07',
+          wood: '#4a3018',
+          paper: '#f4eacc',
+          alert: '#E83B3B',
+          amber: '#FFB000',
         },
       },
       fontFamily: {
-        display: ['Bebas Neue', 'sans-serif'],
-        mono: ['Space Mono', 'monospace'],
+        display: ['var(--font-rye)', 'serif'],
+        terminal: ['var(--font-vt323)', 'monospace'],
+        body: ['var(--font-courier)', 'monospace'],
       },
     },
   },

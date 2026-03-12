@@ -47,5 +47,13 @@ export function useGameSocket() {
     }
   }, [])
 
-  return { gameState, activeEvent, connected }
+  const startRace = useCallback(() => {
+    socketRef.current?.emit('dev:startRace')
+  }, [])
+
+  const resetRace = useCallback(() => {
+    socketRef.current?.emit('dev:resetRace')
+  }, [])
+
+  return { gameState, activeEvent, connected, startRace, resetRace }
 }

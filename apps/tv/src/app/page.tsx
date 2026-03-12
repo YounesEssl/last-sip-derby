@@ -1,39 +1,46 @@
 'use client'
 
 import { useGameSocket } from '@/hooks/useGameSocket'
-import { BettingPhase } from '@/components/phases/BettingPhase'
-import { RacingPhase } from '@/components/phases/RacingPhase'
-import { ResultsPhase } from '@/components/phases/ResultsPhase'
-import { IdlePhase } from '@/components/phases/IdlePhase'
+import { Screen } from '@/components/tv/Screen'
+import { DirtTrack } from '@/components/tv/DirtTrack'
 
 export default function TVPage() {
-  const { gameState, activeEvent, connected } = useGameSocket()
+  const { gameState, activeEvent, connected, startRace, resetRace } = useGameSocket()
 
   if (!connected || !gameState) {
     return (
-      <div className="flex h-screen items-center justify-center bg-derby-bg">
+      <Screen>
         <div className="text-center">
-          <h1 className="font-display text-6xl text-derby-gold mb-4">LAST SIP DERBY</h1>
-          <p className="text-gray-400 text-xl animate-pulse">Connexion au serveur...</p>
+          <h1 className="font-rye text-[80px] text-western-gold leading-none mb-4" style={{ textShadow: '0 0 30px rgba(212,168,67,0.4)' }}>
+            Last Sip Derby
+          </h1>
+          <p className="font-mono text-[28px] text-western-gold/60 animate-pulse">
+            ESTABLISHING CONNECTION...
+          </p>
         </div>
-      </div>
+      </Screen>
     )
   }
 
   return (
-    <div className="h-screen w-screen bg-derby-bg overflow-hidden">
-      {gameState.phase === 'BETTING' && (
-        <BettingPhase gameState={gameState} />
-      )}
-      {gameState.phase === 'RACING' && (
-        <RacingPhase gameState={gameState} activeEvent={activeEvent} />
-      )}
-      {gameState.phase === 'RESULTS' && (
-        <ResultsPhase gameState={gameState} />
-      )}
-      {gameState.phase === 'IDLE' && (
-        <IdlePhase gameState={gameState} />
-      )}
-    </div>
+    <Screen>
+      <DirtTrack gameState={gameState} activeEvent={activeEvent} />
+
+      {/* Dev controls */}
+      <div className="absolute bottom-12 right-6 z-50 flex gap-3">
+        <button
+          onClick={resetRace}
+          className="px-5 py-2 bg-white/10 text-white font-mono text-sm border border-white/20 hover:bg-white/20 transition-colors rounded"
+        >
+          RESET
+        </button>
+        <button
+          onClick={startRace}
+          className="px-5 py-2 bg-green-700/80 text-white font-mono text-sm border border-green-400/40 hover:bg-green-600/80 transition-colors rounded"
+        >
+          START RACE
+        </button>
+      </div>
+    </Screen>
   )
 }

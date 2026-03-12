@@ -10,6 +10,7 @@ export interface Horse {
   lane: number
   isStunned: boolean
   color: string
+  effectiveSpeed: number
 }
 
 export interface Bet {
@@ -67,6 +68,8 @@ export interface ClientToServerEvents {
   'player:confirmDrink': () => void
   'player:tapBoost': (data: { horseId: string }) => void
   'player:snitch': (data: { targetPseudo: string }) => void
+  'dev:startRace': () => void
+  'dev:resetRace': () => void
 }
 
 export interface ServerToClientEvents {

@@ -2,20 +2,22 @@
 
 import { useRef, useLayoutEffect } from 'react'
 import gsap from 'gsap'
-import type { Horse as HorseType } from '@last-sip-derby/shared'
+import type { Horse as HorseType, Player } from '@last-sip-derby/shared'
+import { HorseSVG } from './HorseSVG'
 
 interface HorseProps {
   horse: HorseType
   trackWidth: number
+  better?: Player
 }
 
-export function Horse({ horse, trackWidth }: HorseProps) {
+export function Horse({ horse, trackWidth, better }: HorseProps) {
   const horseRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
     if (!horseRef.current) return
 
-    const targetX = (horse.position / 100) * (trackWidth - 60)
+    const targetX = (horse.position / 100) * (trackWidth - 100)
 
     gsap.to(horseRef.current, {
       x: targetX,
@@ -24,39 +26,27 @@ export function Horse({ horse, trackWidth }: HorseProps) {
     })
   }, [horse.position, trackWidth])
 
-  const gallopSpeed = horse.isStunned ? 0 : 0.1 + (horse.speed / 10) * 0.2
-
   return (
     <div
       ref={horseRef}
-      className="absolute flex items-center gap-2"
-      style={{ top: 0, left: 0 }}
+      className="absolute flex items-center"
+      style={{ top: '50%', left: 0, transform: 'translateY(-50%)' }}
     >
-      <div className="relative">
-        {/* Horse emoji as placeholder for spritesheet */}
-        <span
-          className="text-3xl inline-block"
-          style={{
-            animation: horse.isStunned
-              ? 'none'
-              : `gallop-bounce ${gallopSpeed}s ease-in-out infinite alternate`,
-            filter: horse.isStunned ? 'grayscale(1) brightness(0.5)' : 'none',
-          }}
-        >
-          🏇
+      <HorseSVG
+        color={horse.color}
+        isRunning={horse.position > 0 && horse.position < 100}
+        isStunned={horse.isStunned}
+      />
+      <div className="absolute -top-8 left-0 whitespace-nowrap">
+        <span className="font-display text-[28px] text-derby-text leading-none">
+          {horse.name.toUpperCase()}
         </span>
-        {horse.isStunned && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-lg animate-bounce">
-            💫
+        {better && (
+          <span className="font-body text-[20px] text-derby-gold ml-2">
+            {better.pseudo} ({better.currentBet?.amount}G)
           </span>
         )}
       </div>
-      <span
-        className="text-xs font-bold px-1.5 py-0.5 rounded whitespace-nowrap"
-        style={{ backgroundColor: horse.color, color: '#0A0A0F' }}
-      >
-        {horse.name}
-      </span>
     </div>
   )
 }

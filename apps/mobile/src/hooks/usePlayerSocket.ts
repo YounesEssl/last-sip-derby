@@ -79,8 +79,8 @@ export function usePlayerSocket() {
     socketRef.current?.emit('player:join', name)
   }, [])
 
-  const placeBet = useCallback((horseId: string, amount: number) => {
-    socketRef.current?.emit('player:bet', { horseId, amount })
+  const placeBet = useCallback((bet: { horseId: string; amount: number }) => {
+    socketRef.current?.emit('player:bet', bet)
   }, [])
 
   const confirmDrink = useCallback(() => {
