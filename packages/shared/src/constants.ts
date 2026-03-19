@@ -1,5 +1,5 @@
 export const MAX_ACTIVE_PLAYERS = 10
-export const HORSES_PER_RACE = 6
+export const HORSES_PER_RACE = 5
 
 export const PHASE_DURATIONS = {
   BETTING: 60_000,
@@ -9,7 +9,7 @@ export const PHASE_DURATIONS = {
 } as const
 
 export const RACE_TICK_MS = 100
-export const BASE_SPEED = 0.15
+export const BASE_SPEED = 0.12
 
 export const HORSE_COLORS = [
   '#E63946', // rouge
@@ -17,7 +17,6 @@ export const HORSE_COLORS = [
   '#2D6A4F', // vert
   '#C9A84C', // or
   '#9B5DE5', // violet
-  '#F77F00', // orange
 ] as const
 
 export const DRINK_CONFIRM_TIMEOUT_MS = 10_000

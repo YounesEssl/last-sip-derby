@@ -84,7 +84,7 @@ export function OddsBoard({ horses, players }: OddsBoardProps) {
                   className="font-display text-[48px] leading-none"
                   style={{ color: '#D4A843', textShadow: '0 0 15px rgba(212, 168, 67, 0.3)' }}
                 >
-                  {horse.odds}x
+                  {horse.odds}G
                 </div>
               </div>
             </div>

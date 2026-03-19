@@ -29,6 +29,8 @@ const config: Config = {
         'marquee': 'marquee 12s linear infinite',
         'victory-pop': 'victory-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+        'leader-bob': 'leader-bob 1.5s ease-in-out infinite',
+        'photo-flash': 'photo-flash 900ms ease-out forwards',
       },
       keyframes: {
         marquee: {
@@ -42,6 +44,15 @@ const config: Config = {
         'pulse-glow': {
           '0%, 100%': { opacity: '0.6' },
           '50%': { opacity: '1' },
+        },
+        'leader-bob': {
+          '0%, 100%': { transform: 'translateX(-50%) translateY(0)' },
+          '50%': { transform: 'translateX(-50%) translateY(-3px)' },
+        },
+        'photo-flash': {
+          '0%': { opacity: '1' },
+          '15%': { opacity: '0.85' },
+          '100%': { opacity: '0' },
         },
       },
     },

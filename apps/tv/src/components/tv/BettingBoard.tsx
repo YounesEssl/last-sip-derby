@@ -40,7 +40,7 @@ export const BettingBoard = ({ gameState }: { gameState: GameState }) => {
                 </div>
               </div>
               <div className="text-7xl text-pmu-amber led-glow-amber ml-4">
-                {horse.odds}:1
+                {horse.odds}G
               </div>
             </div>
           )

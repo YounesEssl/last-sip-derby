@@ -5,14 +5,15 @@ import { GameState, GameEvent, HORSE_COLORS } from '@last-sip-derby/shared'
 import { useCountdown } from '@/hooks/useCountdown'
 import { ParallaxBackground } from './ParallaxBackground'
 import { RaceHorse } from './RaceHorse'
+import { RaceRankingHUD } from './RaceRankingHUD'
 
-// Scale per lane: top (far) → bottom (close) — subtle perspective
-const LANE_SCALES = [0.85, 0.88, 0.91, 0.94, 0.97, 1.0]
+// Scale per lane: top (far) → bottom (close) — very subtle perspective
+const LANE_SCALES = [0.94, 0.96, 0.97, 0.98, 1.0]
 
 // Z-index per lane for depth effect with background layers (bg: 0-5, horses: 4-6)
-const LANE_ZINDEX = [4, 4, 5, 5, 6, 6]
+const LANE_ZINDEX = [4, 4, 5, 6, 6]
 
-export const DirtTrack = ({ gameState, activeEvent }: { gameState: GameState, activeEvent: GameEvent | null }) => {
+export const DirtTrack = ({ gameState, activeEvent, raceStarting }: { gameState: GameState, activeEvent: GameEvent | null, raceStarting?: boolean }) => {
   const timeLeft = useCountdown(gameState.phaseStartedAt, gameState.phaseDuration)
   const isRacing = gameState.phase === 'RACING'
   const isFinished = gameState.phase === 'RESULTS'
@@ -41,10 +42,10 @@ export const DirtTrack = ({ gameState, activeEvent }: { gameState: GameState, ac
       <div
         style={{
           position: 'absolute',
-          top: '12%',
+          top: '18%',
           left: 0,
           right: 0,
-          height: '65%',
+          height: '50%',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-around',
@@ -54,9 +55,10 @@ export const DirtTrack = ({ gameState, activeEvent }: { gameState: GameState, ac
           const scale = LANE_SCALES[i % LANE_SCALES.length]
           const isLeading = horse.id === leaderId && isRacing
 
-          const maxVw = 0.72
+          const maxVw = 0.65
+          const visualPos = Math.pow(horse.position / 100, 1.3) * 100
           const translateX = (isRacing || isFinished)
-            ? `calc(-60px + ${horse.position * maxVw}vw)`
+            ? `calc(-60px + ${visualPos * maxVw}vw)`
             : '-60px'
 
           return (
@@ -76,6 +78,7 @@ export const DirtTrack = ({ gameState, activeEvent }: { gameState: GameState, ac
                   transform: `translateX(${translateX}) scale(${scale})`,
                   transformOrigin: 'bottom left',
                   zIndex: LANE_ZINDEX[i % LANE_ZINDEX.length],
+                  transition: raceStarting ? 'transform 0.8s ease-out' : undefined,
                 }}
               >
                 <RaceHorse
@@ -94,6 +97,7 @@ export const DirtTrack = ({ gameState, activeEvent }: { gameState: GameState, ac
                 className="absolute flex items-center justify-center font-mono font-bold text-white"
                 style={{
                   transform: `translateX(calc(${translateX} + 80px))`,
+                  transition: raceStarting ? 'transform 0.8s ease-out' : undefined,
                   width: 32,
                   height: 32,
                   fontSize: 18,
@@ -112,14 +116,9 @@ export const DirtTrack = ({ gameState, activeEvent }: { gameState: GameState, ac
       </div>
 
 
-      {/* ── FLOATING RACE PANEL ── */}
+      {/* ── RANKING HUD — replaces old RacePanel ── */}
       {(isRacing || isFinished) && (
-        <RacePanel
-          horses={gameState.horses}
-          rankedHorses={rankedHorses}
-          leaderId={leaderId}
-          raceProgress={raceProgress}
-        />
+        <RaceRankingHUD horses={gameState.horses} raceProgress={raceProgress} />
       )}
 
 
@@ -135,82 +134,6 @@ export const DirtTrack = ({ gameState, activeEvent }: { gameState: GameState, ac
         </div>
       )}
 
-      {/* ── VICTORY OVERLAY ── */}
-      {gameState.phase === 'RESULTS' && gameState.lastRaceWinner && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm pointer-events-none">
-          <div className="glass-panel text-center px-20 py-14" style={{ boxShadow: '0 0 80px rgba(120,200,80,0.2)' }}>
-            <h2 className="text-3xl font-mono text-prairie-accent/60 mb-2 tracking-[0.3em] uppercase">
-              VAINQUEUR
-            </h2>
-            <div
-              className="font-rye text-prairie-accent pb-4 pt-2"
-              style={{ fontSize: '100px', lineHeight: '1', textShadow: '0 0 40px rgba(120,200,80,0.5)' }}
-            >
-              {gameState.lastRaceWinner.horseName}
-            </div>
-            <div className="mt-8 pt-8 border-t border-prairie-accent/20">
-              <div className="text-4xl text-white/50 font-mono mb-3">Gagnant</div>
-              <div className="text-7xl text-red-500 font-bold uppercase leading-none mb-8 font-bebas">
-                {gameState.lastRaceWinner.pseudo}
-              </div>
-              <div className="bg-prairie-accent text-black font-bold px-12 py-5 rounded-lg text-3xl inline-block font-bebas tracking-wide">
-                DISTRIBUE {gameState.lastRaceWinner.sipsToDistribute} GORGEES !
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ── Race Panel — centered top 3 ── */
-function RacePanel({
-  rankedHorses,
-}: {
-  horses: GameState['horses']
-  rankedHorses: GameState['horses']
-  leaderId: string | undefined
-  raceProgress: number
-}) {
-  const top3 = rankedHorses.slice(0, 3)
-  const medals = ['🥇', '🥈', '🥉']
-
-  return (
-    <div
-      className="absolute z-40 flex justify-center items-center gap-4 py-3"
-      style={{
-        top: 0,
-        left: 0,
-        right: 0,
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 100%)',
-      }}
-    >
-      {top3.map((horse, rank) => {
-        const color = HORSE_COLORS[horse.lane % HORSE_COLORS.length]
-
-        return (
-          <div
-            key={horse.id}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl"
-            style={{
-              background: rank === 0 ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.08)',
-              border: rank === 0 ? '1px solid rgba(255,215,0,0.4)' : '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <span className="text-lg">{medals[rank]}</span>
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center font-mono font-bold text-white text-base"
-              style={{ backgroundColor: color }}
-            >
-              {horse.lane + 1}
-            </div>
-            <span className="font-mono text-white text-base font-bold">
-              {horse.name}
-            </span>
-          </div>
-        )
-      })}
     </div>
   )
 }
@@ -263,7 +186,7 @@ function OddsPanel({ gameState }: { gameState: GameState }) {
                 </span>
               )}
               <span className="font-mono text-FFD700 text-base font-bold min-w-[44px] text-right">
-                {horse.odds}:1
+                {horse.odds}G
               </span>
             </div>
           )

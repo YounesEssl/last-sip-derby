@@ -22,7 +22,6 @@ const HORSE_FILTERS = [
   'hue-rotate(270deg) saturate(3)',                    // violet
   'hue-rotate(45deg) saturate(3) brightness(1.1)',     // jaune/doré
   'hue-rotate(0deg) saturate(3)',                      // rouge
-  'hue-rotate(30deg) saturate(3)',                     // orange
 ]
 
 // Base display size: 560×434 (upscaled from 128×90 frames)
@@ -72,7 +71,7 @@ export const RaceHorse = ({ number, speed, isRacing, isFrozen, isStunned, isLead
     const getIntervalMs = () => {
       if (!isRacing) return 150
       const s = Math.max(1, Math.min(10, speedRef.current))
-      const ms = 220 - (s / 10) * 180
+      const ms = 140 - (s / 10) * 110
       return stunnedRef.current ? ms * 3 : ms
     }
 

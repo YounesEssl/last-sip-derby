@@ -52,7 +52,7 @@ export const BettingTicket = ({ gameState, player, onBet }: Props) => {
                 </div>
                 <div className="text-left flex-1">
                   <h3 className="text-3xl font-bold uppercase">{horse.name}</h3>
-                  <p className="text-xl">COTE: {horse.odds}:1</p>
+                  <p className="text-xl">{horse.odds} GORGÉE{horse.odds > 1 ? 'S' : ''}</p>
                 </div>
                 <div className="text-right border-l-2 border-pmu-dark pl-4">
                   <span className="font-display text-4xl">PARIER</span>

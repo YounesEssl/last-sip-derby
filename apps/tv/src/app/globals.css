@@ -27,6 +27,13 @@ body {
   background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
 }
 
+/* Photo-finish flash */
+@keyframes photo-flash {
+  0%   { opacity: 1; }
+  15%  { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
 /* Glass panel — prairie style */
 .glass-panel {
   background: rgba(10, 25, 10, 0.88);
