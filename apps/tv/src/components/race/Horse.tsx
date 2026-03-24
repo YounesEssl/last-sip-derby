@@ -35,7 +35,7 @@ export function Horse({ horse, trackWidth, better }: HorseProps) {
       <HorseSVG
         color={horse.color}
         isRunning={horse.position > 0 && horse.position < 100}
-        isStunned={horse.isStunned}
+        isStunned={horse.isEliminated}
       />
       <div className="absolute -top-8 left-0 whitespace-nowrap">
         <span className="font-display text-[28px] text-derby-text leading-none">

@@ -27,11 +27,18 @@ body {
   background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
 }
 
-/* Photo-finish flash */
+/* Photo-finish flash — bright flash then slow fade to see frozen race */
 @keyframes photo-flash {
   0%   { opacity: 1; }
-  15%  { opacity: 0.85; }
+  10%  { opacity: 0.9; }
+  30%  { opacity: 0.3; }
   100% { opacity: 0; }
+}
+
+/* Progress bar shrink for results screen */
+@keyframes shrink-bar {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
 }
 
 /* Glass panel — prairie style */

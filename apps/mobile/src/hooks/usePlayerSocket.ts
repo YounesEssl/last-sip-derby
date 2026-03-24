@@ -12,7 +12,8 @@ import type {
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>
 
-const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3001'
+const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL
+  ?? (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://localhost:3001')
 
 export function usePlayerSocket() {
   const socketRef = useRef<TypedSocket | null>(null)
@@ -20,8 +21,13 @@ export function usePlayerSocket() {
   const [player, setPlayer] = useState<Player | null>(null)
   const [connected, setConnected] = useState(false)
   const [drinkNotification, setDrinkNotification] = useState<{ sips: number; reason: string } | null>(null)
-  const [boostWindow, setBoostWindow] = useState<{ horseId: string; durationMs: number } | null>(null)
-  const [pseudo, setPseudo] = useState<string | null>(null)
+  const [voteRequest, setVoteRequest] = useState<GameEvent | null>(null)
+  const [pseudo, setPseudo] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('derby_pseudo')
+    }
+    return null
+  })
 
   useEffect(() => {
     const socket: TypedSocket = io(SERVER_URL, {
@@ -33,7 +39,6 @@ export function usePlayerSocket() {
 
     socket.on('connect', () => {
       setConnected(true)
-      // Rejoin if we had a pseudo
       const savedPseudo = pseudo ?? sessionStorage.getItem('derby_pseudo')
       if (savedPseudo) {
         socket.emit('player:join', savedPseudo)
@@ -44,10 +49,18 @@ export function usePlayerSocket() {
 
     socket.on('game:stateUpdate', (state: GameState) => {
       setGameState(state)
-      // Update local player state
       if (pseudo) {
         const me = state.players.find((p) => p.pseudo === pseudo)
-        if (me) setPlayer(me)
+        if (me) {
+          setPlayer(me)
+        } else {
+          // Player not in connected list — mark as disconnected locally
+          setPlayer((prev) => prev ? { ...prev, isConnected: false } : null)
+        }
+      }
+      // Clear vote/drink UI when event is resolved
+      if (!state.activeEvent) {
+        setVoteRequest(null)
       }
     })
 
@@ -57,15 +70,24 @@ export function usePlayerSocket() {
 
     socket.on('player:drinkNotification', (data) => {
       setDrinkNotification(data)
-      // Vibrate
       if (navigator.vibrate) navigator.vibrate([200, 100, 200])
     })
 
-    socket.on('player:boostWindow', (data) => {
-      setBoostWindow(data)
-      if (navigator.vibrate) navigator.vibrate(100)
-      // Auto-clear after duration
-      setTimeout(() => setBoostWindow(null), data.durationMs)
+    socket.on('game:event', (event: GameEvent) => {
+      // Check if current player is a voter (non-affected)
+      const myId = socketRef.current?.id
+      if (myId && event.nonAffectedPlayerIds.includes(myId)) {
+        setVoteRequest(event)
+      }
+    })
+
+    socket.on('game:eventResolved', () => {
+      setVoteRequest(null)
+    })
+
+    socket.on('game:phaseChange', () => {
+      setVoteRequest(null)
+      setDrinkNotification(null)
     })
 
     return () => {
@@ -88,9 +110,9 @@ export function usePlayerSocket() {
     setDrinkNotification(null)
   }, [])
 
-  const tapBoost = useCallback((horseId: string) => {
-    socketRef.current?.emit('player:tapBoost', { horseId })
-    if (navigator.vibrate) navigator.vibrate(30)
+  const vote = useCallback((eventId: string, valid: boolean) => {
+    socketRef.current?.emit('player:vote', { eventId, valid })
+    setVoteRequest(null)
   }, [])
 
   return {
@@ -98,11 +120,11 @@ export function usePlayerSocket() {
     player,
     connected,
     drinkNotification,
-    boostWindow,
+    voteRequest,
     pseudo,
     join,
     placeBet,
     confirmDrink,
-    tapBoost,
+    vote,
   }
 }

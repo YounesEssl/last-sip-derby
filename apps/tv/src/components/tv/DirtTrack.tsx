@@ -13,7 +13,7 @@ const LANE_SCALES = [0.94, 0.96, 0.97, 0.98, 1.0]
 // Z-index per lane for depth effect with background layers (bg: 0-5, horses: 4-6)
 const LANE_ZINDEX = [4, 4, 5, 6, 6]
 
-export const DirtTrack = ({ gameState, activeEvent, raceStarting }: { gameState: GameState, activeEvent: GameEvent | null, raceStarting?: boolean }) => {
+export const DirtTrack = ({ gameState, activeEvent, eventResolution, raceStarting }: { gameState: GameState, activeEvent: GameEvent | null, eventResolution?: { horseEliminated: boolean; horseName: string } | null, raceStarting?: boolean }) => {
   const timeLeft = useCountdown(gameState.phaseStartedAt, gameState.phaseDuration)
   const isRacing = gameState.phase === 'RACING'
   const isFinished = gameState.phase === 'RESULTS'
@@ -24,9 +24,9 @@ export const DirtTrack = ({ gameState, activeEvent, raceStarting }: { gameState:
     [gameState.horses]
   )
 
-  const leaderProgress = rankedHorses[0]?.position ?? 0
   const leaderId = rankedHorses[0]?.id
-  const raceProgress = leaderProgress
+  // Race progress from server (tick-based, linear, pauses correctly)
+  const raceProgress = gameState.raceProgress ?? 0
   const horseCount = gameState.horses.length
 
   return (
@@ -34,7 +34,7 @@ export const DirtTrack = ({ gameState, activeEvent, raceStarting }: { gameState:
 
       {/* ── PARALLAX BACKGROUND ── */}
       <div className="absolute inset-0 z-0">
-        <ParallaxBackground isRacing={isRacing} raceProgress={raceProgress} isFinished={isFinished} />
+        <ParallaxBackground isRacing={isRacing && !gameState.racePaused} raceProgress={raceProgress} isFinished={isFinished} />
       </div>
 
 
@@ -56,7 +56,7 @@ export const DirtTrack = ({ gameState, activeEvent, raceStarting }: { gameState:
           const isLeading = horse.id === leaderId && isRacing
 
           const maxVw = 0.65
-          const visualPos = Math.pow(horse.position / 100, 1.3) * 100
+          const visualPos = Math.pow(horse.position / 100, 3.2) * 100
           const translateX = (isRacing || isFinished)
             ? `calc(-60px + ${visualPos * maxVw}vw)`
             : '-60px'
@@ -78,16 +78,17 @@ export const DirtTrack = ({ gameState, activeEvent, raceStarting }: { gameState:
                   transform: `translateX(${translateX}) scale(${scale})`,
                   transformOrigin: 'bottom left',
                   zIndex: LANE_ZINDEX[i % LANE_ZINDEX.length],
-                  transition: raceStarting ? 'transform 0.8s ease-out' : undefined,
+                  transition: raceStarting ? 'transform 0.8s ease-out' : 'opacity 2s ease-out',
+                  opacity: horse.isEliminated ? 0 : 1,
                 }}
               >
                 <RaceHorse
                   number={horse.lane + 1}
                   speed={horse.effectiveSpeed}
-                  isRacing={isRacing}
-                  isFrozen={isFinished}
-                  isStunned={horse.isStunned}
-                  isLeading={isLeading}
+                  isRacing={isRacing && !horse.isEliminated && !gameState.racePaused}
+                  isFrozen={isFinished || horse.isEliminated || gameState.racePaused}
+                  isStunned={false}
+                  isLeading={isLeading && !horse.isEliminated}
                   colorIndex={horse.lane}
                   scale={1}
                 />
@@ -97,7 +98,8 @@ export const DirtTrack = ({ gameState, activeEvent, raceStarting }: { gameState:
                 className="absolute flex items-center justify-center font-mono font-bold text-white"
                 style={{
                   transform: `translateX(calc(${translateX} + 80px))`,
-                  transition: raceStarting ? 'transform 0.8s ease-out' : undefined,
+                  transition: raceStarting ? 'transform 0.8s ease-out' : 'opacity 2s ease-out',
+                  opacity: horse.isEliminated ? 0 : 1,
                   width: 32,
                   height: 32,
                   fontSize: 18,
@@ -124,12 +126,47 @@ export const DirtTrack = ({ gameState, activeEvent, raceStarting }: { gameState:
 
       {/* ── ACTIVE EVENT OVERLAY ── */}
       {activeEvent && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-none">
-          <div className="glass-panel px-16 py-10 text-center shadow-2xl">
-            <h1 className="text-5xl text-prairie-accent font-rye uppercase tracking-wider leading-tight">
-              {activeEvent.type.replace(/_/g, ' ')}
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="glass-panel px-16 py-10 text-center shadow-2xl max-w-3xl">
+            {/* Title */}
+            <h1 className="text-6xl text-prairie-accent font-rye uppercase tracking-wider leading-tight animate-pulse">
+              {activeEvent.title}
             </h1>
-            <p className="text-2xl text-white/80 mt-4 font-mono">{activeEvent.message}</p>
+
+            {/* Description */}
+            <p className="text-2xl text-white/90 mt-6 font-mono leading-relaxed">
+              {activeEvent.description}
+            </p>
+
+            {/* Sips */}
+            <div className="mt-6 text-4xl font-bold text-red-400">
+              {activeEvent.sipsAmount} GORGEE{activeEvent.sipsAmount > 1 ? 'S' : ''} A BOIRE !
+            </div>
+
+            {/* Resolution */}
+            {eventResolution ? (
+              <div className={`mt-8 text-3xl font-rye ${eventResolution.horseEliminated ? 'text-red-500' : 'text-green-400'}`}>
+                {eventResolution.horseEliminated
+                  ? `${eventResolution.horseName} EST ELIMINE !`
+                  : 'VALIDE ! La course reprend...'}
+              </div>
+            ) : (
+              /* Voting progress */
+              <div className="mt-8">
+                <p className="text-lg text-white/60 font-mono mb-3">EN ATTENTE DES VOTES...</p>
+                <div className="flex justify-center gap-8 text-2xl font-mono">
+                  <span className="text-green-400">
+                    VALIDE: {Object.values(activeEvent.votes).filter((v) => v).length}
+                  </span>
+                  <span className="text-red-400">
+                    PAS VALIDE: {Object.values(activeEvent.votes).filter((v) => !v).length}
+                  </span>
+                  <span className="text-white/40">
+                    / {activeEvent.nonAffectedPlayerIds.length}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

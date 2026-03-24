@@ -1,3 +1,4 @@
 export * from './types'
 export * from './constants'
-export { default as horsesData } from './horses.json'
+export * from './event-content'
+export { default as horseNamesBySips } from './horses.json'

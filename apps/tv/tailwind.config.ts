@@ -30,7 +30,7 @@ const config: Config = {
         'victory-pop': 'victory-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
         'leader-bob': 'leader-bob 1.5s ease-in-out infinite',
-        'photo-flash': 'photo-flash 900ms ease-out forwards',
+        'photo-flash': 'photo-flash 2.5s ease-out forwards',
       },
       keyframes: {
         marquee: {

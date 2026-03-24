@@ -18,15 +18,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
   app.enableCors({
-    origin: [
-      process.env.TV_URL ?? 'http://localhost:3000',
-      process.env.MOBILE_URL ?? 'http://localhost:3002',
-    ],
+    origin: true,
     credentials: true,
   })
 
   const port = parseInt(process.env.PORT ?? '3001', 10)
-  await app.listen(port)
+  await app.listen(port, '0.0.0.0')
 
   const localIP = getLocalIP()
   console.log(`\n  Last Sip Derby - Server running on port ${port}`)

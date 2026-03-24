@@ -71,8 +71,9 @@ export const RaceHorse = ({ number, speed, isRacing, isFrozen, isStunned, isLead
     const getIntervalMs = () => {
       if (!isRacing) return 150
       const s = Math.max(1, Math.min(10, speedRef.current))
-      const ms = 140 - (s / 10) * 110
-      return stunnedRef.current ? ms * 3 : ms
+      // Exponential curve: speed 1 = 160ms (trot), speed 5 = 55ms, speed 10 = 15ms (blur)
+      const ms = 200 * Math.pow(0.75, s)
+      return stunnedRef.current ? ms * 4 : ms
     }
 
     const tick = (time: number) => {

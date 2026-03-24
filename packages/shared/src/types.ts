@@ -8,7 +8,7 @@ export interface Horse {
   odds: number
   position: number
   lane: number
-  isStunned: boolean
+  isEliminated: boolean
   color: string
   effectiveSpeed: number
 }
@@ -30,20 +30,19 @@ export interface Player {
   lastSeen: number
 }
 
-export type GameEventType =
-  | 'ANTIDOPING'
-  | 'COUP_DE_FOUET'
-  | 'CHUTE_COLLECTIVE'
-  | 'OBSTACLE_IMPREVU'
-
 export interface GameEvent {
   id: string
-  type: GameEventType
-  affectedHorseId?: string
-  affectedPlayerIds?: string[]
-  message: string
-  sipsAmount?: number
-  expiresAt: number
+  title: string
+  description: string
+  targetHorseId: string
+  targetHorseName: string
+  affectedPlayerIds: string[]
+  nonAffectedPlayerIds: string[]
+  sipsAmount: number
+  votes: Record<string, boolean>
+  votingDeadline: number
+  resolved: boolean
+  horseEliminated: boolean
 }
 
 export interface GameState {
@@ -53,6 +52,8 @@ export interface GameState {
   players: Player[]
   queue: string[]
   activeEvent: GameEvent | null
+  racePaused: boolean
+  raceProgress: number
   phaseStartedAt: number
   phaseDuration: number
   lastRaceWinner: {
@@ -66,7 +67,7 @@ export interface ClientToServerEvents {
   'player:join': (pseudo: string) => void
   'player:bet': (bet: { horseId: string; amount: number }) => void
   'player:confirmDrink': () => void
-  'player:tapBoost': (data: { horseId: string }) => void
+  'player:vote': (data: { eventId: string; valid: boolean }) => void
   'player:snitch': (data: { targetPseudo: string }) => void
   'dev:startRace': () => void
   'dev:resetRace': () => void
@@ -75,8 +76,8 @@ export interface ClientToServerEvents {
 export interface ServerToClientEvents {
   'game:stateUpdate': (state: GameState) => void
   'game:event': (event: GameEvent) => void
+  'game:eventResolved': (data: { eventId: string; horseEliminated: boolean; horseName: string }) => void
   'game:phaseChange': (phase: GamePhase) => void
   'player:joined': (player: Player) => void
   'player:drinkNotification': (data: { sips: number; reason: string }) => void
-  'player:boostWindow': (data: { horseId: string; durationMs: number }) => void
 }

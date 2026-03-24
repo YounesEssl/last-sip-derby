@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useGameSocket } from '@/hooks/useGameSocket'
 import { useSoundEngine } from '@/hooks/useSoundEngine'
 import { Screen } from '@/components/tv/Screen'
+import { WaitingSaloon } from '@/components/tv/WaitingSaloon'
+import { BettingBoard } from '@/components/tv/BettingBoard'
 import { DirtTrack } from '@/components/tv/DirtTrack'
 import { RaceCountdown } from '@/components/tv/RaceCountdown'
 import { RaceResults } from '@/components/tv/RaceResults'
@@ -13,7 +15,8 @@ function PhotoFlash({ onComplete }: { onComplete: () => void }) {
   onCompleteRef.current = onComplete
 
   useEffect(() => {
-    const timer = setTimeout(() => onCompleteRef.current(), 950)
+    // Flash lasts 3s: white flash fades, then holds on frozen race for a moment
+    const timer = setTimeout(() => onCompleteRef.current(), 3000)
     return () => clearTimeout(timer)
   }, [])
 
@@ -23,14 +26,14 @@ function PhotoFlash({ onComplete }: { onComplete: () => void }) {
       style={{
         zIndex: 100,
         backgroundColor: '#fff',
-        animation: 'photo-flash 900ms ease-out forwards',
+        animation: 'photo-flash 2.5s ease-out forwards',
       }}
     />
   )
 }
 
 export default function TVPage() {
-  const { gameState, activeEvent, connected, startRace, resetRace } = useGameSocket()
+  const { gameState, activeEvent, eventResolution, connected } = useGameSocket()
   const sound = useSoundEngine()
   const [showCountdown, setShowCountdown] = useState(false)
   const [freezePhase, setFreezePhase] = useState(false)
@@ -51,10 +54,6 @@ export default function TVPage() {
       setShowCountdown(true)
       setFreezePhase(true)
       sprintWhooshPlayed.current = false
-    }
-
-    // → BETTING: bell
-    if (prev !== null && prev !== 'BETTING' && gameState.phase === 'BETTING') {
       sound.playBell()
     }
 
@@ -121,13 +120,26 @@ export default function TVPage() {
     )
   }
 
+  const phase = freezePhase ? 'BETTING' : gameState.phase
+  const showTrack = phase === 'RACING' || phase === 'RESULTS'
+
   return (
     <Screen>
-      <DirtTrack
-        gameState={freezePhase ? { ...gameState, phase: 'BETTING' } : gameState}
-        activeEvent={activeEvent}
-        raceStarting={raceStarting}
-      />
+      {/* IDLE: lobby with QR code + player list */}
+      {phase === 'IDLE' && <WaitingSaloon gameState={gameState} />}
+
+      {/* BETTING: betting board with horses, odds, live bets */}
+      {phase === 'BETTING' && <BettingBoard gameState={gameState} />}
+
+      {/* RACING / RESULTS: live race */}
+      {showTrack && (
+        <DirtTrack
+          gameState={gameState}
+          activeEvent={activeEvent}
+          eventResolution={eventResolution}
+          raceStarting={raceStarting}
+        />
+      )}
 
       {/* Race countdown overlay */}
       {showCountdown && (
@@ -149,21 +161,6 @@ export default function TVPage() {
         <RaceResults gameState={gameState} onComplete={() => setShowResults(false)} />
       )}
 
-      {/* Dev controls */}
-      <div className="absolute bottom-12 right-6 z-50 flex gap-3">
-        <button
-          onClick={resetRace}
-          className="px-5 py-2 bg-white/10 text-white font-mono text-sm border border-white/20 hover:bg-white/20 transition-colors rounded"
-        >
-          RESET
-        </button>
-        <button
-          onClick={startRace}
-          className="px-5 py-2 bg-green-700/80 text-white font-mono text-sm border border-green-400/40 hover:bg-green-600/80 transition-colors rounded"
-        >
-          START RACE
-        </button>
-      </div>
     </Screen>
   )
 }

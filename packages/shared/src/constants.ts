@@ -9,7 +9,6 @@ export const PHASE_DURATIONS = {
 } as const
 
 export const RACE_TICK_MS = 100
-export const BASE_SPEED = 0.12
 
 export const HORSE_COLORS = [
   '#E63946', // rouge
@@ -22,9 +21,10 @@ export const HORSE_COLORS = [
 export const DRINK_CONFIRM_TIMEOUT_MS = 10_000
 export const DRINK_PENALTY_SIPS = 1
 
-export const EVENT_MIN_INTERVAL_MS = 15_000
-export const EVENT_MAX_INTERVAL_MS = 30_000
-
-export const BOOST_DURATION_MS = 5_000
-export const STUN_DURATION_MS = 5_000
-export const CHUTE_STUN_DURATION_MS = 3_000
+// Event system
+export const MAX_EVENTS_PER_RACE = 2
+export const EVENT_VOTE_TIMEOUT_MS = 30_000
+export const EVENT_RESOLVE_DISPLAY_MS = 5_000
+export const EVENT_EARLIEST_TICK = 150   // no events before ~15s
+export const EVENT_LATEST_TICK = 550     // no events after ~55s
+export const EVENT_MIN_TICK_GAP = 150    // minimum ~15s between events

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { GameState, HORSE_COLORS } from '@last-sip-derby/shared'
 
 interface Props {
@@ -263,11 +263,21 @@ export function RaceResults({ gameState, onComplete }: Props) {
           })}
         </div>
 
-        {/* Decorative bottom border */}
+        {/* Progress bar — time until next race */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-1"
-          style={{ background: `linear-gradient(90deg, transparent 0%, ${winnerColor}40 30%, ${winnerColor}40 70%, transparent 100%)` }}
-        />
+          className="absolute bottom-0 left-0 right-0"
+          style={{ height: 6, background: 'rgba(255,255,255,0.08)' }}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: '100%',
+              background: `linear-gradient(90deg, ${winnerColor}, #D4A843)`,
+              transformOrigin: 'left',
+              animation: `shrink-bar ${gameState.phaseDuration}ms linear forwards`,
+            }}
+          />
+        </div>
       </div>
     </div>
   )

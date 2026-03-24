@@ -28,9 +28,9 @@ export function RaceRankingHUD({ horses, raceProgress }: { horses: Horse[]; race
     return () => ro.disconnect()
   }, [updateWidth])
 
-  // Sort by position descending → rank 0 = leader
+  // Sort by position descending → rank 0 = leader (exclude eliminated)
   const ranked = useMemo(
-    () => [...horses].sort((a, b) => b.position - a.position),
+    () => [...horses].filter((h) => !h.isEliminated).sort((a, b) => b.position - a.position),
     [horses],
   )
 
@@ -61,10 +61,10 @@ export function RaceRankingHUD({ horses, raceProgress }: { horses: Horse[]; race
         style={{
           width: '85%',
           maxWidth: 900,
-          height: AVATAR_SIZE + 36,
+          height: AVATAR_SIZE + 46,
         }}
       >
-        {horses.map((horse) => {
+        {ranked.map((horse) => {
           const rank = rankMap.get(horse.id) ?? n - 1
           const isLeader = rank === 0
           const isTop3 = rank < 3

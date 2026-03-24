@@ -35,7 +35,7 @@ export function EventBanner({ event }: EventBannerProps) {
             </motion.span>
             <div className="w-px h-10 bg-white/30" />
             <span className="font-display text-3xl text-white leading-tight flex-1 text-center">
-              {event.message}
+              {event.description}
             </span>
           </div>
         </motion.div>

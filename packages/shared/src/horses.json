@@ -1,12 +1,27 @@
-[
-  { "name": "Ex de Thomas",     "speed": 3, "endurance": 4 },
-  { "name": "Gueule de Bois",   "speed": 7, "endurance": 5 },
-  { "name": "Pinte de Trop",    "speed": 5, "endurance": 9 },
-  { "name": "La Derniere",      "speed": 8, "endurance": 3 },
-  { "name": "Eau Gazeuse",      "speed": 2, "endurance": 8 },
-  { "name": "Lendemain Matin",  "speed": 6, "endurance": 6 },
-  { "name": "Shot Sans Filet",  "speed": 9, "endurance": 2 },
-  { "name": "Le Chauffeur",     "speed": 1, "endurance": 10 },
-  { "name": "Kebab 4h",         "speed": 4, "endurance": 7 },
-  { "name": "Pas de Taxi",      "speed": 10, "endurance": 1 }
-]
+{
+  "1": [
+    "L'arracheur de piste", "Sabot doré", "Le péteur fou", "Le génie d'la lampe",
+    "La fusée", "Le filou", "Boosté", "Déjà dans la poche", "Intouchable",
+    "C'est plié", "Trop facile", "Les doigts dans le nez", "Thanos"
+  ],
+  "2": [
+    "Le bousilleur", "Démouleur de cake", "Tous dans le rétro", "Tagadatagada",
+    "Ferrari rose", "Le monstre", "Le français", "Le bandit", "Le crack",
+    "Le Prometteur", "Bonne pioche", "Gandalf", "La caution"
+  ],
+  "3": [
+    "KykydeBondy", "Sous-coke", "Mírame el culo", "Belek",
+    "Le coupeur de queue", "Le chanceux", "L'audacieux", "Dhiarré folle",
+    "L'inattendu", "Le raciste", "Le coup du siècle", "Le Joker", "Pépito"
+  ],
+  "5": [
+    "Oh pétard", "Homer Simpsons", "L'enculé", "Le baveur degueu",
+    "Le P4", "Le couillu", "Le singe", "Nonchalant", "Courreur de jupon",
+    "Le Kamikaze", "Le Miraculé", "Inch'Allah", "L'outsider"
+  ],
+  "7": [
+    "Le bouffon du roi", "Mitraillette sans balle", "Le nul", "Mangeur de crotte",
+    "L'aveugle", "Le raté", "Le remplaçant", "L'amputé", "Pourquoi pas",
+    "Espoir", "Le Bouche-trou", "Pétard mouillé", "Zéro pointé"
+  ]
+}

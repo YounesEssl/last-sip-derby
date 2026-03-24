@@ -9,17 +9,14 @@ import {
 } from '@nestjs/websockets'
 import { OnModuleInit } from '@nestjs/common'
 import { Server, Socket } from 'socket.io'
-import { BOOST_DURATION_MS, DRINK_CONFIRM_TIMEOUT_MS } from '@last-sip-derby/shared'
+import { DRINK_CONFIRM_TIMEOUT_MS } from '@last-sip-derby/shared'
 import { GameService } from './game.service'
 import { GameLoop } from './game.loop'
 import { PersistenceService } from '../persistence/persistence.service'
 
 @WebSocketGateway({
   cors: {
-    origin: [
-      process.env.TV_URL ?? 'http://localhost:3000',
-      process.env.MOBILE_URL ?? 'http://localhost:3002',
-    ],
+    origin: true,
     credentials: true,
   },
 })
@@ -36,38 +33,29 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   ) {}
 
   onModuleInit() {
-    // Set up game loop callbacks
     this.gameLoop.setCallbacks({
       onStateUpdate: () => this.broadcastState(),
       onPhaseChange: (phase) => this.server.emit('game:phaseChange', phase),
-      onEventTriggered: (result) => {
-        this.server.emit('game:event', result.event)
+      onEventTriggered: (event) => {
+        this.server.emit('game:event', event)
 
         // Send drink notifications to affected players
-        for (const notif of result.drinkNotifications) {
-          const player = this.gameService.getPlayerByPseudo(notif.pseudo)
+        for (const playerId of event.affectedPlayerIds) {
+          this.server.to(playerId).emit('player:drinkNotification', {
+            sips: event.sipsAmount,
+            reason: event.description,
+          })
+
+          // Add drink debt
+          const player = this.gameService.getConnectedPlayers().find((p) => p.id === playerId)
           if (player) {
-            this.server.to(player.id).emit('player:drinkNotification', {
-              sips: notif.sips,
-              reason: notif.reason,
-            })
-            this.gameService.startDrinkTimer(notif.pseudo, () => {
-              this.server.to(player.id).emit('player:drinkNotification', {
-                sips: 1,
-                reason: 'Penalite : dette non payee a temps !',
-              })
-              this.broadcastState()
-            })
+            player.debt += event.sipsAmount
+            player.totalSipsDrunk += event.sipsAmount
           }
         }
-
-        // Send boost windows to affected players
-        for (const boost of result.boostTargets) {
-          this.server.to(boost.socketId).emit('player:boostWindow', {
-            horseId: boost.horseId,
-            durationMs: BOOST_DURATION_MS,
-          })
-        }
+      },
+      onEventResolved: (data) => {
+        this.server.emit('game:eventResolved', data)
       },
       onRaceFinished: () => {
         // Handled by game loop internally
@@ -128,18 +116,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
   }
 
-  @SubscribeMessage('player:tapBoost')
-  handleTapBoost(
+  @SubscribeMessage('player:vote')
+  handleVote(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { horseId: string },
+    @MessageBody() data: { eventId: string; valid: boolean },
   ) {
-    if (!data?.horseId) return
-    if (this.gameService.getPhase() !== 'RACING') return
-
+    if (!data?.eventId || typeof data.valid !== 'boolean') return
     const player = this.gameService.getPlayerBySocket(client.id)
-    if (!player?.currentBet || player.currentBet.horseId !== data.horseId) return
-
-    this.gameService.boostHorse(data.horseId)
+    if (!player) return
+    this.gameLoop.handleVote(data.eventId, player.id, data.valid)
   }
 
   @SubscribeMessage('dev:startRace')

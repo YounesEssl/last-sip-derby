@@ -28,13 +28,14 @@ export const BettingTicket = ({ gameState, player, onBet }: Props) => {
           <div className="stamped text-5xl font-display mb-8 p-4">
             PARI VALIDÉ
           </div>
-          <p className="text-3xl font-bold mb-2">CHEVAL CHOISI :</p>
-          <div className="w-24 h-24 bg-pmu-dark text-white rounded-full flex flex-col items-center justify-center mb-8">
-            <span className="text-5xl font-display">
-              {gameState.horses.find(h => h.id === player.currentBet?.horseId)?.lane}
-            </span>
-          </div>
-          <p className="text-2xl animate-pulse">ATTENTE DU DÉPART...</p>
+          <p className="text-3xl font-bold mb-4">CHEVAL CHOISI :</p>
+          <p className="text-3xl font-display text-pmu-alert uppercase mb-2">
+            {gameState.horses.find(h => h.id === player.currentBet?.horseId)?.name}
+          </p>
+          <p className="text-xl text-pmu-dark/60 mb-8">
+            {gameState.horses.find(h => h.id === player.currentBet?.horseId)?.odds}G
+          </p>
+          <p className="text-2xl animate-pulse">ATTENTE DU DEPART...</p>
         </div>
       ) : (
         <div className="flex-1 overflow-auto">
@@ -48,7 +49,7 @@ export const BettingTicket = ({ gameState, player, onBet }: Props) => {
                 style={{ boxShadow: '4px 4px 0px #0f0a07' }}
               >
                 <div className="w-16 h-16 bg-pmu-dark text-white flex items-center justify-center font-display text-4xl mr-6">
-                  {horse.lane}
+                  {horse.lane + 1}
                 </div>
                 <div className="text-left flex-1">
                   <h3 className="text-3xl font-bold uppercase">{horse.name}</h3>
