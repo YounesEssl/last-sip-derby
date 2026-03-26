@@ -17,7 +17,7 @@ export const DirtTrack = ({ gameState, activeEvent, eventResolution, raceStartin
   const timeLeft = useCountdown(gameState.phaseStartedAt, gameState.phaseDuration)
   const isRacing = gameState.phase === 'RACING'
   const isFinished = gameState.phase === 'RESULTS'
-  const timerColor = timeLeft < 10 ? '#FF4444' : '#7BC67E'
+  const timerColor = timeLeft < 10 ? '#FF4444' : '#D4A843'
 
   const rankedHorses = useMemo(
     () => [...gameState.horses].sort((a, b) => b.position - a.position),
@@ -82,6 +82,24 @@ export const DirtTrack = ({ gameState, activeEvent, eventResolution, raceStartin
                   opacity: horse.isEliminated ? 0 : 1,
                 }}
               >
+                {/* Number badge — in front of horse head */}
+                <div
+                  className="absolute flex items-center justify-center font-mono font-bold text-white"
+                  style={{
+                    top: 160,
+                    left: 540,
+                    width: 38,
+                    height: 38,
+                    fontSize: 22,
+                    backgroundColor: HORSE_COLORS[horse.lane % HORSE_COLORS.length],
+                    borderRadius: '50%',
+                    border: '3px solid rgba(255,255,255,0.9)',
+                    boxShadow: `0 2px 8px rgba(0,0,0,0.7), 0 0 14px ${HORSE_COLORS[horse.lane % HORSE_COLORS.length]}80`,
+                    zIndex: 50,
+                  }}
+                >
+                  {horse.lane + 1}
+                </div>
                 <RaceHorse
                   number={horse.lane + 1}
                   speed={horse.effectiveSpeed}
@@ -92,25 +110,6 @@ export const DirtTrack = ({ gameState, activeEvent, eventResolution, raceStartin
                   colorIndex={horse.lane}
                   scale={1}
                 />
-              </div>
-              {/* Number badge — positioned independently */}
-              <div
-                className="absolute flex items-center justify-center font-mono font-bold text-white"
-                style={{
-                  transform: `translateX(calc(${translateX} + 80px))`,
-                  transition: raceStarting ? 'transform 0.8s ease-out' : 'opacity 2s ease-out',
-                  opacity: horse.isEliminated ? 0 : 1,
-                  width: 32,
-                  height: 32,
-                  fontSize: 18,
-                  backgroundColor: HORSE_COLORS[horse.lane % HORSE_COLORS.length],
-                  borderRadius: '50%',
-                  border: '2px solid rgba(255,255,255,0.6)',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
-                  zIndex: 50,
-                }}
-              >
-                {horse.lane + 1}
               </div>
             </div>
           )
@@ -126,26 +125,26 @@ export const DirtTrack = ({ gameState, activeEvent, eventResolution, raceStartin
 
       {/* ── ACTIVE EVENT OVERLAY ── */}
       {activeEvent && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="glass-panel px-16 py-10 text-center shadow-2xl max-w-3xl">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="glass-panel px-16 py-10 text-center max-w-3xl">
             {/* Title */}
-            <h1 className="text-6xl text-prairie-accent font-rye uppercase tracking-wider leading-tight animate-pulse">
+            <h1 className="text-6xl text-pmu-alert font-rye uppercase tracking-wider leading-tight animate-pulse">
               {activeEvent.title}
             </h1>
 
             {/* Description */}
-            <p className="text-2xl text-white/90 mt-6 font-mono leading-relaxed">
+            <p className="text-2xl text-pmu-dark/80 mt-6 font-mono leading-relaxed">
               {activeEvent.description}
             </p>
 
             {/* Sips */}
-            <div className="mt-6 text-4xl font-bold text-red-400">
+            <div className="mt-6 text-4xl font-bold text-pmu-alert">
               {activeEvent.sipsAmount} GORGEE{activeEvent.sipsAmount > 1 ? 'S' : ''} A BOIRE !
             </div>
 
             {/* Resolution */}
             {eventResolution ? (
-              <div className={`mt-8 text-3xl font-rye ${eventResolution.horseEliminated ? 'text-red-500' : 'text-green-400'}`}>
+              <div className={`mt-8 text-3xl font-rye ${eventResolution.horseEliminated ? 'text-pmu-alert' : 'text-green-700'}`}>
                 {eventResolution.horseEliminated
                   ? `${eventResolution.horseName} EST ELIMINE !`
                   : 'VALIDE ! La course reprend...'}
@@ -153,15 +152,15 @@ export const DirtTrack = ({ gameState, activeEvent, eventResolution, raceStartin
             ) : (
               /* Voting progress */
               <div className="mt-8">
-                <p className="text-lg text-white/60 font-mono mb-3">EN ATTENTE DES VOTES...</p>
+                <p className="text-lg text-pmu-dark/50 font-mono mb-3">EN ATTENTE DES VOTES...</p>
                 <div className="flex justify-center gap-8 text-2xl font-mono">
-                  <span className="text-green-400">
+                  <span className="text-green-700 font-bold">
                     VALIDE: {Object.values(activeEvent.votes).filter((v) => v).length}
                   </span>
-                  <span className="text-red-400">
+                  <span className="text-pmu-alert font-bold">
                     PAS VALIDE: {Object.values(activeEvent.votes).filter((v) => !v).length}
                   </span>
-                  <span className="text-white/40">
+                  <span className="text-pmu-dark/30">
                     / {activeEvent.nonAffectedPlayerIds.length}
                   </span>
                 </div>
@@ -192,7 +191,7 @@ function OddsPanel({ gameState }: { gameState: GameState }) {
     >
       <div
         className="px-4 py-1.5 text-center"
-        style={{ background: 'linear-gradient(135deg, #0f2e0f, #1a4d1a)' }}
+        style={{ background: 'linear-gradient(135deg, #1a0e06, #2a1808)' }}
       >
         <span className="font-rye text-prairie-accent text-base tracking-wider uppercase">
           {gameState.phase === 'BETTING' ? 'Paris ouverts' : 'Prochaine course'}

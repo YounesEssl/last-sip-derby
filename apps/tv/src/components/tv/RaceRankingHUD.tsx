@@ -88,7 +88,7 @@ export function RaceRankingHUD({ horses, raceProgress }: { horses: Horse[]; race
             >
               {/* Rank badge — top-left of avatar */}
               <div
-                className="absolute font-rye text-center leading-none"
+                className="absolute font-mono text-center leading-none font-bold"
                 style={{
                   width: 20,
                   height: 20,
@@ -97,19 +97,10 @@ export function RaceRankingHUD({ horses, raceProgress }: { horses: Horse[]; race
                   left: SLOT_WIDTH / 2 - AVATAR_SIZE / 2 - 6,
                   fontSize: 11,
                   lineHeight: '20px',
-                  background: isLeader
-                    ? 'linear-gradient(135deg, #FFD700, #B8860B)'
-                    : rank === 1
-                      ? 'linear-gradient(135deg, #C0C0C0, #808080)'
-                      : rank === 2
-                        ? 'linear-gradient(135deg, #CD7F32, #8B4513)'
-                        : 'rgba(255,255,255,0.12)',
-                  color: isTop3 ? '#1a0a00' : 'rgba(255,255,255,0.5)',
-                  fontWeight: 700,
-                  border: isTop3 ? 'none' : '1px solid rgba(255,255,255,0.15)',
-                  boxShadow: isLeader ? '0 0 8px rgba(255,215,0,0.6)' : undefined,
+                  background: 'rgba(255,255,255,0.12)',
+                  color: 'rgba(255,255,255,0.5)',
+                  border: '1px solid rgba(255,255,255,0.15)',
                   zIndex: 30,
-                  transition: 'background 300ms ease, box-shadow 300ms ease',
                 }}
               >
                 {rank + 1}
@@ -164,7 +155,7 @@ export function RaceRankingHUD({ horses, raceProgress }: { horses: Horse[]; race
                 style={{
                   fontSize: 11,
                   marginTop: 1,
-                  color: isLeader ? '#FFD700' : 'rgba(123,198,126,0.45)',
+                  color: isLeader ? '#FFD700' : 'rgba(212,168,67,0.45)',
                   textShadow: isLeader ? '0 0 10px rgba(255,215,0,0.5)' : undefined,
                   transition: 'color 300ms ease',
                 }}

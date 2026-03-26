@@ -60,10 +60,7 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
     if (this.gameService.getPhase() === 'IDLE' && this.gameService.hasConnectedPlayers()) {
       // Start a 20s countdown before transitioning to betting (if not already counting)
       if (!this.lobbyCountdown) {
-        // Set the IDLE phase duration to 20s so clients can show a countdown
-        const state = this.gameService.getState()
-        state.phaseStartedAt = Date.now()
-        state.phaseDuration = 20_000
+        this.gameService.setIdleCountdown(20_000)
         this.onStateUpdate?.()
 
         this.lobbyCountdown = setTimeout(() => {

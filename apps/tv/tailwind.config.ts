@@ -14,14 +14,22 @@ const config: Config = {
         body: ['var(--font-courier)', 'monospace'],
       },
       colors: {
+        pmu: {
+          bg: '#1c1613',
+          dark: '#0f0a07',
+          wood: '#4a3018',
+          paper: '#f4eacc',
+          alert: '#E83B3B',
+          amber: '#FFB000',
+        },
         western: {
           gold: '#D4A843',
           dark: 'rgba(30, 15, 5, 0.85)',
         },
         prairie: {
-          accent: '#7BC67E',
+          accent: '#D4A843',
           gold: '#FFD700',
-          dark: 'rgba(15, 30, 15, 0.85)',
+          dark: 'rgba(30, 15, 5, 0.85)',
         },
         FFD700: '#FFD700',
       },

@@ -11,18 +11,18 @@ export const RaceRemote = ({ horseName }: Props) => {
            style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 10px, transparent 10px, transparent 20px)' }}>
       </div>
 
-      <div className="z-10 text-center w-full max-w-sm">
-        <h2 className="text-4xl font-display tracking-widest text-pmu-amber mb-6 drop-shadow-lg">
+      <div className="z-10 text-center w-full max-w-xs px-4">
+        <h2 className="text-2xl font-display tracking-widest text-pmu-amber mb-4 drop-shadow-lg">
           LA COURSE EST EN COURS
         </h2>
         {horseName ? (
-          <p className="text-2xl font-mono text-gray-300">
-            VOTRE CHEVAL: <span className="font-bold text-white text-3xl block mt-2">{horseName}</span>
+          <p className="text-base font-mono text-gray-300">
+            VOTRE CHEVAL: <span className="font-bold text-white text-xl block mt-2">{horseName}</span>
           </p>
         ) : (
-          <p className="text-2xl font-mono text-pmu-alert font-bold">VOUS N'AVEZ PAS PARIE</p>
+          <p className="text-base font-mono text-pmu-alert font-bold">VOUS N'AVEZ PAS PARIE</p>
         )}
-        <p className="mt-12 text-xl font-mono text-gray-500 animate-pulse">REGARDE L'ECRAN...</p>
+        <p className="mt-8 text-base font-mono text-gray-500 animate-pulse">REGARDE L'ECRAN...</p>
       </div>
     </div>
   )

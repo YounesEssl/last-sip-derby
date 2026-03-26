@@ -17,7 +17,7 @@ export function RaceResults({ gameState, onComplete }: Props) {
   const winnerHorse = rankedHorses[0]
   const winnerColor = winnerHorse
     ? HORSE_COLORS[winnerHorse.lane % HORSE_COLORS.length]
-    : '#D4A843'
+    : '#E83B3B'
 
   const runAnimation = useCallback(async () => {
     const container = containerRef.current
@@ -81,10 +81,6 @@ export function RaceResults({ gameState, onComplete }: Props) {
     return () => cancelAnimationFrame(id)
   }, [runAnimation])
 
-  // Grain overlay
-  const grainOverlay =
-    'repeating-linear-gradient(90deg, transparent 0px, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 5px)'
-
   return (
     <div
       ref={containerRef}
@@ -94,31 +90,30 @@ export function RaceResults({ gameState, onComplete }: Props) {
       {/* ── Backdrop ── */}
       <div
         data-el="backdrop"
-        className="absolute inset-0 flex flex-col items-center justify-center"
+        className="absolute inset-0 flex flex-col items-center justify-center bg-pmu-paper"
         style={{
           transform: 'translateY(100%)',
-          background: `${grainOverlay}, radial-gradient(ellipse at 50% 40%, #2a1a08 0%, #0d0703 70%, #000 100%)`,
           willChange: 'transform',
         }}
       >
+        <div className="paper-texture"></div>
+
         {/* Decorative top border */}
         <div
-          className="absolute top-0 left-0 right-0 h-2"
-          style={{ background: `linear-gradient(90deg, transparent 0%, ${winnerColor} 30%, #D4A843 50%, ${winnerColor} 70%, transparent 100%)` }}
+          className="absolute top-0 left-0 right-0 h-3 bg-pmu-dark"
         />
 
         {/* ── Content container ── */}
-        <div className="flex flex-col items-center" style={{ marginTop: '-3vh' }}>
+        <div className="flex flex-col items-center relative z-10" style={{ marginTop: '-3vh' }}>
 
           {/* Badge: VAINQUEUR */}
           <div
             data-el="badge"
-            className="font-rye tracking-[0.4em] uppercase"
+            className="font-rye tracking-[0.4em] uppercase text-pmu-wood"
             style={{
               transform: 'translateY(-60px) scale(0.8)',
               opacity: 0,
               fontSize: 'min(4vh, 2.5vw)',
-              color: 'rgba(212,168,67,0.6)',
               letterSpacing: '0.4em',
               willChange: 'transform, opacity',
             }}
@@ -136,7 +131,7 @@ export function RaceResults({ gameState, onComplete }: Props) {
               fontSize: 'min(14vh, 9vw)',
               lineHeight: 1,
               color: winnerColor,
-              textShadow: `0 0 60px ${winnerColor}80, 0 0 120px ${winnerColor}30, 0 8px 30px rgba(0,0,0,0.8)`,
+              textShadow: `0 4px 0 rgba(0,0,0,0.15)`,
               marginTop: '1vh',
               willChange: 'transform, opacity',
             }}
@@ -147,13 +142,13 @@ export function RaceResults({ gameState, onComplete }: Props) {
           {/* Divider */}
           <div
             data-el="divider"
+            className="bg-pmu-dark/20"
             style={{
               transform: 'scaleX(0)',
               opacity: 0,
               width: 'min(50vw, 600px)',
-              height: 2,
+              height: 3,
               marginTop: '3vh',
-              background: `linear-gradient(90deg, transparent, ${winnerColor}80, #D4A84380, ${winnerColor}80, transparent)`,
               willChange: 'transform, opacity',
             }}
           />
@@ -172,18 +167,16 @@ export function RaceResults({ gameState, onComplete }: Props) {
             {winner ? (
               <>
                 <div
-                  className="font-mono uppercase tracking-widest"
-                  style={{ fontSize: 'min(2.5vh, 1.5vw)', color: 'rgba(255,255,255,0.4)' }}
+                  className="font-mono uppercase tracking-widest text-pmu-wood"
+                  style={{ fontSize: 'min(2.5vh, 1.5vw)' }}
                 >
                   Parieur gagnant
                 </div>
                 <div
-                  className="font-bebas uppercase"
+                  className="font-bebas uppercase text-pmu-dark"
                   style={{
                     fontSize: 'min(10vh, 7vw)',
                     lineHeight: 1.1,
-                    color: '#fff',
-                    textShadow: '0 4px 20px rgba(0,0,0,0.5)',
                     marginTop: '0.5vh',
                   }}
                 >
@@ -192,8 +185,8 @@ export function RaceResults({ gameState, onComplete }: Props) {
               </>
             ) : (
               <div
-                className="font-mono uppercase tracking-widest"
-                style={{ fontSize: 'min(3vh, 2vw)', color: 'rgba(255,255,255,0.4)' }}
+                className="font-mono uppercase tracking-widest text-pmu-dark/40"
+                style={{ fontSize: 'min(3vh, 2vw)' }}
               >
                 Aucun parieur gagnant
               </div>
@@ -212,14 +205,13 @@ export function RaceResults({ gameState, onComplete }: Props) {
           >
             {winner && winner.sipsToDistribute > 0 && (
               <div
-                className="font-bebas tracking-wide uppercase"
+                className="font-rye tracking-wide uppercase text-white"
                 style={{
                   fontSize: 'min(4vh, 2.5vw)',
-                  background: winnerColor,
-                  color: '#000',
+                  background: '#E83B3B',
                   padding: '1.2vh 3vw',
-                  borderRadius: 12,
-                  boxShadow: `0 0 40px ${winnerColor}40, 0 4px 15px rgba(0,0,0,0.5)`,
+                  border: '4px solid #0f0a07',
+                  boxShadow: '4px 4px 0px #3a2a1a',
                 }}
               >
                 Distribue {winner.sipsToDistribute} gorgées !
@@ -231,31 +223,26 @@ export function RaceResults({ gameState, onComplete }: Props) {
         {/* ── Podium: top 3 at bottom ── */}
         <div
           data-el="podium"
-          className="absolute bottom-0 left-0 right-0 flex justify-center gap-6 pb-6"
+          className="absolute bottom-0 left-0 right-0 flex justify-center gap-6 pb-8 z-10"
           style={{ opacity: 0, willChange: 'opacity' }}
         >
           {rankedHorses.slice(0, 3).map((horse, i) => {
             const color = HORSE_COLORS[horse.lane % HORSE_COLORS.length]
-            const medals = ['🥇', '🥈', '🥉']
-            const sizes = ['text-2xl', 'text-xl', 'text-lg']
+            const labels = ['1ER', '2E', '3E']
 
             return (
               <div
                 key={horse.id}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl"
-                style={{
-                  background: i === 0 ? `${color}20` : 'rgba(255,255,255,0.05)',
-                  border: i === 0 ? `2px solid ${color}60` : '1px solid rgba(255,255,255,0.1)',
-                }}
+                className="flex items-center gap-3 px-5 py-2.5 bg-white/50 border-2 border-pmu-dark/15"
               >
-                <span className={sizes[i]}>{medals[i]}</span>
+                <span className="font-rye text-lg text-pmu-dark">{labels[i]}</span>
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center font-mono font-bold text-white text-sm"
                   style={{ backgroundColor: color }}
                 >
                   {horse.lane + 1}
                 </div>
-                <span className="font-mono text-white font-bold text-base">
+                <span className="font-mono text-pmu-dark font-bold text-base">
                   {horse.name}
                 </span>
               </div>
@@ -265,14 +252,14 @@ export function RaceResults({ gameState, onComplete }: Props) {
 
         {/* Progress bar — time until next race */}
         <div
-          className="absolute bottom-0 left-0 right-0"
-          style={{ height: 6, background: 'rgba(255,255,255,0.08)' }}
+          className="absolute bottom-0 left-0 right-0 z-10"
+          style={{ height: 6, background: 'rgba(15,10,7,0.1)' }}
         >
           <div
             style={{
               height: '100%',
               width: '100%',
-              background: `linear-gradient(90deg, ${winnerColor}, #D4A843)`,
+              background: '#E83B3B',
               transformOrigin: 'left',
               animation: `shrink-bar ${gameState.phaseDuration}ms linear forwards`,
             }}

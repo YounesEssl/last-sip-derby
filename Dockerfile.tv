@@ -1,0 +1,18 @@
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9 --activate
+
+WORKDIR /app
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
+COPY packages/shared/package.json packages/shared/
+COPY apps/tv/package.json apps/tv/
+
+RUN pnpm install --frozen-lockfile
+
+COPY packages/shared/ packages/shared/
+COPY apps/tv/ apps/tv/
+
+RUN pnpm --filter @last-sip-derby/shared build
+RUN pnpm --filter @last-sip-derby/tv build
+
+EXPOSE 3000
+CMD ["pnpm", "--filter", "@last-sip-derby/tv", "start"]

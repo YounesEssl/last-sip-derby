@@ -12,8 +12,16 @@ import type {
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>
 
-const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL
-  ?? (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://localhost:3001')
+function getServerUrl() {
+  if (process.env.NEXT_PUBLIC_SERVER_URL) return process.env.NEXT_PUBLIC_SERVER_URL
+  if (typeof window === 'undefined') return 'http://localhost:3001'
+  // In production (nginx), socket.io is proxied on same host. In dev, use port 3001.
+  const isDev = window.location.port === '3002' || window.location.port === '3001'
+  return isDev
+    ? `${window.location.protocol}//${window.location.hostname}:3001`
+    : `${window.location.protocol}//${window.location.host}`
+}
+const SERVER_URL = getServerUrl()
 
 export function usePlayerSocket() {
   const socketRef = useRef<TypedSocket | null>(null)
@@ -83,6 +91,7 @@ export function usePlayerSocket() {
 
     socket.on('game:eventResolved', () => {
       setVoteRequest(null)
+      setDrinkNotification(null)
     })
 
     socket.on('game:phaseChange', () => {

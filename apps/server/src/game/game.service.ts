@@ -339,8 +339,9 @@ export class GameService implements OnModuleInit {
         horse.position = Math.min(maxPos, horse.position + burst);
       }
 
-      // ── Effective speed for gallop animation ──
-      horse.effectiveSpeed = Math.max(1, Math.min(10, (speed / targetSpeed) * 5));
+      // ── Effective speed for gallop animation (smoothed to avoid jitter) ──
+      const rawAnimSpeed = Math.max(1, Math.min(10, (speed / targetSpeed) * 5));
+      horse.effectiveSpeed = horse.effectiveSpeed * 0.8 + rawAnimSpeed * 0.2;
 
       if (horse.position >= 100 && !winner) {
         winner = horse;
@@ -389,15 +390,16 @@ export class GameService implements OnModuleInit {
       if (!player.currentBet) continue;
 
       if (player.currentBet.horseId === winnerHorse.id) {
-        // Winner: gets to distribute sips
-        sipsToDistribute = Math.round(
-          player.currentBet.amount * winnerHorse.odds,
-        );
+        // Winner: distributes double the horse's odds
+        sipsToDistribute = winnerHorse.odds * 2;
         player.totalSipsGiven += sipsToDistribute;
         winnerPlayer = player;
       } else {
-        // Loser: drinks their bet amount
-        const sips = player.currentBet.amount;
+        // Loser: drinks the odds of the horse they bet on
+        const betHorse = this.state.horses.find(
+          (h) => h.id === player.currentBet!.horseId,
+        );
+        const sips = betHorse ? betHorse.odds : player.currentBet.amount;
         player.debt += sips;
         player.totalSipsDrunk += sips;
         losers.push({ player, sips });
@@ -427,6 +429,12 @@ export class GameService implements OnModuleInit {
       player.isConnected = false;
       player.currentBet = null;
     }
+  }
+
+  /** Reset the IDLE countdown (e.g. when first player joins) */
+  setIdleCountdown(durationMs: number): void {
+    this.state.phaseStartedAt = Date.now();
+    this.state.phaseDuration = durationMs;
   }
 
   // Events

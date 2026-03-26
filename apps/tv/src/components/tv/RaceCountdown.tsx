@@ -92,38 +92,33 @@ export function RaceCountdown({ onReveal, onComplete, onBeep, onStart }: Props) 
   const numberStyle: React.CSSProperties = {
     fontSize: 'min(75vh, 45vw)',
     lineHeight: 1,
-    textShadow:
-      '0 0 80px rgba(212,168,67,0.5), 0 0 160px rgba(212,168,67,0.2), 0 10px 40px rgba(0,0,0,0.8)',
-    WebkitTextStroke: '2px rgba(140,100,30,0.4)',
+    color: '#E83B3B',
+    textShadow: '0 6px 0 rgba(160,32,32,0.3), 0 0 80px rgba(232,59,59,0.3)',
+    WebkitTextStroke: '3px rgba(160,32,32,0.2)',
   }
-
-  /* Wood grain overlay via repeating-linear-gradient */
-  const grainOverlay =
-    'repeating-linear-gradient(90deg, transparent 0px, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 5px)'
 
   return (
     <div
       ref={containerRef}
       className="absolute inset-0 overflow-hidden"
-      style={{ zIndex: 100, opacity: 1, background: '#0d0703' }}
+      style={{ zIndex: 100, opacity: 1, background: '#f4eacc' }}
     >
       {/* ── Screen: 3  (starts offscreen left) ── */}
       <div
         data-screen="3"
+        className="bg-pmu-paper"
         style={{
           ...screenBase,
           transform: 'translateX(-100%)',
-          background: `${grainOverlay}, radial-gradient(ellipse at 40% 50%, #3d2814 0%, #1a0e06 70%, #0d0703 100%)`,
         }}
       >
+        <div className="paper-texture"></div>
         {/* Leading edge shadow */}
         <div
           className="absolute top-0 right-0 bottom-0 w-4"
-          style={{
-            background: 'linear-gradient(to left, rgba(0,0,0,0.6), transparent)',
-          }}
+          style={{ background: 'linear-gradient(to left, rgba(74,48,24,0.15), transparent)' }}
         />
-        <span className="font-rye text-western-gold" style={numberStyle}>
+        <span className="font-rye relative z-10" style={numberStyle}>
           3
         </span>
       </div>
@@ -131,19 +126,18 @@ export function RaceCountdown({ onReveal, onComplete, onBeep, onStart }: Props) 
       {/* ── Screen: 2  (starts offscreen right) ── */}
       <div
         data-screen="2"
+        className="bg-pmu-paper"
         style={{
           ...screenBase,
           transform: 'translateX(100%)',
-          background: `${grainOverlay}, radial-gradient(ellipse at 60% 50%, #362010 0%, #150a04 70%, #0a0502 100%)`,
         }}
       >
+        <div className="paper-texture"></div>
         <div
           className="absolute top-0 left-0 bottom-0 w-4"
-          style={{
-            background: 'linear-gradient(to right, rgba(0,0,0,0.6), transparent)',
-          }}
+          style={{ background: 'linear-gradient(to right, rgba(74,48,24,0.15), transparent)' }}
         />
-        <span className="font-rye text-western-gold" style={numberStyle}>
+        <span className="font-rye relative z-10" style={numberStyle}>
           2
         </span>
       </div>
@@ -151,19 +145,18 @@ export function RaceCountdown({ onReveal, onComplete, onBeep, onStart }: Props) 
       {/* ── Screen: 1  (starts offscreen top) ── */}
       <div
         data-screen="1"
+        className="bg-pmu-paper"
         style={{
           ...screenBase,
           transform: 'translateY(-100%)',
-          background: `${grainOverlay}, radial-gradient(ellipse at 50% 60%, #4a2a12 0%, #1c0c04 70%, #0d0502 100%)`,
         }}
       >
+        <div className="paper-texture"></div>
         <div
           className="absolute left-0 right-0 bottom-0 h-4"
-          style={{
-            background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)',
-          }}
+          style={{ background: 'linear-gradient(to top, rgba(74,48,24,0.15), transparent)' }}
         />
-        <span className="font-rye text-western-gold" style={numberStyle}>
+        <span className="font-rye relative z-10" style={numberStyle}>
           1
         </span>
       </div>
@@ -171,33 +164,34 @@ export function RaceCountdown({ onReveal, onComplete, onBeep, onStart }: Props) 
       {/* ── Screen: PARTEZ !  (starts scaled down + transparent) ── */}
       <div
         data-screen="go"
+        className="bg-pmu-paper"
         style={{
           ...screenBase,
           transform: 'scale(0.85)',
           opacity: 0,
-          background: `${grainOverlay}, radial-gradient(ellipse at 50% 50%, #2a3a12 0%, #0f1a06 70%, #060d03 100%)`,
         }}
       >
+        <div className="paper-texture"></div>
         <div
-          className="font-rye tracking-widest uppercase text-prairie-accent/50"
+          className="font-rye tracking-widest uppercase relative z-10 text-pmu-dark/30"
           style={{ fontSize: 'min(8vh, 5vw)', marginBottom: '1vh' }}
         >
           ★ ★ ★
         </div>
         <span
-          className="font-rye text-prairie-accent"
+          className="font-rye relative z-10"
           style={{
             fontSize: 'min(28vh, 18vw)',
             lineHeight: 1,
-            textShadow:
-              '0 0 80px rgba(123,198,126,0.6), 0 0 160px rgba(123,198,126,0.25), 0 10px 40px rgba(0,0,0,0.8)',
-            WebkitTextStroke: '2px rgba(50,120,55,0.3)',
+            color: '#E83B3B',
+            textShadow: '0 6px 0 rgba(160,32,32,0.3), 0 0 80px rgba(232,59,59,0.3)',
+            WebkitTextStroke: '3px rgba(160,32,32,0.2)',
           }}
         >
           PARTEZ !
         </span>
         <div
-          className="font-rye tracking-widest uppercase text-prairie-accent/50"
+          className="font-rye tracking-widest uppercase relative z-10 text-pmu-dark/30"
           style={{ fontSize: 'min(8vh, 5vw)', marginTop: '1vh' }}
         >
           ★ ★ ★

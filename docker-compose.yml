@@ -1,0 +1,62 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    expose:
+      - "3001"
+    environment:
+      - PORT=3001
+    restart: unless-stopped
+
+  tv:
+    build:
+      context: .
+      dockerfile: Dockerfile.tv
+    expose:
+      - "3000"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  mobile:
+    build:
+      context: .
+      dockerfile: Dockerfile.mobile
+    expose:
+      - "3002"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    expose:
+      - "80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - server
+      - tv
+      - mobile
+    restart: unless-stopped
+    networks:
+      - default
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      # HTTP → HTTPS redirect
+      - "traefik.http.routers.derby-http.rule=Host(`derby.annivmaxyou.fr`)"
+      - "traefik.http.routers.derby-http.entrypoints=http"
+      - "traefik.http.routers.derby-http.middlewares=derby-redirect"
+      - "traefik.http.middlewares.derby-redirect.redirectscheme.scheme=https"
+      # HTTPS with Let's Encrypt
+      - "traefik.http.routers.derby.rule=Host(`derby.annivmaxyou.fr`)"
+      - "traefik.http.routers.derby.entrypoints=https"
+      - "traefik.http.routers.derby.tls=true"
+      - "traefik.http.routers.derby.tls.certresolver=letsencrypt"
+      - "traefik.http.services.derby.loadbalancer.server.port=80"
+
+networks:
+  coolify:
+    external: true

@@ -1,0 +1,11 @@
+node_modules
+.next
+dist
+.git
+.gitignore
+*.md
+state-dump.json
+.env
+.env.local
+**/.env
+**/.env.local

@@ -48,7 +48,7 @@ export class GameEvents {
     // Pick random title and description
     const title = EVENT_TITLES[Math.floor(Math.random() * EVENT_TITLES.length)]
     const rawDescription = EVENT_DESCRIPTIONS[Math.floor(Math.random() * EVENT_DESCRIPTIONS.length)]
-    const description = rawDescription.replace(/\.\.\./g, targetHorse.name)
+    const description = rawDescription.replace('...', targetHorse.name)
 
     const event: GameEvent = {
       id: uuid(),

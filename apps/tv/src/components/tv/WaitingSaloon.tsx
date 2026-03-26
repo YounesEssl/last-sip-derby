@@ -5,90 +5,77 @@ import { GameState, HORSE_COLORS } from '@last-sip-derby/shared'
 import { useCountdown } from '@/hooks/useCountdown'
 
 export const WaitingSaloon = ({ gameState }: { gameState: GameState }) => {
-  const joinUrl = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3002` : ''
+  // QR points to mobile: in dev → hostname:3002, in prod → same origin + /play
+  const joinUrl = typeof window !== 'undefined'
+    ? (window.location.port === '3000'
+      ? `${window.location.protocol}//${window.location.hostname}:3002`
+      : `${window.location.origin}/play`)
+    : ''
   const players = gameState.players.filter((p) => p.isConnected)
   const timeLeft = useCountdown(gameState.phaseStartedAt, gameState.phaseDuration)
-  const hasCountdown = players.length > 0 && gameState.phaseDuration <= 30_000
+  const hasCountdown = players.length > 0 && gameState.phaseDuration < 30_000
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: 'radial-gradient(ellipse at 50% 30%, #1a2e1a 0%, #0a0f0a 70%, #000 100%)' }}
-    >
-      {/* Subtle grid overlay */}
-      <div className="absolute inset-0 opacity-[0.04]"
-        style={{ backgroundImage: 'linear-gradient(rgba(123,198,126,1) 1px, transparent 1px), linear-gradient(90deg, rgba(123,198,126,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }}
-      />
+    <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-pmu-paper">
+      <div className="paper-texture"></div>
 
       {/* Title */}
       <div className="text-center mb-10 relative z-10">
-        <h1 className="font-rye text-[90px] leading-none tracking-wide"
-          style={{ color: '#D4A843', textShadow: '0 0 40px rgba(212,168,67,0.3), 0 4px 0 #8B6914' }}
+        <h1 className="font-rye text-[90px] leading-none tracking-wide text-pmu-alert transform -rotate-1"
+          style={{ textShadow: '0 4px 0 rgba(160,32,32,0.3)' }}
         >
           Last Sip Derby
         </h1>
-        <div className="h-[2px] mx-auto mt-3 opacity-40" style={{ width: 400, background: 'linear-gradient(90deg, transparent, #D4A843, transparent)' }} />
+        <div className="h-[3px] mx-auto mt-4 bg-pmu-dark/20" style={{ width: 500 }} />
+        <p className="font-body text-xl text-pmu-wood tracking-[0.3em] uppercase font-bold mt-3">
+          PMU OFFICIEL — SALLE D'ATTENTE
+        </p>
       </div>
 
-      {/* Main content */}
-      <div className="flex items-start gap-16 relative z-10">
-
-        {/* QR Code block */}
-        <div className="flex flex-col items-center">
-          <div className="relative p-1 rounded-xl" style={{ background: 'linear-gradient(135deg, #D4A843, #8B6914)' }}>
-            <div className="bg-white p-5 rounded-lg">
-              {joinUrl ? (
-                <QRCodeSVG value={joinUrl} size={200} bgColor="#ffffff" fgColor="#0a0f0a" />
-              ) : (
-                <div className="w-[200px] h-[200px] bg-gray-200" />
-              )}
-            </div>
+      {/* QR Code — centered */}
+      <div className="flex flex-col items-center relative z-10 mb-8">
+        <div className="relative p-1.5 border-4 border-pmu-dark" style={{ boxShadow: '6px 6px 0px #3a2a1a' }}>
+          <div className="bg-white p-4">
+            {joinUrl ? (
+              <QRCodeSVG value={joinUrl} size={160} bgColor="#ffffff" fgColor="#0f0a07" />
+            ) : (
+              <div className="w-[160px] h-[160px] bg-gray-200" />
+            )}
           </div>
-          <p className="font-mono text-sm text-white/30 mt-4 tracking-widest uppercase">
-            Scannez pour rejoindre
-          </p>
         </div>
+        <p className="font-mono text-sm text-pmu-dark/40 mt-3 tracking-widest uppercase font-bold">
+          Scannez pour rejoindre
+        </p>
+      </div>
 
-        {/* Players list */}
-        <div className="min-w-[350px]">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-[1px] flex-1" style={{ background: 'linear-gradient(90deg, rgba(123,198,126,0.4), transparent)' }} />
-            <h2 className="font-rye text-2xl tracking-wider" style={{ color: '#7BC67E' }}>
-              Joueurs
-            </h2>
-            <div className="h-[1px] flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(123,198,126,0.4))' }} />
+      {/* Players list — horizontal wrap, full width */}
+      <div className="relative z-10 w-full max-w-4xl px-12">
+        {players.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="font-terminal text-2xl text-pmu-dark/30 animate-pulse uppercase">
+              En attente de joueurs...
+            </p>
           </div>
-
-          {players.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="font-mono text-lg text-white/20 animate-pulse">
-                En attente de joueurs...
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {players.map((p, i) => (
+        ) : (
+          <div className="flex flex-wrap justify-center gap-2">
+            {players.map((p, i) => (
+              <div
+                key={p.pseudo}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white/50 border-2 border-pmu-dark/15"
+              >
                 <div
-                  key={p.pseudo}
-                  className="flex items-center gap-4 px-5 py-3 rounded-lg"
-                  style={{
-                    background: 'rgba(123,198,126,0.06)',
-                    border: '1px solid rgba(123,198,126,0.15)',
-                  }}
+                  className="w-6 h-6 rounded-full flex items-center justify-center font-mono text-xs font-bold text-white"
+                  style={{ backgroundColor: HORSE_COLORS[i % HORSE_COLORS.length] }}
                 >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center font-mono text-sm font-bold text-white"
-                    style={{ backgroundColor: HORSE_COLORS[i % HORSE_COLORS.length] }}
-                  >
-                    {i + 1}
-                  </div>
-                  <span className="font-mono text-xl text-white/80 uppercase tracking-wide">
-                    {p.pseudo}
-                  </span>
+                  {i + 1}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <span className="font-terminal text-lg text-pmu-dark uppercase">
+                  {p.pseudo}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Bottom: countdown or invite */}
@@ -96,19 +83,24 @@ export const WaitingSaloon = ({ gameState }: { gameState: GameState }) => {
         {hasCountdown ? (
           <div className="text-center">
             <div
-              className="inline-block px-10 py-4 rounded-xl"
-              style={{ background: 'rgba(212,168,67,0.1)', border: '2px solid rgba(212,168,67,0.3)' }}
+              className="inline-block px-10 py-4 border-4 border-pmu-dark"
+              style={{ boxShadow: '4px 4px 0px #3a2a1a' }}
             >
-              <p className="font-rye text-4xl animate-pulse" style={{ color: '#D4A843' }}>
+              <p className="font-rye text-4xl animate-pulse text-pmu-dark">
                 La course commence dans {timeLeft}s
               </p>
             </div>
           </div>
         ) : (
-          <p className="font-mono text-base text-white/20 tracking-widest uppercase">
+          <p className="font-mono text-base text-pmu-dark/30 tracking-widest uppercase">
             La partie commence des qu'un joueur rejoint
           </p>
         )}
+      </div>
+
+      {/* Decorative footer */}
+      <div className="absolute bottom-6 opacity-20 pointer-events-none text-center font-mono text-pmu-dark z-10">
+        <p className="border-t-2 border-dashed border-pmu-dark pt-2">PMU — SOUMIS À LA RÉGLEMENTATION</p>
       </div>
     </div>
   )

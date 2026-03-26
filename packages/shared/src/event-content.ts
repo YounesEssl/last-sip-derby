@@ -49,7 +49,7 @@ export const EVENT_DESCRIPTIONS: string[] = [
   "... vient de prendre un projectile, va-t-il reussir a continuer ?",
   "... respire mal, le soigneur lui donne de la ventoline !",
   "... perd de la vitesse, va-t-il repartir ?",
-  "... a pris un molard sur la crignere... il faut lui enlever pour qu'il continue d'avancer",
+  "... a pris un molard sur la crignere, il faut lui enlever pour qu'il continue d'avancer !",
   "... a oublie de fermer a clef sa voiture, va-t-il aller la fermer et perdre la course ?",
   "... s'est casse le tibia, est-ce qu'il peut encore finir la course ?",
   "... a perdu un sabot, va-t-il reussir a mettre celui de secours ?",

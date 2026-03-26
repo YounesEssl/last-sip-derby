@@ -108,13 +108,16 @@ export default function TVPage() {
   if (!connected || !gameState) {
     return (
       <Screen>
-        <div className="text-center">
-          <h1 className="font-rye text-[80px] text-western-gold leading-none mb-4" style={{ textShadow: '0 0 30px rgba(212,168,67,0.4)' }}>
-            Last Sip Derby
-          </h1>
-          <p className="font-mono text-[28px] text-western-gold/60 animate-pulse">
-            ESTABLISHING CONNECTION...
-          </p>
+        <div className="w-full h-full bg-pmu-paper flex items-center justify-center relative">
+          <div className="paper-texture"></div>
+          <div className="text-center relative z-10">
+            <h1 className="font-rye text-[80px] text-pmu-alert leading-none mb-4" style={{ textShadow: '0 4px 0 rgba(160,32,32,0.3)' }}>
+              Last Sip Derby
+            </h1>
+            <p className="font-terminal text-[28px] text-pmu-dark/40 animate-pulse uppercase">
+              Connexion en cours...
+            </p>
+          </div>
         </div>
       </Screen>
     )
