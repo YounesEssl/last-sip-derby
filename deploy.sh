@@ -14,7 +14,7 @@ rsync -avz --delete \
   ./ "$VPS:$APP_DIR/"
 
 echo "🐳 Building and starting on VPS..."
-ssh "$VPS" "cd $APP_DIR && docker compose up -d --build"
+ssh "$VPS" "cd $APP_DIR && docker compose up -d --build && docker compose restart nginx"
 
 echo ""
 echo "✅ Deployed!"

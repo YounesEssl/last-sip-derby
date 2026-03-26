@@ -33,7 +33,7 @@ function PhotoFlash({ onComplete }: { onComplete: () => void }) {
 }
 
 export default function TVPage() {
-  const { gameState, activeEvent, eventResolution, connected, startRace } = useGameSocket()
+  const { gameState, activeEvent, eventResolution, connected } = useGameSocket()
   const sound = useSoundEngine()
   const [showCountdown, setShowCountdown] = useState(false)
   const [freezePhase, setFreezePhase] = useState(false)
@@ -128,14 +128,6 @@ export default function TVPage() {
 
   return (
     <Screen>
-      {/* DEBUG: instant race button */}
-      <button
-        onClick={startRace}
-        className="absolute top-2 right-2 z-[200] px-3 py-1 bg-pmu-alert text-white font-mono text-xs uppercase opacity-30 hover:opacity-100 transition-opacity"
-      >
-        GO
-      </button>
-
       {/* IDLE: lobby with QR code + player list */}
       {phase === 'IDLE' && <WaitingSaloon gameState={gameState} />}
 
