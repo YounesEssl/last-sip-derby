@@ -1,11 +1,17 @@
 'use client'
 
+import { QRCodeSVG } from 'qrcode.react'
 import { GameState, HORSE_COLORS } from '@last-sip-derby/shared'
 import { useCountdown } from '@/hooks/useCountdown'
 
 export const BettingBoard = ({ gameState }: { gameState: GameState }) => {
   const timeLeft = useCountdown(gameState.phaseStartedAt, gameState.phaseDuration)
   const connectedPlayers = gameState.players.filter((p) => p.isConnected)
+  const joinUrl = typeof window !== 'undefined'
+    ? (window.location.port === '3000'
+      ? `${window.location.protocol}//${window.location.hostname}:3002`
+      : `${window.location.origin}/play`)
+    : ''
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden bg-pmu-paper">
@@ -21,13 +27,22 @@ export const BettingBoard = ({ gameState }: { gameState: GameState }) => {
             Placez vos paris
           </p>
         </div>
-        <div className="text-center px-8 py-4 border-4 border-pmu-dark bg-white/40"
-          style={{ boxShadow: '4px 4px 0px #3a2a1a' }}
-        >
-          <p className="font-mono text-sm text-pmu-dark/50 uppercase tracking-widest">Depart dans</p>
-          <p className="font-rye text-6xl mt-1" style={{ color: timeLeft <= 10 ? '#E83B3B' : '#0f0a07' }}>
-            {timeLeft}s
-          </p>
+        <div className="flex items-center gap-6">
+          {/* QR Code */}
+          {joinUrl && (
+            <div className="border-3 border-pmu-dark bg-white p-2" style={{ boxShadow: '3px 3px 0px #3a2a1a' }}>
+              <QRCodeSVG value={joinUrl} size={120} bgColor="#ffffff" fgColor="#0f0a07" />
+            </div>
+          )}
+          {/* Timer */}
+          <div className="text-center px-8 py-4 border-4 border-pmu-dark bg-white/40"
+            style={{ boxShadow: '4px 4px 0px #3a2a1a' }}
+          >
+            <p className="font-mono text-sm text-pmu-dark/50 uppercase tracking-widest">Depart dans</p>
+            <p className="font-rye text-6xl mt-1" style={{ color: timeLeft <= 10 ? '#E83B3B' : '#0f0a07' }}>
+              {timeLeft}s
+            </p>
+          </div>
         </div>
       </div>
 

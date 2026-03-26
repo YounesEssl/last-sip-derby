@@ -2,7 +2,7 @@ export const MAX_ACTIVE_PLAYERS = 10
 export const HORSES_PER_RACE = 5
 
 export const PHASE_DURATIONS = {
-  BETTING: 60_000,
+  BETTING: 40_000,
   RACING: 120_000,
   RESULTS: 30_000,
   IDLE: 30_000,
