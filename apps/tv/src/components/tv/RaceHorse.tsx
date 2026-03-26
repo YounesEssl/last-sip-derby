@@ -16,14 +16,13 @@ interface RaceHorseProps {
 
 // Exactly 5 variants = 5 horses per race → all always appear
 export const HORSE_VARIANTS = [
-  { sprite: '/horse/Black_Horse.png', filter: '' },
-  { sprite: '/horse/Brown_Horse.png', filter: '' },
-  { sprite: '/horse/White_Horse.png', filter: 'hue-rotate(0deg) saturate(3)' },          // rouge
-  { sprite: '/horse/White_Horse.png', filter: 'hue-rotate(200deg) saturate(3)' },         // bleu
-  { sprite: '/horse/White_Horse.png', filter: 'hue-rotate(90deg) saturate(3)' },          // vert
+  { sprite: '/horse/Black_Horse.png', filter: '', color: '#1a1a1a' },
+  { sprite: '/horse/Brown_Horse.png', filter: '', color: '#8B4513' },
+  { sprite: '/horse/White_Horse.png', filter: '', color: '#d4cfc4' },
+  { sprite: '/horse/horse_noir.png', filter: '', color: '#c46a2a' },
+  { sprite: '/horse/horse_rouan.png', filter: '', color: '#5a7080' },
 ]
 
-// Deterministic hash from horse name → always same preferred variant
 export function hashName(name: string): number {
   let hash = 0
   for (let i = 0; i < name.length; i++) {
@@ -33,23 +32,18 @@ export function hashName(name: string): number {
   return Math.abs(hash)
 }
 
-/** Assign unique variant indices for a list of horse names (no duplicates) */
 export function assignVariants(names: string[]): number[] {
   const used = new Set<number>()
   const result: number[] = new Array(names.length)
-
-  // First pass: assign preferred variant from hash
   for (let i = 0; i < names.length; i++) {
     const preferred = hashName(names[i]) % HORSE_VARIANTS.length
     if (!used.has(preferred)) {
       result[i] = preferred
       used.add(preferred)
     } else {
-      result[i] = -1 // needs reassignment
+      result[i] = -1
     }
   }
-
-  // Second pass: fill collisions with unused variants
   for (let i = 0; i < names.length; i++) {
     if (result[i] === -1) {
       for (let v = 0; v < HORSE_VARIANTS.length; v++) {
@@ -61,27 +55,21 @@ export function assignVariants(names: string[]): number[] {
       }
     }
   }
-
   return result
 }
 
-// Base display size: 560×434 (upscaled from 128×90 frames)
 const DISPLAY_W = 560
 const DISPLAY_H = 434
-// Spritesheet scaled to match
 const BG_W = 3360
 const BG_H = 3472
-// Frame offsets scaled from original 128×90 grid
 const SCALE_X = DISPLAY_W / 128
 const SCALE_Y = DISPLAY_H / 90
 
-// Idle animation: 8 frames
 const IDLE_FRAMES: [number, number][] = [
   [0, 0], [-128, 0], [-256, 0], [-384, 0], [-512, 0], [-640, 0],
   [0, -90], [-128, -90],
 ]
 
-// Run animation: 6 frames
 const RUN_FRAMES: [number, number][] = [
   [-640, -270],
   [0, -360],
@@ -114,7 +102,6 @@ export const RaceHorse = ({ number, variantIndex, speed, isRacing, isFrozen, isS
     const getIntervalMs = () => {
       if (!isRacing) return 150
       const s = Math.max(1, Math.min(10, speedRef.current))
-      // Exponential curve: speed 1 = 160ms (trot), speed 5 = 55ms, speed 10 = 15ms (blur)
       const ms = 200 * Math.pow(0.75, s)
       return stunnedRef.current ? ms * 4 : ms
     }
@@ -138,12 +125,8 @@ export const RaceHorse = ({ number, variantIndex, speed, isRacing, isFrozen, isS
   }, [isRacing, isFrozen])
 
   const frames = (isRacing || isFrozen) ? RUN_FRAMES : IDLE_FRAMES
-  const safeFrame = frame % frames.length
-  const pos = frames[safeFrame] ?? frames[0]
+  const pos = frames[frame % frames.length] ?? frames[0]
 
-  const effectiveScale = scale
-
-  // Combine variant filter with stunned state
   let combinedFilter = variant.filter
   if (isStunned) {
     combinedFilter = 'grayscale(0.6) brightness(0.6)'
@@ -154,14 +137,13 @@ export const RaceHorse = ({ number, variantIndex, speed, isRacing, isFrozen, isS
       style={{
         width: DISPLAY_W,
         height: DISPLAY_H,
-        transform: `scale(${effectiveScale})`,
+        transform: `scale(${scale})`,
         transformOrigin: 'bottom center',
         ...(combinedFilter && { filter: combinedFilter }),
         overflow: 'visible',
         background: 'transparent',
       }}
     >
-      {/* Horse sprite */}
       <div
         style={{
           width: DISPLAY_W,

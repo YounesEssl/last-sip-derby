@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react'
-import { Horse, HORSE_COLORS } from '@last-sip-derby/shared'
+import { Horse } from '@last-sip-derby/shared'
 
 const SLOT_WIDTH = 80
 const AVATAR_SIZE = 44
@@ -11,7 +11,7 @@ function ordinal(n: number): string {
   return `${n}e`
 }
 
-export function RaceRankingHUD({ horses, raceProgress }: { horses: Horse[]; raceProgress: number }) {
+export function RaceRankingHUD({ horses, raceProgress, colorMap }: { horses: Horse[]; raceProgress: number; colorMap: Map<string, string> }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
 
@@ -68,7 +68,7 @@ export function RaceRankingHUD({ horses, raceProgress }: { horses: Horse[]; race
           const rank = rankMap.get(horse.id) ?? n - 1
           const isLeader = rank === 0
           const isTop3 = rank < 3
-          const color = HORSE_COLORS[horse.lane % HORSE_COLORS.length]
+          const color = colorMap.get(horse.id) ?? '#888'
 
           // rank 0 → rightmost, rank n-1 → leftmost
           const slotLeft =

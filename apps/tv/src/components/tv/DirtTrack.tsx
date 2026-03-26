@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect, useCallback, useRef } from 'react'
 import { GameState, GameEvent, HORSE_COLORS } from '@last-sip-derby/shared'
 import { useCountdown } from '@/hooks/useCountdown'
 import { ParallaxBackground } from './ParallaxBackground'
-import { RaceHorse, assignVariants } from './RaceHorse'
+import { RaceHorse, assignVariants, HORSE_VARIANTS } from './RaceHorse'
 import { RaceRankingHUD } from './RaceRankingHUD'
 
 // Virtual viewport: everything is authored at this resolution and uniformly scaled
@@ -18,7 +18,7 @@ const LANE_SCALES = [0.94, 0.96, 0.97, 0.98, 1.0]
 const LANE_ZINDEX = [4, 4, 5, 6, 6]
 
 // Horse positions in virtual pixels
-const TRACK_TOP = 194      // 18% of 1080
+const TRACK_TOP = 260      // ~24% of 1080, lower on screen
 const TRACK_HEIGHT = 540    // 50% of 1080
 const HORSE_START_X = -60
 const HORSE_END_X = 1400    // where position=100 reaches (head at ~1400+560=1960 ≈ right edge)
@@ -46,6 +46,16 @@ export const DirtTrack = ({ gameState, activeEvent, eventResolution, raceStartin
     gameState.horses.forEach((h, i) => map.set(h.id, variants[i]))
     return map
   }, [gameState.horses.map(h => h.name).join(',')])
+
+  // Color map: horse id → variant color (for HUD)
+  const colorMap = useMemo(() => {
+    const map = new Map<string, string>()
+    gameState.horses.forEach(h => {
+      const vi = variantMap.get(h.id) ?? 0
+      map.set(h.id, HORSE_VARIANTS[vi % HORSE_VARIANTS.length].color)
+    })
+    return map
+  }, [variantMap, gameState.horses])
 
   // Compute uniform scale to fit virtual viewport into actual screen
   const containerRef = useRef<HTMLDivElement>(null)
@@ -127,24 +137,30 @@ export const DirtTrack = ({ gameState, activeEvent, eventResolution, raceStartin
                     opacity: horse.isEliminated ? 0 : 1,
                   }}
                 >
-                  {/* Number badge — centered on horse body */}
-                  <div
-                    className="absolute flex items-center justify-center font-mono font-bold text-white"
-                    style={{
-                      top: 240,
-                      left: 260,
-                      width: 38,
-                      height: 38,
-                      fontSize: 22,
-                      backgroundColor: HORSE_COLORS[horse.lane % HORSE_COLORS.length],
-                      borderRadius: '50%',
-                      border: '3px solid rgba(255,255,255,0.9)',
-                      boxShadow: `0 2px 8px rgba(0,0,0,0.7), 0 0 14px ${HORSE_COLORS[horse.lane % HORSE_COLORS.length]}80`,
-                      zIndex: 50,
-                    }}
-                  >
-                    {horse.lane + 1}
-                  </div>
+                  {/* Number badge — centered on horse body, color matches sprite */}
+                  {(() => {
+                    const vi = variantMap.get(horse.id) ?? 0
+                    const horseColor = HORSE_VARIANTS[vi % HORSE_VARIANTS.length].color
+                    return (
+                      <div
+                        className="absolute flex items-center justify-center font-mono font-bold text-white"
+                        style={{
+                          top: 240,
+                          left: 260,
+                          width: 38,
+                          height: 38,
+                          fontSize: 22,
+                          backgroundColor: horseColor,
+                          borderRadius: '50%',
+                          border: '3px solid rgba(255,255,255,0.9)',
+                          boxShadow: `0 2px 8px rgba(0,0,0,0.7), 0 0 14px ${horseColor}80`,
+                          zIndex: 50,
+                        }}
+                      >
+                        {horse.lane + 1}
+                      </div>
+                    )
+                  })()}
                   <RaceHorse
                     number={horse.lane + 1}
                     variantIndex={variantMap.get(horse.id) ?? 0}
@@ -165,7 +181,7 @@ export const DirtTrack = ({ gameState, activeEvent, eventResolution, raceStartin
 
       {/* ── RANKING HUD (outside virtual viewport — uses its own responsive layout) ── */}
       {(isRacing || isFinished) && (
-        <RaceRankingHUD horses={gameState.horses} raceProgress={raceProgress} />
+        <RaceRankingHUD horses={gameState.horses} raceProgress={raceProgress} colorMap={colorMap} />
       )}
 
       {/* ── ACTIVE EVENT OVERLAY ── */}

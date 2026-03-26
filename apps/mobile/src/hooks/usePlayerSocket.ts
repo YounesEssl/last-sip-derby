@@ -61,8 +61,15 @@ export function usePlayerSocket() {
         const me = state.players.find((p) => p.pseudo === pseudo)
         if (me) {
           setPlayer(me)
+
+          // Clear drink notification if player's horse was eliminated
+          if (me.currentBet) {
+            const betHorse = state.horses.find((h) => h.id === me.currentBet?.horseId)
+            if (betHorse?.isEliminated) {
+              setDrinkNotification(null)
+            }
+          }
         } else {
-          // Player not in connected list — mark as disconnected locally
           setPlayer((prev) => prev ? { ...prev, isConnected: false } : null)
         }
       }
