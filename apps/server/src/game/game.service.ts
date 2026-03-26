@@ -317,11 +317,12 @@ export class GameService implements OnModuleInit {
       const noiseVal = slow * 0.65 + fast * 0.35;
       const speedMult = Math.max(0, 1 + noiseVal * 0.95 * noiseFade);
 
-      // ── 2. Base noise speed ──
-      let speed = targetSpeed * speedMult;
+      // ── 2. Base noise speed (used for animation) ──
+      const noiseSpeed = targetSpeed * speedMult;
+      let speed = noiseSpeed;
 
       // ── 3. Correction: ADDITIVE force starting at 45% ──
-      // Pushes horse toward scripted position regardless of noise
+      // Pushes horse toward scripted position — invisible to animation
       if (progress > 0.45) {
         const targetPos = rs.targetFinishPos * progress;
         const error = targetPos - horse.position;
@@ -332,16 +333,17 @@ export class GameService implements OnModuleInit {
       // ── 4. Apply speed (never negative) ──
       horse.position = Math.min(maxPos, horse.position + Math.max(0, speed));
 
-      // ── 4. Chaotic start: HUGE forward bursts (first 15s) ──
+      // ── 5. Chaotic start: HUGE forward bursts (first 15s) ──
       if (this.raceTick < 150) {
         const fade = 1 - this.raceTick / 150;
         const burst = Math.random() * 0.6 * fade * rs.startBurst;
         horse.position = Math.min(maxPos, horse.position + burst);
       }
 
-      // ── Effective speed for gallop animation (smoothed to avoid jitter) ──
-      const rawAnimSpeed = Math.max(1, Math.min(10, (speed / targetSpeed) * 5));
-      horse.effectiveSpeed = horse.effectiveSpeed * 0.8 + rawAnimSpeed * 0.2;
+      // ── Effective speed for gallop animation ──
+      // Based on noiseSpeed only (excludes correction) + heavy smoothing
+      const rawAnimSpeed = Math.max(1, Math.min(8, (noiseSpeed / targetSpeed) * 5));
+      horse.effectiveSpeed = horse.effectiveSpeed * 0.85 + rawAnimSpeed * 0.15;
 
       if (horse.position >= 100 && !winner) {
         winner = horse;

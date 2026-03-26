@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { HORSE_COLORS } from '@last-sip-derby/shared'
 
 interface RaceHorseProps {
   number: number
+  variantIndex: number
   speed: number
   isRacing: boolean
   isFrozen: boolean
@@ -14,15 +14,56 @@ interface RaceHorseProps {
   scale: number
 }
 
-// Filter applied on the outermost wrapper — hue-rotate + high saturate
-// so the color is visible even on a near-white sprite
-const HORSE_FILTERS = [
-  'hue-rotate(200deg) saturate(3)',                    // bleu
-  'hue-rotate(90deg) saturate(3)',                     // vert
-  'hue-rotate(270deg) saturate(3)',                    // violet
-  'hue-rotate(45deg) saturate(3) brightness(1.1)',     // jaune/doré
-  'hue-rotate(0deg) saturate(3)',                      // rouge
+// Exactly 5 variants = 5 horses per race → all always appear
+export const HORSE_VARIANTS = [
+  { sprite: '/horse/Black_Horse.png', filter: '' },
+  { sprite: '/horse/Brown_Horse.png', filter: '' },
+  { sprite: '/horse/White_Horse.png', filter: 'hue-rotate(0deg) saturate(3)' },          // rouge
+  { sprite: '/horse/White_Horse.png', filter: 'hue-rotate(200deg) saturate(3)' },         // bleu
+  { sprite: '/horse/White_Horse.png', filter: 'hue-rotate(90deg) saturate(3)' },          // vert
 ]
+
+// Deterministic hash from horse name → always same preferred variant
+export function hashName(name: string): number {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash)
+}
+
+/** Assign unique variant indices for a list of horse names (no duplicates) */
+export function assignVariants(names: string[]): number[] {
+  const used = new Set<number>()
+  const result: number[] = new Array(names.length)
+
+  // First pass: assign preferred variant from hash
+  for (let i = 0; i < names.length; i++) {
+    const preferred = hashName(names[i]) % HORSE_VARIANTS.length
+    if (!used.has(preferred)) {
+      result[i] = preferred
+      used.add(preferred)
+    } else {
+      result[i] = -1 // needs reassignment
+    }
+  }
+
+  // Second pass: fill collisions with unused variants
+  for (let i = 0; i < names.length; i++) {
+    if (result[i] === -1) {
+      for (let v = 0; v < HORSE_VARIANTS.length; v++) {
+        if (!used.has(v)) {
+          result[i] = v
+          used.add(v)
+          break
+        }
+      }
+    }
+  }
+
+  return result
+}
 
 // Base display size: 560×434 (upscaled from 128×90 frames)
 const DISPLAY_W = 560
@@ -50,12 +91,14 @@ const RUN_FRAMES: [number, number][] = [
   [-512, -360],
 ]
 
-export const RaceHorse = ({ number, speed, isRacing, isFrozen, isStunned, isLeading, colorIndex, scale }: RaceHorseProps) => {
+export const RaceHorse = ({ number, variantIndex, speed, isRacing, isFrozen, isStunned, isLeading, colorIndex, scale }: RaceHorseProps) => {
   const [frame, setFrame] = useState(0)
   const speedRef = useRef(speed)
   const stunnedRef = useRef(isStunned)
   speedRef.current = speed
   stunnedRef.current = isStunned
+
+  const variant = HORSE_VARIANTS[variantIndex % HORSE_VARIANTS.length]
 
   useEffect(() => {
     if (isFrozen) return
@@ -100,9 +143,10 @@ export const RaceHorse = ({ number, speed, isRacing, isFrozen, isStunned, isLead
 
   const effectiveScale = scale
 
-  let colorFilter = ''
+  // Combine variant filter with stunned state
+  let combinedFilter = variant.filter
   if (isStunned) {
-    colorFilter = 'grayscale(0.6) brightness(0.6)'
+    combinedFilter = 'grayscale(0.6) brightness(0.6)'
   }
 
   return (
@@ -112,25 +156,23 @@ export const RaceHorse = ({ number, speed, isRacing, isFrozen, isStunned, isLead
         height: DISPLAY_H,
         transform: `scale(${effectiveScale})`,
         transformOrigin: 'bottom center',
-        ...(colorFilter && { filter: colorFilter }),
+        ...(combinedFilter && { filter: combinedFilter }),
         overflow: 'visible',
         background: 'transparent',
       }}
     >
-      {/* Horse sprite — mix-blend-mode: lighten removes the black bg */}
+      {/* Horse sprite */}
       <div
         style={{
           width: DISPLAY_W,
           height: DISPLAY_H,
-          backgroundImage: 'url(/horse/White_Horse.png)',
+          backgroundImage: `url(${variant.sprite})`,
           backgroundSize: `${BG_W}px ${BG_H}px`,
           backgroundRepeat: 'no-repeat',
           backgroundPositionX: pos[0] * SCALE_X,
           backgroundPositionY: pos[1] * SCALE_Y,
         }}
       />
-
-
     </div>
   )
 }
