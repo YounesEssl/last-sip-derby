@@ -23,7 +23,8 @@ export function mobileUrl(): string {
   if (process.env.NEXT_PUBLIC_MOBILE_URL) return process.env.NEXT_PUBLIC_MOBILE_URL
   const { protocol, hostname, port } = window.location
   const isDev = port === '3000' || port === '3003'
-  return isDev ? `${protocol}//${hostname}:3002` : `${protocol}//${window.location.host}`
+  // In production nginx serves the mobile app under /play
+  return isDev ? `${protocol}//${hostname}:3002` : `${protocol}//${window.location.host}/play`
 }
 
 export function JoinQR({ size = 210, label = 'SCANNE & JOUE' }: { size?: number; label?: string }) {
