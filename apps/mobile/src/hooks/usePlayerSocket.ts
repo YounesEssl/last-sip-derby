@@ -28,14 +28,20 @@ export function usePlayerSocket() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [player, setPlayer] = useState<Player | null>(null)
   const [connected, setConnected] = useState(false)
-  const [drinkNotification, setDrinkNotification] = useState<{ sips: number; reason: string } | null>(null)
+  const [drinkNotification, setDrinkNotification] = useState<{
+    sips: number
+    reason: string
+    deadline?: number
+  } | null>(null)
   const [voteRequest, setVoteRequest] = useState<GameEvent | null>(null)
-  const [pseudo, setPseudo] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('derby_pseudo')
-    }
-    return null
-  })
+  // Loaded after mount: reading sessionStorage during the first render makes
+  // the client HTML diverge from the server HTML (hydration error).
+  const [pseudo, setPseudo] = useState<string | null>(null)
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('derby_pseudo')
+    if (saved) setPseudo(saved)
+  }, [])
 
   useEffect(() => {
     const socket: TypedSocket = io(SERVER_URL, {
@@ -131,6 +137,10 @@ export function usePlayerSocket() {
     setVoteRequest(null)
   }, [])
 
+  const distributeSips = useCallback((allocations: { pseudo: string; sips: number }[]) => {
+    socketRef.current?.emit('winner:distributeSips', allocations)
+  }, [])
+
   return {
     gameState,
     player,
@@ -142,5 +152,6 @@ export function usePlayerSocket() {
     placeBet,
     confirmDrink,
     vote,
+    distributeSips,
   }
 }

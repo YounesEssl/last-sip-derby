@@ -83,10 +83,9 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
   }
 
   forceResetRace() {
-    this.clearTimers()
-    this.gameService.startBetting()
-    this.onPhaseChange?.('IDLE')
-    this.onStateUpdate?.()
+    // Proper reset: back to IDLE with the normal lobby flow (the previous
+    // version parked the game in BETTING with no scheduled transition).
+    this.transitionToIdle()
   }
 
   // Called from gateway when a player votes

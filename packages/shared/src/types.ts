@@ -63,12 +63,18 @@ export interface GameState {
   } | null
 }
 
+export interface SipAllocation {
+  pseudo: string
+  sips: number
+}
+
 export interface ClientToServerEvents {
   'player:join': (pseudo: string) => void
   'player:bet': (bet: { horseId: string; amount: number }) => void
   'player:confirmDrink': () => void
   'player:vote': (data: { eventId: string; valid: boolean }) => void
   'player:snitch': (data: { targetPseudo: string }) => void
+  'winner:distributeSips': (allocations: SipAllocation[]) => void
   'dev:startRace': () => void
   'dev:resetRace': () => void
 }
@@ -79,5 +85,5 @@ export interface ServerToClientEvents {
   'game:eventResolved': (data: { eventId: string; horseEliminated: boolean; horseName: string }) => void
   'game:phaseChange': (phase: GamePhase) => void
   'player:joined': (player: Player) => void
-  'player:drinkNotification': (data: { sips: number; reason: string }) => void
+  'player:drinkNotification': (data: { sips: number; reason: string; deadline?: number }) => void
 }

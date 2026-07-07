@@ -2,36 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
+html,
 body {
-  background-color: #f4eacc; /* pmu.paper */
-  color: #0f0a07; /* pmu.dark */
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #0a231b;
+  color: #f4e8ce;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   overscroll-behavior: none;
-  margin: 0;
-  padding: 0;
+  -webkit-font-smoothing: antialiased;
 }
 
-html, body {
-  height: 100%;
-  overflow: hidden;
+/* Hippodrome felt backdrop: deep green + art-deco sunburst rays */
+.bg-hippodrome {
+  background:
+    repeating-conic-gradient(
+      from -90deg at 50% -12%,
+      rgba(217, 169, 63, 0.05) 0deg 6deg,
+      rgba(217, 169, 63, 0) 6deg 13deg
+    ),
+    radial-gradient(150% 90% at 50% -5%, #1d4a37 0%, #143a2c 45%, #0a231b 100%);
 }
 
-/* Grimy paper texture */
-.paper-texture {
+/* Aged betting-slip paper */
+.paper {
+  color: #241a0f;
+  background:
+    radial-gradient(ellipse at 30% 15%, rgba(255, 255, 255, 0.5), transparent 60%),
+    linear-gradient(170deg, #f4e8ce, #e4d2ac);
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 90, 40, 0.35),
+    inset 0 0 32px rgba(120, 90, 40, 0.16),
+    0 12px 32px -10px rgba(0, 0, 0, 0.7);
+}
+
+/* Perforated ticket edge */
+.ticket-edge {
+  position: relative;
+}
+.ticket-edge::before,
+.ticket-edge::after {
+  content: '';
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(74, 48, 24, 0.15) 100%);
-  z-index: -1;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background-image: radial-gradient(circle at 5px 5px, #0e0a06 4px, transparent 4.5px);
+  background-size: 18px 10px;
+  background-repeat: repeat-x;
+}
+.ticket-edge::before {
+  top: -1px;
+}
+.ticket-edge::after {
+  bottom: -1px;
+  transform: scaleY(-1);
 }
 
-/* Hand-drawn/stamped bet style */
-.stamped {
-  border: 4px solid #E83B3B;
-  color: #E83B3B;
-  text-transform: uppercase;
-  transform: rotate(-2deg);
-  padding: 0.5rem 1rem;
-  display: inline-block;
+.panel-gold {
+  border: 2px solid rgba(217, 169, 63, 0.55);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 10px 28px -8px rgba(0, 0, 0, 0.65);
+  background:
+    linear-gradient(160deg, rgba(244, 232, 206, 0.06), rgba(244, 232, 206, 0) 40%),
+    linear-gradient(#1a120a, #140e08);
+}
+
+.text-engraved {
+  background: linear-gradient(180deg, #f3dc9a 0%, #d9a943 45%, #8f6a20 55%, #d9a943 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.55));
+}
+
+/* Big tactile button */
+.btn-big {
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+.btn-big:active {
+  transform: scale(0.96) translateY(2px);
+  filter: brightness(0.92);
+}
+
+/* Countdown urgency ring */
+@keyframes ring-drain {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 289;
+  }
 }

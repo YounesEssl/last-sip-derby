@@ -4,7 +4,7 @@ export const HORSES_PER_RACE = 5
 export const PHASE_DURATIONS = {
   BETTING: 40_000,
   RACING: 120_000,
-  RESULTS: 30_000,
+  RESULTS: 45_000, // time for the winner to pick victims and send the tournée
   IDLE: 30_000,
 } as const
 
@@ -25,6 +25,6 @@ export const DRINK_PENALTY_SIPS = 1
 export const MAX_EVENTS_PER_RACE = 2
 export const EVENT_VOTE_TIMEOUT_MS = 30_000
 export const EVENT_RESOLVE_DISPLAY_MS = 5_000
-export const EVENT_EARLIEST_TICK = 150   // no events before ~15s
-export const EVENT_LATEST_TICK = 550     // no events after ~55s
-export const EVENT_MIN_TICK_GAP = 150    // minimum ~15s between events
+export const EVENT_EARLIEST_TICK = 130   // no events before ~13s
+export const EVENT_LATEST_TICK = 460     // no events after ~46s (race lasts 60s)
+export const EVENT_MIN_TICK_GAP = 140    // minimum ~14s between events

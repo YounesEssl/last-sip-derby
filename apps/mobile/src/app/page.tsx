@@ -1,12 +1,14 @@
 'use client'
 
-import { SlipForm } from '@/components/mobile/SlipForm'
-import { BettingTicket } from '@/components/mobile/BettingTicket'
-import { RaceRemote } from '@/components/mobile/RaceRemote'
-import { DrinkAlert } from '@/components/mobile/DrinkAlert'
-import { EventVote } from '@/components/mobile/EventVote'
+import { useEffect, useRef, useState } from 'react'
 import { usePlayerSocket } from '@/hooks/usePlayerSocket'
 import { useNoSleep } from '@/hooks/useNoSleep'
+import { JoinScreen } from '@/components/screens/JoinScreen'
+import { LobbyScreen } from '@/components/screens/LobbyScreen'
+import { BetScreen } from '@/components/screens/BetScreen'
+import { RaceScreen } from '@/components/screens/RaceScreen'
+import { ResultScreen } from '@/components/screens/ResultScreen'
+import { DrinkOverlay, VoteOverlay } from '@/components/Overlays'
 
 export default function MobilePage() {
   const {
@@ -20,160 +22,92 @@ export default function MobilePage() {
     placeBet,
     confirmDrink,
     vote,
+    distributeSips,
   } = usePlayerSocket()
-
   useNoSleep()
 
-  if (!connected) {
-    return (
-      <div className="flex flex-col h-screen items-center justify-center p-6 bg-pmu-paper relative">
-        <div className="paper-texture"></div>
-        <h1 className="font-display text-4xl text-pmu-alert mb-4 drop-shadow-md transform -rotate-2">DERBY PMU</h1>
-        <p className="font-mono text-lg animate-pulse text-pmu-dark font-bold font-terminal uppercase border-4 border-pmu-dark p-2 text-center mt-6">
-          Recherche terminal...
-        </p>
-      </div>
-    )
+  // The server drops everyone at the end of RESULTS — quietly re-enter with
+  // the saved pseudo whenever we're missing from the roster (any phase:
+  // mid-race rejoiners become voters for the next incident).
+  const lastRejoinKeyRef = useRef('')
+  useEffect(() => {
+    if (!gameState || !pseudo) return
+    const amIn = gameState.players.some((p) => p.pseudo === pseudo)
+    const key = `${gameState.phase}-${gameState.raceNumber}`
+    if (!amIn && lastRejoinKeyRef.current !== key) {
+      lastRejoinKeyRef.current = key
+      join(pseudo)
+    }
+  }, [gameState, pseudo, join])
+
+  const bet = (horseId: string) => {
+    const horse = gameState?.horses.find((h) => h.id === horseId)
+    if (!horse) return
+    placeBet({ horseId, amount: horse.odds })
+    if (navigator.vibrate) navigator.vibrate(60)
   }
 
-  if (!pseudo || !player) {
-    return <SlipForm onJoin={join} />
+  // The winner keeps the distribution panel through IDLE until the tournée
+  // is sent (the server accepts it until the next betting opens).
+  const [tourneeSentRace, setTourneeSentRace] = useState<number | null>(null)
+  const distribute = (allocations: { pseudo: string; sips: number }[]) => {
+    distributeSips(allocations)
+    setTourneeSentRace(gameState?.raceNumber ?? null)
   }
+  const isUnsentWinner =
+    !!gameState &&
+    !!pseudo &&
+    gameState.lastRaceWinner?.pseudo === pseudo &&
+    tourneeSentRace !== gameState.raceNumber
 
-  if (!gameState) {
-    return (
-      <div className="flex flex-col h-screen items-center justify-center p-6 bg-pmu-paper relative">
-        <div className="paper-texture"></div>
-        <p className="font-mono text-lg animate-pulse text-pmu-dark font-bold font-terminal uppercase border-4 border-pmu-dark p-2 text-center mt-6">
-          Synchronisation...
-        </p>
-      </div>
-    )
+  let screen: React.ReactNode
+  if (!pseudo || !gameState) {
+    screen = <JoinScreen onJoin={join} connected={connected} />
+  } else {
+    switch (gameState.phase) {
+      case 'BETTING':
+        screen = <BetScreen state={gameState} player={player} onBet={bet} />
+        break
+      case 'RACING':
+        screen = <RaceScreen state={gameState} player={player} />
+        break
+      case 'RESULTS':
+        screen = <ResultScreen state={gameState} player={player} onDistribute={distribute} />
+        break
+      default:
+        screen = isUnsentWinner ? (
+          <ResultScreen state={gameState} player={player} onDistribute={distribute} />
+        ) : (
+          <LobbyScreen state={gameState} player={player} pseudo={pseudo} />
+        )
+    }
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-pmu-paper text-pmu-dark relative flex flex-col">
-      {/* HUD HEADER */}
-      <div className="bg-[#0f0a07] text-white px-3 py-2 font-mono shadow-[0_4px_10px_rgba(0,0,0,0.5)] z-20">
-        <div className="flex justify-between items-center text-sm">
-          <span className="font-bold uppercase text-pmu-board truncate mr-2">{player.pseudo}</span>
-          <span className="text-pmu-amber font-terminal shrink-0">{player.totalSipsDrunk}BU | {player.totalSipsGiven}DIST</span>
+    <div className="bg-hippodrome relative h-full overflow-hidden">
+      {screen}
+
+      {voteRequest && !voteRequest.resolved && (
+        <VoteOverlay
+          event={voteRequest}
+          players={gameState?.players ?? []}
+          onVote={(v) => vote(voteRequest.id, v)}
+        />
+      )}
+      {drinkNotification && (
+        <DrinkOverlay
+          sips={drinkNotification.sips}
+          reason={drinkNotification.reason}
+          deadline={drinkNotification.deadline}
+          onConfirm={confirmDrink}
+        />
+      )}
+
+      {!connected && pseudo && (
+        <div className="absolute inset-x-0 top-0 z-[60] bg-derby-red py-1 text-center font-headline text-sm tracking-[0.25em] text-derby-cream">
+          RECONNEXION EN COURS...
         </div>
-      </div>
-
-      {/* DYNAMIC VIEW */}
-      <div className="flex-1 overflow-hidden relative">
-        {/* IDLE: rejoin or waiting room */}
-        {gameState.phase === 'IDLE' && (
-          <div className="flex-1 flex flex-col items-center justify-center h-full bg-pmu-paper relative p-6 text-center">
-            <div className="paper-texture"></div>
-            {!gameState.players.some((p) => p.pseudo === pseudo) ? (
-              <>
-                <h2 className="font-display text-3xl text-pmu-dark mb-4">PROCHAINE COURSE</h2>
-                <button
-                  onClick={() => join(pseudo)}
-                  className="px-8 py-4 bg-pmu-dark text-white font-display text-2xl uppercase tracking-wider active:scale-95 transition-transform"
-                  style={{ boxShadow: '4px 4px 0px #3a2a1a' }}
-                >
-                  REJOINDRE
-                </button>
-                <p className="font-mono text-base text-pmu-dark/40 mt-4">{pseudo}</p>
-              </>
-            ) : (
-              <>
-                <h2 className="font-display text-2xl text-pmu-dark mb-4">SALLE D'ATTENTE</h2>
-                <div className="w-full max-w-xs flex flex-col gap-2 mb-6">
-                  {gameState.players.filter((p) => p.isConnected).map((p) => (
-                    <div key={p.pseudo} className="flex items-center gap-2 bg-pmu-dark/10 px-3 py-2 border-2 border-pmu-dark/20">
-                      <span className="text-pmu-dark font-bold">&#9658;</span>
-                      <span className="font-terminal text-base text-pmu-dark uppercase">{p.pseudo}</span>
-                      {p.pseudo === pseudo && <span className="font-mono text-xs text-pmu-dark/40 ml-auto">(toi)</span>}
-                    </div>
-                  ))}
-                </div>
-                <p className="font-mono text-base text-pmu-dark/40 animate-pulse">EN ATTENTE DES AUTRES...</p>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* BETTING: horse selection */}
-        {gameState.phase === 'BETTING' && (
-          <BettingTicket gameState={gameState} player={player} onBet={placeBet} />
-        )}
-
-        {gameState.phase === 'RACING' && (() => {
-          const betHorse = player.currentBet ? gameState.horses.find(h => h.id === player.currentBet?.horseId) : null
-          const isEliminated = betHorse?.isEliminated
-
-          if (voteRequest) {
-            return <EventVote event={voteRequest} onVote={vote} />
-          }
-
-          if (isEliminated) {
-            return (
-              <div className="flex flex-col items-center justify-center h-full p-6 text-center" style={{ background: '#2e0a0a' }}>
-                <h2 className="text-2xl font-display text-red-400 mb-3">CHEVAL ÉLIMINÉ</h2>
-                <p className="text-base font-mono text-white/70 mb-4">
-                  {betHorse?.name} n'a pas réussi à repartir...
-                </p>
-                <div className="bg-red-900/50 border-4 border-red-400 px-6 py-4 rounded-xl mb-4">
-                  <p className="text-base font-mono text-red-300 mb-1">Tu bois</p>
-                  <p className="text-5xl font-display text-red-400">{betHorse?.odds}G</p>
-                </div>
-                <p className="text-sm font-mono text-white/30 animate-pulse">REGARDE L'ECRAN...</p>
-              </div>
-            )
-          }
-
-          return <RaceRemote horseName={betHorse?.name} />
-        })()}
-
-        {gameState.phase === 'RESULTS' && (() => {
-          const myBet = player.currentBet
-          const winnerInfo = gameState.lastRaceWinner
-          const didWin = myBet && winnerInfo && gameState.horses.find(h => h.id === myBet.horseId)?.name === winnerInfo.horseName
-          const betHorse = myBet ? gameState.horses.find(h => h.id === myBet.horseId) : null
-
-          return (
-            <div className="flex-1 flex flex-col items-center justify-center h-full p-6 text-center relative overflow-hidden"
-              style={{ background: didWin ? '#0a2e0a' : '#2e0a0a' }}
-            >
-              {didWin ? (
-                <>
-                  <h2 className="text-3xl font-display text-green-400 mb-3">TU AS GAGNE !</h2>
-                  <p className="text-base font-mono text-white/70 mb-4">{betHorse?.name} a gagne la course</p>
-                  <div className="bg-green-900/50 border-4 border-green-400 px-6 py-4 rounded-xl">
-                    <p className="text-base font-mono text-green-300 mb-1">Tu distribues</p>
-                    <p className="text-5xl font-display text-green-400">{winnerInfo?.sipsToDistribute}G</p>
-                  </div>
-                </>
-              ) : myBet ? (
-                <>
-                  <h2 className="text-3xl font-display text-red-400 mb-3">PERDU !</h2>
-                  <p className="text-base font-mono text-white/70 mb-4">{betHorse?.name} n'a pas gagne</p>
-                  <div className="bg-red-900/50 border-4 border-red-400 px-6 py-4 rounded-xl">
-                    <p className="text-base font-mono text-red-300 mb-1">Tu bois</p>
-                    <p className="text-5xl font-display text-red-400">{betHorse?.odds ?? myBet.amount}G</p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-2xl font-display text-white/50 mb-3">COURSE TERMINEE</h2>
-                  <p className="text-base font-mono text-white/40">Tu n'as pas parie</p>
-                </>
-              )}
-              {winnerInfo && (
-                <p className="mt-6 text-sm font-mono text-white/40">
-                  Gagnant : {winnerInfo.horseName} — {winnerInfo.pseudo}
-                </p>
-              )}
-            </div>
-          )
-        })()}
-      </div>
-
-      <DrinkAlert notification={drinkNotification} />
+      )}
     </div>
   )
 }

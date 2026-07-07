@@ -39,11 +39,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       onEventTriggered: (event) => {
         this.server.emit('game:event', event)
 
-        // Send drink notifications to affected players
+        // Send drink notifications to affected players — they have the whole
+        // voting window (30s) to drink under the crowd's scrutiny
         for (const playerId of event.affectedPlayerIds) {
           this.server.to(playerId).emit('player:drinkNotification', {
             sips: event.sipsAmount,
             reason: event.description,
+            deadline: event.votingDeadline,
           })
 
           // Add drink debt
@@ -125,6 +127,25 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const player = this.gameService.getPlayerBySocket(client.id)
     if (!player) return
     this.gameLoop.handleVote(data.eventId, player.id, data.valid)
+  }
+
+  @SubscribeMessage('winner:distributeSips')
+  handleDistributeSips(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() allocations: Array<{ pseudo: string; sips: number }>,
+  ) {
+    const applied = this.gameService.distributeSips(client.id, allocations)
+    if (!applied) return
+
+    const winner = this.gameService.getPlayerBySocket(client.id)
+    for (const target of applied) {
+      this.server.to(target.id).emit('player:drinkNotification', {
+        sips: target.sips,
+        reason: `🏆 ${winner?.pseudo ?? 'Le vainqueur'} t'envoie ${target.sips} gorgée${target.sips > 1 ? 's' : ''} — santé !`,
+        deadline: Date.now() + 15_000,
+      })
+    }
+    this.broadcastState()
   }
 
   @SubscribeMessage('dev:startRace')

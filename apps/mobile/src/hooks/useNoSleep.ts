@@ -13,7 +13,8 @@ export function useNoSleep() {
       noSleep = new NoSleep()
 
       const enableNoSleep = () => {
-        noSleep?.enable()
+        // Wake Lock can be denied (permissions, headless) — the game works without it
+        Promise.resolve(noSleep?.enable()).catch(() => {})
         setEnabled(true)
       }
 

@@ -2,59 +2,180 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --derby-night: #0e0a06;
+  --derby-cream: #f4e8ce;
+  --derby-gold: #d9a943;
+}
+
+html,
 body {
-  background-color: #000;
-  color: #fff;
-  overflow: hidden;
+  height: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  background: var(--derby-night);
+  color: var(--derby-cream);
+  cursor: none;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Parallax background scroll */
-@keyframes scrollBg {
-  from { background-position-x: 0; }
-  to   { background-position-x: -100vw; }
+/* ── Film grain + vignette, applied once on the app shell ── */
+.tv-frame {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
 }
 
-.bg-scroll {
-  animation: scrollBg linear infinite;
-  background-repeat: repeat-x;
-  background-size: 100vw auto;
-}
-
-/* Finish line checkered pattern */
-.checkered-flag {
-  background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
-}
-
-/* Grimy paper texture — matches mobile DA */
-.paper-texture {
+.tv-frame::after {
+  content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(74, 48, 24, 0.15) 100%);
-  z-index: 0;
+  z-index: 90;
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.5) 100%);
 }
 
-/* Photo-finish flash — bright flash then slow fade to see frozen race */
+.grain {
+  position: absolute;
+  inset: -100px;
+  pointer-events: none;
+  z-index: 91;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain-shift 0.7s steps(4) infinite;
+}
+
+@keyframes grain-shift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-30px, 20px); }
+  50% { transform: translate(25px, -35px); }
+  75% { transform: translate(-15px, -20px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ── Wooden stage frame around the whole screen ── */
+.stage-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 95;
+  box-shadow:
+    inset 0 0 0 10px #2c1c0e,
+    inset 0 0 0 11px #4a3018,
+    inset 0 0 0 13px rgba(217, 169, 63, 0.75),
+    inset 0 0 0 14px rgba(0, 0, 0, 0.6),
+    inset 0 0 60px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Hippodrome felt backdrop: deep green + art-deco sunburst rays ── */
+.bg-hippodrome {
+  background:
+    repeating-conic-gradient(
+      from -90deg at 50% -12%,
+      rgba(217, 169, 63, 0.045) 0deg 5deg,
+      rgba(217, 169, 63, 0) 5deg 11deg
+    ),
+    radial-gradient(130% 95% at 50% -5%, #1d4a37 0%, #143a2c 45%, #0a231b 100%);
+}
+.bg-hippodrome::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Cpath d='M0 6 6 0M-1 1 1 -1M5 7 7 5' stroke='%23000' stroke-opacity='0.14' stroke-width='1'/%3E%3C/svg%3E");
+}
+
+/* ── Gold framing for panels ── */
+.panel-gold {
+  border: 2px solid rgba(217, 169, 63, 0.55);
+  outline: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 14px 40px -10px rgba(0, 0, 0, 0.65);
+  background:
+    linear-gradient(160deg, rgba(244, 232, 206, 0.06), rgba(244, 232, 206, 0) 40%),
+    linear-gradient(#1a120a, #140e08);
+}
+
+.paper {
+  color: #241a0f;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.5), transparent 60%),
+    linear-gradient(170deg, #f4e8ce, #e4d2ac);
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 90, 40, 0.35),
+    inset 0 0 40px rgba(120, 90, 40, 0.18),
+    0 16px 44px -12px rgba(0, 0, 0, 0.75);
+}
+
+/* Perforated ticket edge */
+.ticket-edge {
+  position: relative;
+}
+.ticket-edge::before,
+.ticket-edge::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background-image: radial-gradient(circle at 5px 5px, rgba(10, 26, 20, 0.9) 4px, transparent 4.5px);
+  background-size: 18px 10px;
+  background-repeat: repeat-x;
+}
+.ticket-edge::before {
+  top: -1px;
+}
+.ticket-edge::after {
+  bottom: -1px;
+  transform: scaleY(-1);
+}
+
+/* Gold engraved text */
+.text-engraved {
+  background: linear-gradient(180deg, #f3dc9a 0%, #d9a943 45%, #8f6a20 55%, #d9a943 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.55));
+}
+
+/* Marquee bulbs strip */
+.bulbs {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+}
+.bulbs i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #fff6d8, #ffce56 55%, #a4741e);
+  box-shadow: 0 0 10px 2px rgba(255, 206, 86, 0.7);
+  animation: bulb 1.2s ease-in-out infinite;
+}
+.bulbs i:nth-child(2n) { animation-delay: 0.6s; }
+.bulbs i:nth-child(3n) { animation-delay: 0.3s; }
+
+/* Photo-finish flash (referenced via animate-[photo-flash_...]) */
 @keyframes photo-flash {
-  0%   { opacity: 1; }
-  10%  { opacity: 0.9; }
-  30%  { opacity: 0.3; }
+  0% { opacity: 1; }
+  12% { opacity: 0.9; }
   100% { opacity: 0; }
 }
 
-/* Progress bar shrink for results screen */
-@keyframes shrink-bar {
-  from { transform: scaleX(1); }
-  to   { transform: scaleX(0); }
+/* Confetti pieces (DOM, results screen) */
+.confetti {
+  position: absolute;
+  top: -3vh;
+  border-radius: 1px;
+  animation: confetti-fall linear both;
 }
-
-/* Glass panel — saloon paper style */
-.glass-panel {
-  background: rgba(244, 234, 204, 0.95);
-  backdrop-filter: blur(6px);
-  border: 4px solid #0f0a07;
-  border-radius: 0;
-  box-shadow: 6px 6px 0px rgba(58, 42, 26, 0.4);
+@keyframes confetti-fall {
+  0% { transform: translateY(-4vh) rotate(0deg) rotateY(0deg); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(108vh) rotate(720deg) rotateY(900deg); opacity: 0.7; }
 }

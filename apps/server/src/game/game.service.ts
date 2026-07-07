@@ -16,42 +16,50 @@ import {
 } from "@last-sip-derby/shared";
 import { PersistenceService } from "../persistence/persistence.service";
 
-// ── Simple 1D value noise for smooth speed waves (replaces Math.random jitter) ──
-class ValueNoise {
-  private perm: number[];
-  constructor(seed: number) {
-    this.perm = Array.from({ length: 256 }, (_, i) => i);
-    let s = seed;
-    for (let i = 255; i > 0; i--) {
-      s = (s * 1103515245 + 12345) & 0x7fffffff;
-      const j = s % (i + 1);
-      [this.perm[i], this.perm[j]] = [this.perm[j], this.perm[i]];
-    }
-  }
-  sample(x: number): number {
-    const xi = Math.floor(x) & 255;
-    const xf = x - Math.floor(x);
-    const u = xf * xf * (3 - 2 * xf);
-    const a = this.perm[xi] / 255;
-    const b = this.perm[(xi + 1) & 255] / 255;
-    return a + u * (b - a); // 0–1
-  }
-}
-
 // ── Scripted race: outcome decided before the race, animation is pure spectacle ──
+//
+// Each horse follows a smooth plan: position(p) = base(p) + wiggle(p), where
+// `base` runs linearly from its anchor to its scripted finish position and
+// `wiggle` is a sum of windowed sine waves (zero at the start and at the
+// finish line). Positions are computed directly from race progress — never
+// integrated — so horses can NEVER stall, teleport or overshoot. Lead changes
+// happen early while the base curves are still close; the script wins late.
 const SIPS_ODDS = [1, 2, 3, 5, 7] as const;
-const RACE_TICKS = 700; // ~70s race
-const FINISH_POSITIONS = [100, 93, 84, 72, 58]; // winner → last place
+const RACE_TICKS = 600; // ~60s race — snappier
+const FINISH_POSITIONS = [100, 98, 95.5, 92.5, 89]; // winner → last: everyone in the picture
 
 // Win probability weights per sip value
 const WIN_WEIGHTS: Record<number, number> = { 1: 35, 2: 25, 3: 18, 5: 13, 7: 8 };
 
+interface Wave {
+  amp: number;
+  freq: number; // cycles over the whole race
+  phase: number;
+}
+
+/** A choreographed spell in the lead: rise to ~1.5 units above everyone,
+ *  hold around `mid`, then fade slowly enough to never run backwards. */
+interface LeadAct {
+  mid: number; // progress at the peak
+  halfUp: number;
+  halfDown: number;
+  amp: number;
+}
+
 interface HorseRaceState {
-  finishRank: number;       // 0=winner, 4=last (pre-determined)
-  targetFinishPos: number;  // from FINISH_POSITIONS
-  noise: ValueNoise;        // slow surges (~6s waves)
-  fastNoise: ValueNoise;    // quick bursts (~2s waves)
-  startBurst: number;       // random chaos magnitude for first 10s
+  finishRank: number; // 0=winner (pre-determined, re-ranked on elimination)
+  targetFinishPos: number; // from FINISH_POSITIONS
+  anchorPos: number; // plan segment start (moves on re-rank)
+  anchorProgress: number;
+  waves: Wave[];
+  leadActs: LeadAct[];
+  gateBurst: number; // early surge amplitude
+  prevPos: number;
+}
+
+function smooth01(x: number): number {
+  const t = Math.max(0, Math.min(1, x));
+  return t * t * (3 - 2 * t);
 }
 
 @Injectable()
@@ -273,30 +281,106 @@ export class GameService implements OnModuleInit {
 
     for (const horse of this.state.horses) {
       horse.position = 0;
-      horse.effectiveSpeed = 0;
+      horse.effectiveSpeed = 3;
 
       const rank = finishOrder.indexOf(horse.id);
+      const target = FINISH_POSITIONS[rank];
+
+      // Random waves are texture only — the lead story is choreographed
+      // below. Derivative budget stays well below base speed (no stalls).
+      const budget = target * 0.35;
+      const f1 = 1.2 + Math.random() * 1.0; // slow storyline wave
+      const f2 = 2.6 + Math.random() * 1.4; // quicker surges
+      const waves: Wave[] = [
+        {
+          amp: ((0.35 + Math.random() * 0.3) * budget * 0.55) / (2 * Math.PI * f1),
+          freq: f1,
+          phase: Math.random() * Math.PI * 2,
+        },
+        {
+          amp: ((0.3 + Math.random() * 0.3) * budget * 0.3) / (2 * Math.PI * f2),
+          freq: f2,
+          phase: Math.random() * Math.PI * 2,
+        },
+      ];
 
       this.horseRaceStates.set(horse.id, {
         finishRank: rank,
-        targetFinishPos: FINISH_POSITIONS[rank],
-        noise: new ValueNoise(Math.floor(Math.random() * 100000)),
-        fastNoise: new ValueNoise(Math.floor(Math.random() * 100000)),
-        startBurst: 0.1 + Math.random() * 3.5,
+        targetFinishPos: target,
+        anchorPos: 0,
+        anchorProgress: 0,
+        waves,
+        leadActs: [],
+        gateBurst: Math.random() * 1.4,
+        prevPos: 0,
       });
     }
+
+    // ── Choreograph the lead story ──
+    // 2-3 acts across [0.08, 0.72]: each act, one horse surges ~1.5 units
+    // above the winner's base line, holds, then fades. Guaranteed lead
+    // changes, and nobody ever runs away with the race. The scripted winner
+    // never holds the last act — it must come back in the finale.
+    const actCount = 2 + Math.floor(Math.random() * 2);
+    const pool = [...finishOrder];
+    const seq: string[] = [];
+    for (let i = 0; i < actCount; i++) {
+      let pick: string;
+      do {
+        pick = pool[Math.floor(Math.random() * pool.length)];
+      } while (
+        pick === seq[seq.length - 1] || // no back-to-back repeat
+        (i === actCount - 1 && pick === finishOrder[0]) // finale twist
+      );
+      seq.push(pick);
+    }
+    const span = 0.72 - 0.08;
+    seq.forEach((id, i) => {
+      const rs = this.horseRaceStates.get(id);
+      if (!rs) return;
+      const a = 0.08 + (span * i) / actCount + Math.random() * 0.04;
+      const b = 0.08 + (span * (i + 1)) / actCount;
+      const mid = (a + b) / 2;
+      // enough to clear the winner's base line at the act's peak (gaps are
+      // now cubic, so mid-race the whole field is within ~2 units anyway)
+      const amp = (100 - rs.targetFinishPos) * mid ** 3 + 1.2 + Math.random() * 1.2;
+      // fade slowly enough that base speed always wins: |dAct/dp| < 0.55·speed
+      const halfDown = Math.max(b - mid + 0.1, (amp * 1.5) / (0.55 * rs.targetFinishPos));
+      rs.leadActs.push({ mid, halfUp: Math.max(0.09, mid - a), halfDown, amp });
+    });
+  }
+
+  /**
+   * Planned base position before wiggle. The gap to the winner's line grows
+   * as p³: the whole field stays glued together for three quarters of the
+   * race, then fans out to the scripted finish in the home stretch — that's
+   * where the race "opens up", like the real thing.
+   */
+  private baseCurve(target: number, p: number): number {
+    return 100 * p - (100 - target) * p * p * p;
+  }
+
+  private basePos(rs: HorseRaceState, p: number): number {
+    const c = this.baseCurve(rs.targetFinishPos, p);
+    const cAnchor = this.baseCurve(rs.targetFinishPos, rs.anchorProgress);
+    const cEnd = this.baseCurve(rs.targetFinishPos, 1); // = target
+    const denom = Math.max(0.0001, cEnd - cAnchor);
+    // rescale the remaining curve so it starts at the anchor and still lands
+    // exactly on the scripted finish (anchors move on elimination re-ranks)
+    return rs.anchorPos + ((c - cAnchor) / denom) * (rs.targetFinishPos - rs.anchorPos);
   }
 
   tickRace(): Horse | null {
     if (this.state.racePaused) return null;
 
     this.raceTick++;
-    const progress = Math.min(1, this.raceTick / RACE_TICKS);
-    this.state.raceProgress = progress * 100;
+    const p = Math.min(1, this.raceTick / RACE_TICKS);
+    this.state.raceProgress = p * 100;
     let winner: Horse | null = null;
 
-    // Safety: no one finishes before 65% of the race
-    const maxPos = progress < 0.65 ? 93 : 100;
+    const leaderId = this.finishOrder[0];
+    const leaderRs = leaderId ? this.horseRaceStates.get(leaderId) : undefined;
+    const avgDelta = 100 / RACE_TICKS;
 
     for (const horse of this.state.horses) {
       if (horse.isEliminated) continue;
@@ -305,45 +389,49 @@ export class GameService implements OnModuleInit {
       const rs = this.horseRaceStates.get(horse.id);
       if (!rs) continue;
 
-      const targetSpeed = rs.targetFinishPos / RACE_TICKS;
+      const base = this.basePos(rs, p);
 
-      // ── 1. Speed noise: MASSIVE variation, two layers ──
-      // Full chaos until 50%, then fades fast so correction takes over
-      const noiseFade = progress < 0.50
-        ? 1.0
-        : Math.max(0.01, 1 - (progress - 0.50) / 0.25);
-      const slow = (rs.noise.sample(this.raceTick * 0.012) - 0.5) * 2;     // ~8s waves
-      const fast = (rs.fastNoise.sample(this.raceTick * 0.055) - 0.5) * 2;  // ~2s bursts
-      const noiseVal = slow * 0.65 + fast * 0.35;
-      const speedMult = Math.max(0, 1 + noiseVal * 0.95 * noiseFade);
+      // Windowed waves: silent at the gate, at the finish line, and right
+      // after a re-rank (segment fade-in) so the plan never jumps.
+      const span = Math.max(0.0001, 1 - rs.anchorProgress);
+      const pp = Math.min(1, Math.max(0, (p - rs.anchorProgress) / span));
+      const segFade = Math.min(1, pp * 4);
+      const window = Math.sin(Math.PI * p) * segFade;
+      let wiggle = 0;
+      for (const w of rs.waves) {
+        wiggle += w.amp * Math.sin(2 * Math.PI * w.freq * p + w.phase);
+      }
+      wiggle *= window;
 
-      // ── 2. Base noise speed (used for animation) ──
-      const noiseSpeed = targetSpeed * speedMult;
-      let speed = noiseSpeed;
-
-      // ── 3. Correction: ADDITIVE force starting at 45% ──
-      // Pushes horse toward scripted position — invisible to animation
-      if (progress > 0.45) {
-        const targetPos = rs.targetFinishPos * progress;
-        const error = targetPos - horse.position;
-        const blend = Math.pow((progress - 0.45) / 0.55, 2);
-        speed += error * blend * 0.25;
+      // Choreographed lead acts: rise, hold the front, fade back to script
+      for (const act of rs.leadActs) {
+        const v =
+          p <= act.mid
+            ? smooth01((p - (act.mid - act.halfUp)) / act.halfUp)
+            : 1 - smooth01((p - act.mid) / act.halfDown);
+        if (v > 0) wiggle += act.amp * v * segFade;
       }
 
-      // ── 4. Apply speed (never negative) ──
-      horse.position = Math.min(maxPos, horse.position + Math.max(0, speed));
+      // Gate surge: quick jump out of the stalls that melts away by the wire
+      wiggle += rs.gateBurst * (1 - Math.exp(-p * 22)) * (1 - p);
 
-      // ── 5. Chaotic start: HUGE forward bursts (first 15s) ──
-      if (this.raceTick < 150) {
-        const fade = 1 - this.raceTick / 150;
-        const burst = Math.random() * 0.6 * fade * rs.startBurst;
-        horse.position = Math.min(maxPos, horse.position + burst);
+      // Photo-finish duel: the runner-up closes on the leader around 85%,
+      // then the script settles it in the last strides.
+      if (rs.finishRank === 1 && leaderRs) {
+        const duelWindow = Math.sin(Math.PI * Math.min(1, Math.max(0, (p - 0.72) / 0.24)));
+        const gap = this.basePos(leaderRs, p) - base;
+        if (duelWindow > 0 && gap > 1.2) wiggle += (gap - 1.2) * duelWindow;
       }
 
-      // ── Effective speed for gallop animation ──
-      // Based on noiseSpeed only (excludes correction) + heavy smoothing
-      const rawAnimSpeed = Math.max(1, Math.min(8, (noiseSpeed / targetSpeed) * 5));
-      horse.effectiveSpeed = horse.effectiveSpeed * 0.85 + rawAnimSpeed * 0.15;
+      // Monotonic and capped: forward only, and 100 is only reachable at p=1
+      const pos = Math.min(100, Math.max(rs.prevPos, base + wiggle));
+      const delta = pos - rs.prevPos;
+      rs.prevPos = pos;
+      horse.position = pos;
+
+      // Gallop cadence for the clients, relative to the mean pace (1..8)
+      const cadence = Math.max(0.8, Math.min(8, (delta / avgDelta) * 4.2));
+      horse.effectiveSpeed = horse.effectiveSpeed * 0.85 + cadence * 0.15;
 
       if (horse.position >= 100 && !winner) {
         winner = horse;
@@ -383,6 +471,8 @@ export class GameService implements OnModuleInit {
     this.state.phase = "RESULTS";
     this.state.phaseStartedAt = Date.now();
     this.state.phaseDuration = PHASE_DURATIONS.RESULTS;
+
+    this.tourneeDistributed = false;
 
     const losers: Array<{ player: Player; sips: number }> = [];
     let winnerPlayer: Player | undefined;
@@ -483,13 +573,20 @@ export class GameService implements OnModuleInit {
     // Remove from finish order and recompute ranks
     this.finishOrder = this.finishOrder.filter((id) => id !== horseId);
 
-    // Reassign ranks and target positions for remaining horses
+    // Reassign ranks and target positions for remaining horses. Re-anchor
+    // each plan at the horse's current position so the new curve starts
+    // exactly where it stands (waves fade back in via the segment window).
+    const progress = Math.min(1, this.raceTick / RACE_TICKS);
     const activeCount = this.finishOrder.length;
     for (let i = 0; i < activeCount; i++) {
+      const h = this.state.horses.find((x) => x.id === this.finishOrder[i]);
       const rs = this.horseRaceStates.get(this.finishOrder[i]);
-      if (rs) {
+      if (rs && h) {
         rs.finishRank = i;
         rs.targetFinishPos = FINISH_POSITIONS[i] ?? (100 - i * 10);
+        rs.anchorPos = h.position;
+        rs.anchorProgress = progress;
+        rs.prevPos = h.position;
       }
     }
 
@@ -527,6 +624,54 @@ export class GameService implements OnModuleInit {
     else if (invalidVotes >= majorityNeeded) majority = 'not_valid';
 
     return { majority, votes: { ...event.votes } };
+  }
+
+  // ── Winner's tournée: send the earned sips to chosen players ──
+  private tourneeDistributed = false;
+
+  /**
+   * Validates and applies the winner's sip distribution. Returns the applied
+   * targets (with socket ids) so the gateway can notify them, or null if the
+   * request is invalid (wrong phase, not the winner, over budget, replay).
+   */
+  distributeSips(
+    socketId: string,
+    allocations: Array<{ pseudo: string; sips: number }>,
+  ): Array<{ id: string; pseudo: string; sips: number }> | null {
+    // Valid from the results screen until the next race's betting opens
+    // (lastRaceWinner is cleared by startBetting) — no time pressure.
+    if (this.state.phase !== "RESULTS" && this.state.phase !== "IDLE") return null;
+    if (this.tourneeDistributed) return null;
+    const winner = this.state.lastRaceWinner;
+    if (!winner) return null;
+    const sender = this.getPlayerBySocket(socketId);
+    if (!sender || sender.pseudo !== winner.pseudo) return null;
+    if (!Array.isArray(allocations) || allocations.length === 0) return null;
+
+    let total = 0;
+    const applied: Array<{ id: string; pseudo: string; sips: number }> = [];
+    for (const a of allocations) {
+      const sips = Math.round(a?.sips ?? 0);
+      if (!a?.pseudo || sips <= 0) return null;
+      if (a.pseudo === sender.pseudo) return null;
+      // no isConnected check: IDLE flags everyone disconnected until they
+      // re-join, but their sockets are still live and the debt must land
+      const target = this.playersByPseudo.get(a.pseudo);
+      if (!target) return null;
+      total += sips;
+      applied.push({ id: target.id, pseudo: target.pseudo, sips });
+    }
+    if (total > winner.sipsToDistribute) return null;
+
+    for (const a of applied) {
+      const target = this.playersByPseudo.get(a.pseudo);
+      if (target) {
+        target.debt += a.sips;
+        target.totalSipsDrunk += a.sips;
+      }
+    }
+    this.tourneeDistributed = true;
+    return applied;
   }
 
   // Drink management
