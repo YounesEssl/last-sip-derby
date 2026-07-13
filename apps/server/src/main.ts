@@ -26,7 +26,7 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0')
 
   const localIP = getLocalIP()
-  console.log(`\n  Last Sip Derby - Server running on port ${port}`)
+  console.log(`\n  L'Apérodrome - Server running on port ${port}`)
   console.log(`  Mobile accessible on http://${localIP}:3002\n`)
 }
 

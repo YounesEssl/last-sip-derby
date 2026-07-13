@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function BetScreen({ state, player, onBet }: Props) {
-  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration)
+  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const betHorse = player?.currentBet ? state.horses.find((h) => h.id === player.currentBet!.horseId) : null
   const selected = selectedId ? state.horses.find((h) => h.id === selectedId) : null
@@ -33,7 +33,7 @@ export function BetScreen({ state, player, onBet }: Props) {
             </div>
             <div className="mt-4 border-t-2 border-dashed border-derby-coal/30 pt-3 font-mono text-sm text-derby-coal">
               <div>
-                🏆 il gagne → tu distribues <b>{betHorse.odds * 2} gorgées</b>
+                🏆 il gagne → tu distribues <b>{betHorse.odds * 2} gorgées</b> (×3 s&apos;il devient doré)
               </div>
               <div className="mt-1">
                 💀 il perd → tu bois <b>{betHorse.odds} gorgée{betHorse.odds > 1 ? 's' : ''}</b>
@@ -57,7 +57,7 @@ export function BetScreen({ state, player, onBet }: Props) {
       <Header raceNumber={state.raceNumber} right={<CountdownPill seconds={seconds} label="FERMETURE" />} />
       <div className="px-5 pt-3">
         <h2 className="font-headline text-2xl tracking-[0.2em] text-derby-cream">CHOISIS TON CANASSON</h2>
-        <p className="font-body text-xs text-derby-smoke">Gagnant : distribue 2× la cote · Perdant : boit la cote</p>
+        <p className="font-body text-xs text-derby-smoke">Gagnant : distribue 2× la cote (3× si doré) · Perdant : boit la cote</p>
       </div>
 
       <div className="mt-3 flex-1 overflow-y-auto px-5 pb-40">

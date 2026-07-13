@@ -44,6 +44,12 @@ export const EVENT_TITLES: string[] = [
 ]
 
 export const EVENT_DESCRIPTIONS: string[] = [
+  // Intentionally duplicated: these two track incidents have a double draw
+  // weight and are the only vote events with a dedicated TV animation.
+  "Un spectateur bourré dévale la piste et se fait percuter par ... !",
+  "Un spectateur bourré dévale la piste et se fait percuter par ... !",
+  "Un dindon traverse tranquillement et fauche ... !",
+  "Un dindon traverse tranquillement et fauche ... !",
   "On dirait bien que ... s'est defequee dessus",
   "... vient de chuter ! Va-t-il se relever ?",
   "... vient de prendre un projectile, va-t-il reussir a continuer ?",
@@ -70,7 +76,6 @@ export const EVENT_DESCRIPTIONS: string[] = [
   "... a reconnu un pote dans les gradins, va-t-il aller lui dire bonjour ?",
   "... a oublie de couper le four chez lui, il hesite a rentrer de toute vitesse",
   "... regarde un reel depuis le depart, personne ne s'en etait rendu compte !",
-  "... vient d'etre frappe par la foudre, va-t-il tenir le coup ?",
   "Un chien errant suit ... depuis 200 metres, va-t-il le semer ?",
   "Une mouche est entree dans la narine de ..., il s'arrete pour souffler ?",
   "... vient de marcher sur un herisson, aie ! Va-t-il lacher la course ?",

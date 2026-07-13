@@ -13,9 +13,7 @@ export function JoinScreen({ onJoin, connected }: { onJoin: (pseudo: string) => 
           ✦ HIPPODROME DU DERNIER VERRE ✦
         </div>
         <h1 className="text-engraved mt-2 font-display text-5xl leading-tight">
-          Last Sip
-          <br />
-          Derby
+          L&apos;Apérodrome
         </h1>
         <div className="mt-2 font-hand text-xl text-derby-parch/70 -rotate-1">
           courses truquées &amp; gorgées garanties

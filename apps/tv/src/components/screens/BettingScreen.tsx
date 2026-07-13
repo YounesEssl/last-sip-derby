@@ -13,7 +13,7 @@ const FLAVOR: Record<number, string> = {
 }
 
 export function BettingScreen({ state }: { state: GameState }) {
-  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration)
+  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow)
   const urgent = seconds <= 10
 
   const bettorsByHorse = new Map<string, string[]>()
@@ -112,7 +112,7 @@ export function BettingScreen({ state }: { state: GameState }) {
               <span className="text-derby-smoke">/{state.players.length}</span>
             </div>
             <div className="mt-2 border-t border-dashed border-derby-gold/30 pt-2 text-left font-body text-[1.7vh] leading-relaxed text-derby-smoke">
-              → gagnant : distribue <b className="text-derby-gold">2× la cote</b>
+              → gagnant : distribue <b className="text-derby-gold">2× la cote</b> (3× si doré)
               <br />
               → perdant : boit <b className="text-derby-red">la cote</b> de son cheval
               <br />

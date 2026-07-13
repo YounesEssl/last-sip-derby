@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 
 /** Re-renders on an interval — for countdowns. */
@@ -13,9 +13,11 @@ export function useNow(intervalMs = 250): number {
   return now
 }
 
-export function usePhaseCountdown(phaseStartedAt: number, phaseDuration: number): number {
+export function usePhaseCountdown(phaseStartedAt: number, phaseDuration: number, serverNow: number): number {
   const now = useNow(200)
-  return Math.max(0, Math.ceil((phaseStartedAt + phaseDuration - now) / 1000))
+  const anchor = useMemo(() => ({ server: serverNow, local: Date.now() }), [serverNow])
+  const estimatedServerNow = anchor.server + (now - anchor.local)
+  return Math.max(0, Math.ceil((phaseStartedAt + phaseDuration - estimatedServerNow) / 1000))
 }
 
 export function mobileUrl(): string {
@@ -62,9 +64,9 @@ export function SilkDot({ color, size = 18 }: { color: string; size?: number }) 
 }
 
 const TICKER_ITEMS = [
-  'LE GAGNANT DISTRIBUE LE DOUBLE DE LA COTE DE SON CHEVAL',
+  'LE GAGNANT DISTRIBUE LE DOUBLE DE LA COTE — LE CHEVAL DORÉ TRIPLE',
   'LES PERDANTS BOIVENT LA COTE DE LEUR CANASSON',
-  'BUVETTE CHEZ MOMO — PARTENAIRE OFFICIEL',
+  'LESROLODES.COM — PARTENAIRE OFFICIEL',
   'TOUT ABUS EST FORTEMENT RECOMMANDÉ (AVEC MODÉRATION)',
   'PARIS FERMES 10 SECONDES AVANT LE DÉPART',
   "SELLERIE ROYALE HABILLE NOS JOCKEYS DEPUIS 1892",

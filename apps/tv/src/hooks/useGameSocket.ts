@@ -10,7 +10,10 @@ function getServerUrl() {
   if (process.env.NEXT_PUBLIC_SERVER_URL) return process.env.NEXT_PUBLIC_SERVER_URL
   if (typeof window === 'undefined') return 'http://localhost:3001'
   // In production (nginx), socket.io is proxied on same host. In dev, use port 3001.
-  const isDev = window.location.port === '3000' || window.location.port === '3001'
+  const isDev =
+    window.location.port === '3000' ||
+    window.location.port === '3001' ||
+    window.location.port === '3003'
   return isDev
     ? `${window.location.protocol}//${window.location.hostname}:3001`
     : `${window.location.protocol}//${window.location.host}`

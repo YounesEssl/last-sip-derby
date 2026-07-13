@@ -13,7 +13,7 @@ export function ResultScreen({
   player: Player | null
   onDistribute: (allocations: { pseudo: string; sips: number }[]) => void
 }) {
-  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration)
+  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow)
 
   const winner = useMemo(() => {
     const alive = state.horses.filter((h) => !h.isEliminated)
@@ -25,14 +25,14 @@ export function ResultScreen({
 
   const losers = useMemo(
     () =>
-      state.players
-        .filter((p) => p.currentBet && p.currentBet.horseId !== winner?.id)
-        .map((p) => {
-          const horse = state.horses.find((h) => h.id === p.currentBet!.horseId)
-          return { pseudo: p.pseudo, color: horse?.color ?? '#5a544a', sips: horse?.odds ?? 1 }
+      state.roundDrinks
+        .map((drink) => {
+          const drinker = state.players.find((p) => p.pseudo === drink.pseudo)
+          const horse = drinker?.currentBet ? state.horses.find((h) => h.id === drinker.currentBet!.horseId) : undefined
+          return { pseudo: drink.pseudo, color: horse?.color ?? '#5a544a', sips: drink.sips }
         })
         .sort((a, b) => b.sips - a.sips),
-    [state.players, state.horses, winner],
+    [state.players, state.horses, state.roundDrinks],
   )
 
   return (
@@ -54,7 +54,7 @@ export function ResultScreen({
             <WinnerPanel
               state={state}
               player={player}
-              totalSips={(winner?.odds ?? 1) * 2}
+              totalSips={(winner?.odds ?? 1) * (winner?.isGolden ? 3 : 2)}
               onDistribute={onDistribute}
             />
           ) : (
@@ -81,9 +81,10 @@ export function ResultScreen({
         )}
 
         {/* Who drinks what — on every phone */}
-        <div className="paper ticket-edge w-full max-w-sm rounded-lg px-5 py-4 animate-rise" style={{ animationDelay: '0.2s' }}>
+        <div className="paper ticket-edge w-full max-w-sm rounded-lg px-5 py-5 animate-rise" style={{ animationDelay: '0.2s' }}>
           <div className="border-b-2 border-dashed border-derby-coal/40 pb-1.5 text-center">
-            <span className="font-headline text-base font-medium tracking-[0.35em] text-derby-coal">★ LA TOURNÉE ★</span>
+            <span className="font-headline text-2xl font-medium tracking-[0.2em] text-derby-coal">QUI BOIT QUOI ?</span>
+            <span className="mt-1 block font-hand text-lg text-derby-coal/60">la tournée officielle</span>
           </div>
           <div className="mt-2 space-y-1">
             {losers.length === 0 && (
@@ -98,7 +99,7 @@ export function ResultScreen({
                     {l.pseudo === player?.pseudo ? ' (toi)' : ''}
                   </span>
                 </span>
-                <span className="whitespace-nowrap font-body text-sm font-bold text-derby-red">
+                <span className="whitespace-nowrap font-body text-base font-bold text-derby-red">
                   {l.sips} gorgée{l.sips > 1 ? 's' : ''} 🍺
                 </span>
               </div>

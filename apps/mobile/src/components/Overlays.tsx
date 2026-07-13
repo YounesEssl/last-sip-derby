@@ -26,6 +26,13 @@ export function DrinkOverlay({
   const frac = left / totalS
   const isEventDrink = totalS > 16 // event drinks ride the 30s vote window
 
+  // This is an information screen, not an extra validation step: recording the
+  // drink automatically keeps the notice visible without asking for a tap.
+  useEffect(() => {
+    const timer = window.setTimeout(onConfirm, Math.min(3500, Math.max(1800, deadline - Date.now())))
+    return () => window.clearTimeout(timer)
+  }, [deadline, onConfirm])
+
   return (
     <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-derby-red/95 px-6 backdrop-blur-sm">
       <div className="animate-shake text-7xl">🍺</div>
@@ -38,23 +45,16 @@ export function DrinkOverlay({
         </span>
       </div>
 
-      <button
-        onClick={onConfirm}
-        className="btn-big relative mt-8 w-full max-w-xs overflow-hidden rounded-2xl border-4 border-derby-cream bg-derby-night py-5 font-headline text-3xl tracking-[0.2em] text-derby-cream shadow-2xl"
-      >
-        <span
-          className="absolute inset-y-0 left-0 bg-derby-cream/20 transition-[width] duration-100 ease-linear"
-          style={{ width: `${frac * 100}%` }}
-        />
-        <span className="relative">C&apos;EST BU ✓</span>
-      </button>
+      <div className="relative mt-8 h-3 w-full max-w-xs overflow-hidden rounded-full bg-derby-night/50">
+        <span className="absolute inset-y-0 left-0 bg-derby-cream/70" style={{ width: `${frac * 100}%` }} />
+      </div>
       <p className="mt-3 text-center font-mono text-sm text-derby-cream/80">
         {isEventDrink
           ? left > 0
-            ? `${Math.ceil(left)}s — le public te regarde et vote : bois VRAIMENT ou ton cheval y passe !`
+            ? `${Math.ceil(left)}s — le public te regarde : bois VRAIMENT ou ton cheval y passe !`
             : 'le vote est clos...'
           : left > 0
-            ? `confirme dans les ${Math.ceil(left)}s !`
+            ? `tu as ${Math.ceil(left)}s pour boire !`
             : 'trop tard...'}
       </p>
     </div>

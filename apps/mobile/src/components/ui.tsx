@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 export function useNow(intervalMs = 250): number {
   const [now, setNow] = useState(() => Date.now())
@@ -11,9 +11,11 @@ export function useNow(intervalMs = 250): number {
   return now
 }
 
-export function usePhaseCountdown(phaseStartedAt: number, phaseDuration: number): number {
+export function usePhaseCountdown(phaseStartedAt: number, phaseDuration: number, serverNow: number): number {
   const now = useNow(200)
-  return Math.max(0, Math.ceil((phaseStartedAt + phaseDuration - now) / 1000))
+  const anchor = useMemo(() => ({ server: serverNow, local: Date.now() }), [serverNow])
+  const estimatedServerNow = anchor.server + (now - anchor.local)
+  return Math.max(0, Math.ceil((phaseStartedAt + phaseDuration - estimatedServerNow) / 1000))
 }
 
 export function CountdownPill({ seconds, label }: { seconds: number; label: string }) {
@@ -32,7 +34,7 @@ export function Header({ raceNumber, right }: { raceNumber?: number; right?: Rea
   return (
     <div className="flex items-center justify-between px-5 pt-[max(1rem,env(safe-area-inset-top))]">
       <div>
-        <div className="text-engraved font-display text-xl leading-none">Last Sip Derby</div>
+        <div className="text-engraved font-display text-xl leading-none">L&apos;Apérodrome</div>
         {raceNumber !== undefined && (
           <div className="font-headline text-xs tracking-[0.3em] text-derby-smoke">COURSE N°{raceNumber}</div>
         )}

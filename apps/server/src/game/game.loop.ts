@@ -20,8 +20,9 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
   private localTick = 0
   private scheduledEventTicks: number[] = []
   private eventsTriggered = 0
-  private phaseTimeRemaining = 0 // for pausing phaseTimeout
   private lobbyCountdown: NodeJS.Timeout | null = null
+  private lightningScheduledTick: number | null = null
+  private lightningTimers: NodeJS.Timeout[] = []
 
   private onStateUpdate: (() => void) | null = null
   private onPhaseChange: ((phase: string) => void) | null = null
@@ -107,11 +108,14 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
     if (this.voteTimeout) clearTimeout(this.voteTimeout)
     if (this.resolveDisplayTimeout) clearTimeout(this.resolveDisplayTimeout)
     if (this.lobbyCountdown) clearTimeout(this.lobbyCountdown)
+    for (const timer of this.lightningTimers) clearTimeout(timer)
     this.raceInterval = null
     this.phaseTimeout = null
     this.voteTimeout = null
     this.resolveDisplayTimeout = null
     this.lobbyCountdown = null
+    this.lightningTimers = []
+    this.lightningScheduledTick = null
   }
 
   private transitionToIdle() {
@@ -150,6 +154,7 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
     this.localTick = 0
     this.eventsTriggered = 0
     this.scheduleEvents()
+    this.scheduleLightning()
 
     this.raceInterval = setInterval(() => {
       // Skip ticks when race is paused (event in progress)
@@ -161,9 +166,21 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
       const winner = this.gameService.tickRace()
       this.onStateUpdate?.()
 
-      // Check if it's time for a scheduled event
+      if (this.lightningScheduledTick === this.localTick) {
+        this.triggerLightning()
+      }
+
+      // Vote incidents never interrupt the lightning sequence: the horses
+      // must keep running in the dark until the strike. Delay a colliding
+      // incident instead of dropping it from the race.
       if (this.scheduledEventTicks.includes(this.localTick)) {
-        this.triggerEvent()
+        if (this.gameService.getState().lightningEvent) {
+          this.scheduledEventTicks = this.scheduledEventTicks.map((tick) =>
+            tick === this.localTick ? Math.min(560, tick + 80) : tick,
+          )
+        } else {
+          this.triggerEvent()
+        }
       }
 
       if (winner) {
@@ -171,21 +188,10 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
       }
     }, RACE_TICK_MS)
 
-    const maxDuration = this.gameService.getState().phaseDuration
-    this.phaseTimeRemaining = maxDuration
-    this.phaseTimeout = setTimeout(() => {
-      if (this.gameService.getPhase() === 'RACING') {
-        const finishOrder = this.gameService.getFinishOrder()
-        if (finishOrder.length > 0) {
-          const winnerId = finishOrder[0]
-          const horse = this.gameService.getHorses().find((h) => h.id === winnerId)
-          if (horse) {
-            horse.position = 100
-            this.finishRace(winnerId)
-          }
-        }
-      }
-    }, maxDuration)
+    // No wall-clock timeout here: the deterministic race ticks own the finish.
+    // A competing timeout used to set the scripted winner directly to 100 at
+    // 60 seconds, sometimes firing just before the final tick and producing a
+    // visible teleport onto the line.
   }
 
   private scheduleEvents() {
@@ -216,6 +222,43 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
     console.log(`📅 Scheduled ${this.scheduledEventTicks.length} events at ticks:`, this.scheduledEventTicks)
   }
 
+  private scheduleLightning() {
+    // One global roll per race. The strike is kept away from the gate and the
+    // photo finish so its full blackout/flash/clearing sequence can play.
+    this.lightningScheduledTick = Math.random() < 1 / 8
+      ? 140 + Math.floor(Math.random() * 260)
+      : null
+    if (this.lightningScheduledTick) {
+      console.log(`⛈️ Lightning scheduled at tick ${this.lightningScheduledTick}`)
+    }
+  }
+
+  private triggerLightning() {
+    this.lightningScheduledTick = null
+    if (!this.gameService.startLightning()) return
+    this.onStateUpdate?.()
+
+    const strikeTimer = setTimeout(() => {
+      if (this.gameService.getPhase() !== 'RACING') return
+      this.gameService.strikeLightning()
+      this.onStateUpdate?.()
+
+      const clearingTimer = setTimeout(() => {
+        if (this.gameService.getPhase() !== 'RACING') return
+        this.gameService.startLightningClearing()
+        this.onStateUpdate?.()
+      }, 250)
+      this.lightningTimers.push(clearingTimer)
+
+      const endTimer = setTimeout(() => {
+        this.gameService.clearLightning()
+        this.onStateUpdate?.()
+      }, 3_250)
+      this.lightningTimers.push(endTimer)
+    }, 3_500)
+    this.lightningTimers.push(strikeTimer)
+  }
+
   private triggerEvent() {
     const event = this.gameEvents.generateEvent()
     if (!event) return // no valid target (no bets or no voters)
@@ -225,12 +268,6 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
     // Pause race
     this.gameService.pauseRace()
     this.gameService.setActiveEvent(event)
-
-    // Pause the phase timeout
-    if (this.phaseTimeout) {
-      clearTimeout(this.phaseTimeout)
-      this.phaseTimeout = null
-    }
 
     // Notify clients
     this.onEventTriggered?.(event)
@@ -276,21 +313,6 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
       this.gameService.resumeRace()
       console.log('▶️ Race resumed, activeEvent cleared')
       this.onStateUpdate?.()
-
-      // Resume phase timeout with remaining time
-      this.phaseTimeout = setTimeout(() => {
-        if (this.gameService.getPhase() === 'RACING') {
-          const finishOrder = this.gameService.getFinishOrder()
-          if (finishOrder.length > 0) {
-            const winnerId = finishOrder[0]
-            const horse = this.gameService.getHorses().find((h) => h.id === winnerId)
-            if (horse) {
-              horse.position = 100
-              this.finishRace(winnerId)
-            }
-          }
-        }
-      }, this.phaseTimeRemaining)
     }, EVENT_RESOLVE_DISPLAY_MS)
   }
 

@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import type { GameEvent, GameState, Horse, Player } from '@last-sip-derby/shared'
+import type { GameEvent, GameState, Horse, LightningEvent, Player } from '@last-sip-derby/shared'
 import { RaceEngine } from '../../race/engine'
 import { SilkDot, useNow } from '../shared'
+import { RaceCommentator } from '../RaceCommentator'
 
 interface Props {
   state: GameState
@@ -27,9 +28,6 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
   const engineRef = useRef<RaceEngine | null>(null)
   const [showStart, setShowStart] = useState(true)
   const celebratedRef = useRef(false)
-  // phaseStartedAt flips to the RESULTS timestamp while we hold the finish
-  // view — pin the race start so the clock stays meaningful.
-  const raceStartRef = useRef(state.phaseStartedAt)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -105,27 +103,26 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
           <span className="font-headline text-2xl tracking-[0.25em] text-derby-cream">EN DIRECT</span>
           <span className="font-headline text-2xl tracking-[0.25em] text-derby-gold">COURSE N°{state.raceNumber}</span>
         </div>
-        <RaceClock startedAt={raceStartRef.current} frozen={finished} />
+        <RaceClock progress={state.raceProgress} durationMs={state.phaseDuration} waiting={showStart} />
       </div>
 
       {/* ── Minimap ── */}
       <div className="pointer-events-none absolute left-1/2 top-[9vh] z-20 w-[44vw] -translate-x-1/2">
-        <div className="relative h-[4.6vh] rounded-full border-2 border-derby-gold/50 bg-derby-night/75 backdrop-blur-sm">
+        <div className="relative h-[2.4vh] rounded-full border border-derby-gold/50 bg-derby-night/75 backdrop-blur-sm">
           <div className="absolute right-[2.2vh] top-1/2 h-[60%] w-[3px] -translate-y-1/2 bg-derby-cream/70" />
           <div className="absolute right-[1vh] top-1/2 -translate-y-1/2 font-headline text-[2vh] text-derby-cream/80">🏁</div>
           {state.horses.map((h) => (
             <div
               key={h.id}
-              className="absolute top-1/2 flex h-[3.4vh] w-[3.4vh] -translate-y-1/2 items-center justify-center rounded-full font-headline text-[1.9vh] text-white shadow"
+              className="absolute top-1/2 h-[1.25vh] w-[1.25vh] -translate-y-1/2 rounded-full border border-white/70 shadow"
               style={{
-                left: `calc(${Math.min(96, 1 + h.position * 0.95)}% - 1.7vh)`,
+                left: `calc(${Math.min(96, 1 + h.position * 0.95)}% - .625vh)`,
                 background: h.isEliminated ? '#4a4a48' : h.color,
                 opacity: h.isEliminated ? 0.55 : 1,
                 transition: 'left 140ms linear',
                 zIndex: Math.round(h.position),
               }}
             >
-              {h.isEliminated ? '✕' : h.lane + 1}
             </div>
           ))}
         </div>
@@ -145,9 +142,11 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
             <span className="w-8 font-headline text-[2.8vh] text-derby-gold">{h.isEliminated ? '—' : `${i + 1}${i === 0 ? 'ᵉʳ' : 'ᵉ'}`}</span>
             <SilkDot color={h.isEliminated ? '#4a4a48' : h.color} size={16} />
             <span className={`min-w-0 flex-1 truncate font-body text-[2vh] font-bold text-derby-cream ${h.isEliminated ? 'line-through' : ''}`}>
-              {h.name}
+              {h.isGolden ? '✨ ' : ''}{h.appearance === 'CAMEL' ? '🐪 ' : h.appearance === 'MOTORCYCLE' ? '🏍️ ' : ''}{h.name}
             </span>
-            <span className="font-terminal text-[2vh] text-derby-smoke">{h.odds}G</span>
+            <span className="font-terminal text-[1.8vh] text-derby-smoke">
+              {h.isStruckByLightning ? '⚡' : h.isReversed ? '↩' : h.jockeyFallen ? '+15%' : `${h.odds}G`}
+            </span>
           </motion.div>
         ))}
       </div>
@@ -172,6 +171,11 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
           </motion.div>
         )}
       </AnimatePresence>
+
+      <RaceCommentator
+        state={state}
+        suppressed={showStart || !!activeEvent || !!state.lightningEvent || finished}
+      />
 
       {/* ── Start flash ── */}
       <AnimatePresence>
@@ -200,6 +204,9 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
         )}
       </AnimatePresence>
 
+      {activeEvent && activeEvent.visualKind !== 'NONE' && !finished && <TrackIncident event={activeEvent} />}
+      {state.lightningEvent && !finished && <LightningOverlay event={state.lightningEvent} horses={state.horses} />}
+
       {/* ── Photo finish ── */}
       {finished && (
         <>
@@ -224,7 +231,7 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
                 </div>
                 <div className="mt-2 font-mono text-lg text-derby-coal/80">
                   {winnerBettors.length > 0
-                    ? `${winnerBettors.join(', ')} distribue${winnerBettors.length > 1 ? 'nt' : ''} ${winner.odds * 2} gorgées !`
+                    ? `${winnerBettors.join(', ')} distribue${winnerBettors.length > 1 ? 'nt' : ''} ${winner.odds * (winner.isGolden ? 3 : 2)} gorgées${winner.isGolden ? ' — JACKPOT DORÉ ×3 !' : ' !'}`
                     : 'Personne ne l’avait joué... tout le monde trinque !'}
                 </div>
               </div>
@@ -236,17 +243,84 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
   )
 }
 
-function RaceClock({ startedAt, frozen }: { startedAt: number; frozen: boolean }) {
-  const now = useNow(120)
-  const frozenAtRef = useRef<number | null>(null)
-  if (frozen && frozenAtRef.current === null) frozenAtRef.current = now
-  if (!frozen) frozenAtRef.current = null
-  const elapsed = Math.max(0, ((frozenAtRef.current ?? now) - startedAt) / 1000)
+function RaceClock({ progress, durationMs, waiting }: { progress: number; durationMs: number; waiting: boolean }) {
+  // The server progress freezes during incidents, unlike a wall-clock timer.
+  // This also prevents negative/jumping values while the starting flash runs.
+  const elapsed = waiting ? 0 : Math.max(0, (progress / 100) * (durationMs / 1000))
   const m = Math.floor(elapsed / 60)
   const s = (elapsed % 60).toFixed(1).padStart(4, '0')
   return (
     <div className="rounded-xl bg-derby-night/75 px-5 py-3 font-terminal text-3xl text-derby-gold backdrop-blur-sm">
-      ⏱ {m}:{s}
+      {waiting ? '⏱ PRÊTS…' : `⏱ ${m}:${s}`}
+    </div>
+  )
+}
+
+function TrackIncident({ event }: { event: GameEvent }) {
+  const turkey = event.visualKind === 'TURKEY'
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[25] overflow-hidden">
+      <motion.div
+        initial={{ x: '-14vw', y: turkey ? '61vh' : '67vh', rotate: turkey ? 0 : -20 }}
+        animate={{ x: '112vw', y: turkey ? '78vh' : '70vh', rotate: turkey ? 12 : 720 }}
+        transition={{ duration: turkey ? 4.8 : 3.2, ease: 'linear', repeat: Infinity, repeatDelay: 0.4 }}
+        className="absolute text-[8vh] drop-shadow-2xl"
+      >
+        {turkey ? '🦃' : '🍺🤸'}
+      </motion.div>
+      <motion.div
+        initial={{ x: '112vw', y: '69vh' }}
+        animate={{ x: '-18vw' }}
+        transition={{ duration: 2.2, delay: 0.8, ease: 'linear', repeat: Infinity, repeatDelay: 1.8 }}
+        className="absolute text-[9vh] drop-shadow-2xl"
+      >
+        🐎💥
+      </motion.div>
+    </div>
+  )
+}
+
+function LightningOverlay({ event, horses }: { event: LightningEvent; horses: Horse[] }) {
+  const now = useNow(40)
+  const clearing = event.phase === 'CLEARING'
+  const darkness = clearing
+    ? Math.max(0, Math.min(0.92, ((event.endsAt - now) / Math.max(1, event.endsAt - event.clearAt)) * 0.92))
+    : 0.97
+  const victims = event.targetHorseIds
+    .map((id) => horses.find((horse) => horse.id === id)?.name)
+    .filter((name): name is string => !!name)
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[45] overflow-hidden">
+      <div className="absolute inset-0 bg-black" style={{ opacity: darkness, transition: 'opacity 80ms linear' }} />
+      {event.phase === 'BLACKOUT' && (
+        <div className="absolute inset-x-0 top-[42%] text-center font-headline text-[3vh] tracking-[0.55em] text-derby-cream/40 animate-pulse">
+          L&apos;ORAGE ARRIVE…
+        </div>
+      )}
+      {event.phase === 'STRIKE' && (
+        <>
+          <motion.div
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 0.28 }}
+            className="absolute inset-0 bg-white"
+          />
+          <div className="absolute inset-0 flex items-center justify-center text-[42vh] leading-none text-white [filter:drop-shadow(0_0_30px_#8fdcff)]">
+            ⚡
+          </div>
+        </>
+      )}
+      {event.phase !== 'BLACKOUT' && victims.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 1.4 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute inset-x-0 top-[18vh] text-center"
+        >
+          <div className="font-display text-[6vh] text-white [text-shadow:0_0_30px_#79c9ff]">FOUDROYÉ{victims.length > 1 ? 'S' : ''} !</div>
+          <div className="font-headline text-[3vh] tracking-[0.2em] text-derby-cream">{victims.join(' · ')}</div>
+        </motion.div>
+      )}
     </div>
   )
 }

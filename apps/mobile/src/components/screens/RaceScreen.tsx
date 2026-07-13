@@ -38,7 +38,14 @@ export function RaceScreen({ state, player }: { state: GameState; player: Player
       <div className="mx-4 mt-3 rounded-xl panel-gold p-3">
         <div className="flex items-center justify-between px-1 pb-1">
           <span className="font-headline text-xs tracking-[0.3em] text-derby-brass">APERÇU DE LA PISTE</span>
-          <span className="font-terminal text-sm text-derby-smoke">{Math.round(state.raceProgress)}%</span>
+          <span className="flex items-center gap-1" aria-label={`${Math.round(state.raceProgress)} % de la course`}>
+            {Array.from({ length: 10 }, (_, index) => (
+              <span
+                key={index}
+                className={`h-1.5 w-1.5 rounded-full ${index < Math.ceil(state.raceProgress / 10) ? 'bg-derby-gold' : 'bg-derby-smoke/30'}`}
+              />
+            ))}
+          </span>
         </div>
         <MiniRace horses={state.horses} myHorseId={myHorse?.id ?? null} paused={state.racePaused} />
       </div>
@@ -69,6 +76,14 @@ export function RaceScreen({ state, player }: { state: GameState; player: Player
                 <SilkChip color={myHorse.color} number={myHorse.lane + 1} size={36} />
                 <span className="font-body text-xl font-bold text-derby-cream">{myHorse.name}</span>
               </div>
+              {(myHorse.isGolden || myHorse.jockeyFallen || myHorse.isReversed || myHorse.appearance !== 'HORSE') && (
+                <div className="mt-2 font-headline text-sm tracking-[0.12em] text-derby-gold">
+                  {myHorse.isGolden ? '✨ CHEVAL DORÉ · ' : ''}
+                  {myHorse.appearance === 'CAMEL' ? '🐪 CHAMEAU · ' : myHorse.appearance === 'MOTORCYCLE' ? '🏍️ MOTO CROSS · ' : ''}
+                  {myHorse.jockeyFallen ? 'JOCKEY À TERRE +15% · ' : ''}
+                  {myHorse.isReversed ? '↩ COURSE À L’ENVERS' : ''}
+                </div>
+              )}
               <p className="mt-2 font-mono text-sm text-derby-smoke">
                 {state.racePaused
                   ? '⚠️ Incident sur la piste !'

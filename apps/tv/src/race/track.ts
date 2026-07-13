@@ -11,13 +11,16 @@ interface Speckle {
 
 export class Track {
   private speckles: Speckle[] = []
+  // The accelerated ground camera travels roughly twice as far as the real
+  // race camera. Repeating this seeded strip keeps the dirt texture present
+  // through the finish and the winner's overrun without visible regeneration.
+  private readonly texturePeriod = WORLD.FINISH_X + 2400
 
   constructor(seed: number) {
     const rand = mulberry32(seed)
-    const worldLen = WORLD.FINISH_X + 2400
     for (let i = 0; i < 2600; i++) {
       this.speckles.push({
-        x: rand() * worldLen,
+        x: rand() * this.texturePeriod,
         yFrac: rand(),
         len: 10 + rand() * 46,
         light: rand() > 0.5,
@@ -29,7 +32,7 @@ export class Track {
     return H * (TRACK.FAR_EDGE + yFrac * (TRACK.NEAR_EDGE - TRACK.FAR_EDGE))
   }
 
-  drawSurface(ctx: CanvasRenderingContext2D, W: number, H: number, camX: number) {
+  drawSurface(ctx: CanvasRenderingContext2D, W: number, H: number, camX: number, speedIntensity = 0) {
     const top = H * TRACK.FAR_EDGE
     const bottom = H * TRACK.NEAR_EDGE
     const g = ctx.createLinearGradient(0, top, 0, bottom)
@@ -38,20 +41,32 @@ export class Track {
     ctx.fillStyle = g
     ctx.fillRect(0, top, W, H - top)
 
-    // texture streaks (world-space, culled to the viewport)
+    // Seeded texture strip repeated in world-space. Previously this was a
+    // single finite strip: `groundCam` outran it in the home straight and the
+    // road abruptly became a flat gradient.
     const left = camX - W / 2 - 60
     const right = camX + W / 2 + 60
     ctx.lineWidth = Math.max(1, H / 720)
-    for (const s of this.speckles) {
-      if (s.x < left || s.x > right) continue
-      const sx = s.x - camX + W / 2
-      const sy = this.trackY(s.yFrac, H)
-      const scale = 0.6 + s.yFrac * 0.8
-      ctx.strokeStyle = s.light ? 'rgba(232,200,160,0.16)' : 'rgba(70,40,20,0.18)'
-      ctx.beginPath()
-      ctx.moveTo(sx, sy)
-      ctx.lineTo(sx + s.len * scale, sy)
-      ctx.stroke()
+    const firstTile = Math.floor(left / this.texturePeriod)
+    const lastTile = Math.floor(right / this.texturePeriod)
+    for (let tile = firstTile; tile <= lastTile; tile++) {
+      const tileOffset = tile * this.texturePeriod
+      for (const s of this.speckles) {
+        const worldX = s.x + tileOffset
+        if (worldX < left || worldX > right) continue
+        const sx = worldX - camX + W / 2
+        const sy = this.trackY(s.yFrac, H)
+        const scale = 0.6 + s.yFrac * 0.8
+        const nearRush = speedIntensity * (0.35 + s.yFrac * 1.25)
+        const streak = 1 + nearRush * 2.1
+        const alpha = Math.min(0.34, (s.light ? 0.16 : 0.18) + nearRush * 0.055)
+        ctx.strokeStyle = s.light ? `rgba(232,200,160,${alpha})` : `rgba(70,40,20,${alpha})`
+        ctx.lineWidth = Math.max(1, H / 720) * (1 + nearRush * 0.45)
+        ctx.beginPath()
+        ctx.moveTo(sx, sy)
+        ctx.lineTo(sx + s.len * scale * streak, sy)
+        ctx.stroke()
+      }
     }
   }
 

@@ -4,7 +4,7 @@
 
 import type { Horse } from '@last-sip-derby/shared'
 import { HorseTracker } from './interpolator'
-import { drawHorse, hoofContact, type Coat } from './horse'
+import { drawCamel, drawHorse, drawMotorcycle, hoofContactSample, type Coat } from './horse'
 import { Scenery } from './scenery'
 import { Track } from './track'
 import { DustPool, ConfettiPool } from './particles'
@@ -19,8 +19,14 @@ interface HorseMeta {
   tracker: HorseTracker
   phase: number
   speedNorm: number
-  effSpeed: number
+  gaitPos: number | null
   eliminated: boolean
+  appearance: Horse['appearance']
+  golden: boolean
+  reversed: boolean
+  jockeyFallen: boolean
+  jockeyFallStart: number | null
+  struck: boolean
   fallStart: number | null
   extraPos: number // visual overrun after the finish (victory lap)
   visX: number // last computed world x (for camera/spotlight)
@@ -33,6 +39,12 @@ interface Celebration {
 }
 
 const LOOK_AHEAD = 190
+// One complete visual stride in horse-local pixels. Advancing the cycle from
+// travelled distance (instead of a free-running timer) keeps hooves and dirt
+// coherent through acceleration, pauses and the post-finish overrun.
+const GAIT_STRIDE_PX = 150
+const GOLDEN_COAT: Coat = { body: '#D9A943', dark: '#8C651D', light: '#FFE877', mane: '#6F4C13' }
+const CHARRED_COAT: Coat = { body: '#191817', dark: '#080808', light: '#46413B', mane: '#050505' }
 
 export class RaceEngine {
   private canvas: HTMLCanvasElement
@@ -52,6 +64,12 @@ export class RaceEngine {
 
   private camX = WORLD.START_X + 300
   private zoom = 1
+  // Extra cyclic scroll applied only to repeatable scenery. World objects
+  // (horses, start, markers, finish) stay physically correct while the dirt,
+  // rails and vegetation rush past faster to sell speed on a large screen.
+  private terrainScroll = 0
+  private lastMeanPos: number | null = null
+  private speedIntensity = 0
 
   // camera direction: punch zooms on the horse that takes the lead
   private lastLeaderId: string | null = null
@@ -106,8 +124,14 @@ export class RaceEngine {
           tracker: new HorseTracker(),
           phase: Math.random(),
           speedNorm: 0,
-          effSpeed: 0,
+          gaitPos: null,
           eliminated: false,
+          appearance: h.appearance,
+          golden: h.isGolden,
+          reversed: h.isReversed,
+          jockeyFallen: h.jockeyFallen,
+          jockeyFallStart: null,
+          struck: h.isStruckByLightning,
           fallStart: null,
           extraPos: 0,
           visX: WORLD.START_X,
@@ -116,7 +140,14 @@ export class RaceEngine {
         this.order = [...this.horses.values()].sort((a, b) => a.lane - b.lane).map((x) => x.id)
       }
       m.tracker.push(h.position, now)
-      m.effSpeed = h.effectiveSpeed
+      m.appearance = h.appearance
+      m.golden = h.isGolden
+      m.reversed = h.isReversed
+      m.struck = h.isStruckByLightning
+      if (h.jockeyFallen && !m.jockeyFallen) {
+        m.jockeyFallen = true
+        m.jockeyFallStart = now
+      }
       if (h.isEliminated && !m.eliminated) {
         m.eliminated = true
         m.fallStart = now
@@ -181,14 +212,17 @@ export class RaceEngine {
     let lastX = Infinity
     let leaderId: string | null = null
     let meanX = 0
+    let meanSpeed = 0
     let alive = 0
     for (const id of this.order) {
       const m = this.horses.get(id)!
       const stalled = m.tracker.isStalled(t)
       let pos = m.tracker.sample(t)
 
-      // Victory overrun: the winner keeps galloping past the post
-      if (this.celebration && stalled) {
+      // Victory overrun starts immediately while the final server snapshot is
+      // still being interpolated. Waiting for the tracker to become "stalled"
+      // made the winner freeze on the line before moving again.
+      if (this.celebration) {
         const el = (t - this.celebration.start) / 1000
         if (m.id === this.celebration.winnerId && el < 3.2) {
           m.extraPos += Math.max(0, 1.3 * (1 - el / 3.2)) * dt
@@ -198,16 +232,18 @@ export class RaceEngine {
       m.visX = WORLD.START_X + pos * WORLD.PX_PER_UNIT
 
       // Gait
-      const vel = stalled && !this.celebration ? 0 : m.tracker.velocity
+      const vel = stalled && !this.celebration ? 0 : Math.abs(m.tracker.velocity)
       const targetNorm = m.eliminated
         ? 0
         : this.celebration && m.id === this.celebration.winnerId
           ? Math.max(0.2, Math.min(1, 1.2 * (1 - (t - this.celebration.start) / 3200)))
           : Math.min(1.1, Math.max(0, vel / 1.5))
       m.speedNorm += (targetNorm - m.speedNorm) * Math.min(1, dt * 5)
-      if (m.speedNorm > 0.03 && !m.eliminated) {
-        const freq = 1.4 + Math.min(1, m.effSpeed / 5) * 1.6
-        m.phase = (m.phase + dt * freq * (0.35 + 0.65 * m.speedNorm)) % 1
+      const travelled = m.gaitPos === null ? 0 : Math.abs(pos - m.gaitPos) * WORLD.PX_PER_UNIT
+      m.gaitPos = pos
+      if (travelled > 0 && m.speedNorm > 0.03 && !m.eliminated) {
+        const projectedStride = GAIT_STRIDE_PX * laneScale(m.lane) * S * 1.04
+        m.phase = (m.phase + travelled / Math.max(1, projectedStride)) % 1
       }
 
       if (!m.eliminated) {
@@ -220,21 +256,38 @@ export class RaceEngine {
         }
         if (pos < lastX) lastX = pos
         meanX += pos
+        meanSpeed += m.speedNorm
         alive++
       }
 
       // Dust from hooves — generous, it sells the speed
-      const contact = hoofContact(m.phase) * m.speedNorm
+      const hoof = hoofContactSample(m.phase)
+      const contact = hoof.strength * m.speedNorm
       if (contact > 0.35 && Math.random() < contact * 1.1) {
         const k = laneScale(m.lane) * S
-        this.dust.spawn(m.visX - 44 * k, laneGroundY(m.lane, H) - 2, k, Math.min(1.2, m.speedNorm * 1.25))
+        this.dust.spawn(m.visX + hoof.x * k, laneGroundY(m.lane, H) - 2, k, Math.min(1.2, m.speedNorm * 1.25))
       }
       // Fall impact burst
       if (m.fallStart && t - m.fallStart < 60) {
         this.dust.burst(m.visX, laneGroundY(m.lane, H) - 4, laneScale(m.lane) * S)
       }
     }
-    if (alive > 0) meanX /= alive
+    if (alive > 0) {
+      meanX /= alive
+      meanSpeed /= alive
+    }
+
+    // Keep the terrain cadence identical from the opening straight through
+    // the finish. A finish-only acceleration made the painted line appear to
+    // detach from the dirt even though both belong to the same track.
+    const targetIntensity = this.paused ? 0 : Math.min(1, meanSpeed)
+    this.speedIntensity += (targetIntensity - this.speedIntensity) * Math.min(1, rawDt * 3.8)
+    if (this.lastMeanPos !== null && alive > 0 && !this.paused) {
+      const fieldDelta = Math.max(0, Math.min(0.22, meanX - this.lastMeanPos)) * WORLD.PX_PER_UNIT
+      const terrainBoost = 1.1
+      this.terrainScroll += fieldDelta * terrainBoost * this.speedIntensity
+    }
+    if (alive > 0) this.lastMeanPos = meanX
 
     // ── Camera direction ──
     // Shot list, like a TV director would call it:
@@ -242,8 +295,7 @@ export class RaceEngine {
     //   2. 3–6s      push in on the race — horses fill the frame (≈1.16)
     //   3. cruise    gentle breathing, leader never leaves the frame
     //   4. moments   punch-zoom (~1.32) on a horse that takes the lead
-    //   5. last 15%  finish framing; tight duel → hard push
-    //   6. event / photo finish override everything
+    //   5. event spotlight override
     let focusPos = 0
     let fitZoom = Infinity // zoom level at which the whole field fits
     if (leaderX !== -Infinity) {
@@ -287,38 +339,21 @@ export class RaceEngine {
     let camRate = 3.2
     let zoomRate = 2.2
 
-    const gap = leaderX - (leader2X === -Infinity ? leaderX : leader2X)
     const punchHorse = this.punch ? this.horses.get(this.punch.horseId) : null
     if (punchHorse && !punchHorse.eliminated) {
       targetZoom = 1.36
       zoomRate = 4.5
       camRate = 4.5
     }
-    if (leaderX > 86) {
-      focusPos = leaderX
-      targetZoom = gap < 2.5 ? 1.3 : 1.2
-      zoomRate = 3
-    }
-
     let camTarget = WORLD.START_X + focusPos * WORLD.PX_PER_UNIT + LOOK_AHEAD
     if (punchHorse && !punchHorse.eliminated && leaderX <= 86) {
       camTarget = punchHorse.visX + LOOK_AHEAD * 0.6
     }
-    // Hold the finish line at ~72% of the screen when the head arrives
-    const finishHold = WORLD.FINISH_X - W * 0.22
-    if (camTarget > finishHold && !this.celebration) camTarget = finishHold
-
     const spot = this.spotlightId ? this.horses.get(this.spotlightId) : null
     if (spot) {
       camTarget = spot.visX + 40
       targetZoom = 1.32
     }
-    if (this.celebration) {
-      const w = this.celebration.winnerId ? this.horses.get(this.celebration.winnerId) : null
-      if (w) camTarget = w.visX + 60
-      targetZoom = 1.22
-    }
-
     this.camX += (camTarget - this.camX) * Math.min(1, rawDt * camRate)
     this.zoom += (targetZoom - this.zoom) * Math.min(1, rawDt * zoomRate)
 
@@ -335,14 +370,26 @@ export class RaceEngine {
     ctx.scale(this.zoom, this.zoom)
     ctx.translate(-W / 2, -H * 0.76)
 
+    // Constant, restrained track vibration: no special kick at the finish.
+    const shake = this.speedIntensity * 0.55 * S
+    if (shake > 0.05 && !spot && !this.celebration) {
+      ctx.translate(Math.sin(this.simTime * 39) * shake, Math.sin(this.simTime * 47 + 1.2) * shake * 0.55)
+    }
+
     const cam = this.camX
+    const hillCam = cam + this.terrainScroll * 0.08
+    const treeCam = cam + this.terrainScroll * 0.24
+    const grassCam = cam + this.terrainScroll * 0.62
+    const farRailCam = cam + this.terrainScroll * 0.9
+    const groundCam = cam + this.terrainScroll
+    const nearRailCam = cam + this.terrainScroll * 1.45
     this.scenery.drawSky(ctx, W, H, cam, this.simTime)
-    this.scenery.drawHills(ctx, W, H, cam)
-    this.scenery.drawTreeLine(ctx, W, H, cam)
-    this.scenery.drawGrass(ctx, W, H, cam)
+    this.scenery.drawHills(ctx, W, H, hillCam)
+    this.scenery.drawTreeLine(ctx, W, H, treeCam)
+    this.scenery.drawGrass(ctx, W, H, grassCam)
     this.scenery.drawGrandstand(ctx, W, H, cam, this.simTime, excitement)
-    this.scenery.drawFarRail(ctx, W, H, cam)
-    this.track.drawSurface(ctx, W, H, cam)
+    this.scenery.drawFarRail(ctx, W, H, farRailCam)
+    this.track.drawSurface(ctx, W, H, groundCam, this.speedIntensity)
     this.track.drawMarkers(ctx, W, H, cam)
     this.track.drawStartGate(ctx, W, H, cam)
     this.track.drawFinish(ctx, W, H, cam, this.simTime)
@@ -353,8 +400,9 @@ export class RaceEngine {
       const sx = m.visX - cam + W / 2
       if (sx < -260 || sx > W + 260) continue
       const groundY = laneGroundY(m.lane, H)
-      const k = laneScale(m.lane) * S * 0.92
+      const k = laneScale(m.lane) * S * 1.04
       const fall = m.fallStart ? Math.min(1, (t - m.fallStart) / 700) : 0
+      const jockeyFall = m.jockeyFallStart ? Math.min(1, (t - m.jockeyFallStart) / 900) : m.jockeyFallen ? 1 : 0
 
       // Speed streaks trailing the horse
       if (m.speedNorm > 0.5 && fall === 0) {
@@ -374,23 +422,49 @@ export class RaceEngine {
 
       ctx.save()
       ctx.translate(sx, groundY)
-      ctx.scale(k, k)
-      drawHorse(ctx, {
-        coat: m.coat,
+      ctx.scale(m.reversed ? -k : k, k)
+      if (m.struck) ctx.filter = 'grayscale(1) brightness(0.22) contrast(1.7)'
+      if (m.golden && !m.struck) {
+        ctx.shadowColor = '#FFE36A'
+        ctx.shadowBlur = 22
+      }
+      const runnerOpts = {
         silk: m.silk,
         number: m.lane + 1,
         phase: m.phase,
         speedNorm: m.speedNorm,
         time: this.simTime + m.lane * 1.7,
         fall,
-        dizzy: m.eliminated,
-      })
+        jockeyFall,
+        golden: m.golden,
+      }
+      if (m.appearance === 'CAMEL') {
+        drawCamel(ctx, runnerOpts)
+      } else if (m.appearance === 'MOTORCYCLE') {
+        drawMotorcycle(ctx, runnerOpts)
+      } else {
+        drawHorse(ctx, {
+          ...runnerOpts,
+          coat: m.struck ? CHARRED_COAT : m.golden ? GOLDEN_COAT : m.coat,
+          dizzy: m.eliminated && !m.struck,
+        })
+      }
+      if (m.struck) {
+        ctx.shadowBlur = 0
+        for (let i = 0; i < 6; i++) {
+          const rise = (this.simTime * (18 + i * 2) + i * 13) % 86
+          ctx.fillStyle = `rgba(42,42,40,${Math.max(0.08, 0.5 - rise / 180)})`
+          ctx.beginPath()
+          ctx.arc(-20 + Math.sin(this.simTime * 1.7 + i) * 16, -76 - rise, 9 + i * 1.4, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      }
       ctx.restore()
     }
 
     this.dust.update(dt)
     this.dust.draw(ctx, cam, W)
-    this.scenery.drawNearRail(ctx, W, H, cam)
+    this.scenery.drawNearRail(ctx, W, H, nearRailCam)
     ctx.restore() // end zoom
 
     // Event spotlight (screen space, after zoom restore)

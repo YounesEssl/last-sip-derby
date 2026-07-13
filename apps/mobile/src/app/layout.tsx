@@ -33,7 +33,7 @@ const caveat = Caveat({
 })
 
 export const metadata: Metadata = {
-  title: 'Last Sip Derby — Ticket',
+  title: "L'Apérodrome — Ticket",
   description: 'Parie et bois !',
 }
 

@@ -55,6 +55,9 @@ interface HorseRaceState {
   leadActs: LeadAct[];
   gateBurst: number; // early surge amplitude
   prevPos: number;
+  jockeyFallTick: number | null;
+  reverseTick: number | null;
+  boostBonus: number;
 }
 
 function smooth01(x: number): number {
@@ -65,12 +68,16 @@ function smooth01(x: number): number {
 @Injectable()
 export class GameService implements OnModuleInit {
   private state: GameState = {
+    serverNow: Date.now(),
     phase: "IDLE",
     raceNumber: 0,
     horses: [],
     players: [],
+    eveningLeaderboard: [],
+    roundDrinks: [],
     queue: [],
     activeEvent: null,
+    lightningEvent: null,
     racePaused: false,
     raceProgress: 0,
     phaseStartedAt: Date.now(),
@@ -110,7 +117,11 @@ export class GameService implements OnModuleInit {
   }
 
   getState(): GameState {
+    this.state.serverNow = Date.now();
     this.state.players = this.getConnectedPlayers();
+    this.state.eveningLeaderboard = Array.from(this.playersByPseudo.values())
+      .sort((a, b) => b.totalSipsDrunk - a.totalSipsDrunk)
+      .map((player) => ({ ...player, currentBet: null, id: "", isConnected: false }));
     return { ...this.state };
   }
 
@@ -228,7 +239,10 @@ export class GameService implements OnModuleInit {
     this.state.phaseStartedAt = Date.now();
     this.state.phaseDuration = PHASE_DURATIONS.BETTING;
     this.state.activeEvent = null;
+    this.state.lightningEvent = null;
     this.state.lastRaceWinner = null;
+    this.state.roundDrinks = [];
+    this.state.raceProgress = 0;
 
     // Pick one random name per sip tier [1, 2, 3, 5, 7]
     const names = horseNamesBySips as Record<string, string[]>;
@@ -246,6 +260,11 @@ export class GameService implements OnModuleInit {
         isEliminated: false,
         color: HORSE_COLORS[i],
         effectiveSpeed: 0,
+        appearance: 'HORSE',
+        isGolden: false,
+        jockeyFallen: false,
+        isReversed: false,
+        isStruckByLightning: false,
       };
     });
 
@@ -267,6 +286,8 @@ export class GameService implements OnModuleInit {
     this.horseRaceStates.clear();
 
     this.state.racePaused = false;
+    this.state.raceProgress = 0;
+    this.state.lightningEvent = null;
 
     // Pre-determine finishing order (weighted by sip odds)
     this.finishOrder = this.rollFinishOrder(this.state.horses);
@@ -282,6 +303,17 @@ export class GameService implements OnModuleInit {
     for (const horse of this.state.horses) {
       horse.position = 0;
       horse.effectiveSpeed = 3;
+      horse.jockeyFallen = false;
+      horse.isReversed = false;
+      horse.isStruckByLightning = false;
+      horse.isEliminated = false;
+
+      // Every roll is per horse. Camel and motorcycle are independent rolls;
+      // in the exceptionally rare double hit, the motorcycle wins visually.
+      const camel = Math.random() < 1 / 25;
+      const motorcycle = Math.random() < 1 / 30;
+      horse.appearance = motorcycle ? 'MOTORCYCLE' : camel ? 'CAMEL' : 'HORSE';
+      horse.isGolden = Math.random() < 1 / 15;
 
       const rank = finishOrder.indexOf(horse.id);
       const target = FINISH_POSITIONS[rank];
@@ -313,6 +345,9 @@ export class GameService implements OnModuleInit {
         leadActs: [],
         gateBurst: Math.random() * 1.4,
         prevPos: 0,
+        jockeyFallTick: Math.random() < 1 / 25 ? 60 + Math.floor(Math.random() * 430) : null,
+        reverseTick: Math.random() < 1 / 30 ? 90 + Math.floor(Math.random() * 390) : null,
+        boostBonus: 0,
       });
     }
 
@@ -382,12 +417,33 @@ export class GameService implements OnModuleInit {
     const leaderRs = leaderId ? this.horseRaceStates.get(leaderId) : undefined;
     const avgDelta = 100 / RACE_TICKS;
 
+    // Timed individual incidents are rolled once at the gate, independently
+    // for every runner, then revealed at their scheduled race tick.
+    for (const horse of this.state.horses) {
+      const rs = this.horseRaceStates.get(horse.id);
+      if (!rs || horse.isEliminated) continue;
+      if (rs.jockeyFallTick === this.raceTick) horse.jockeyFallen = true;
+      if (rs.reverseTick === this.raceTick && !horse.isReversed && this.finishOrder.length > 1) {
+        horse.isReversed = true;
+        this.removeFromFinishOrderAndRerank(horse.id);
+      }
+    }
+
     for (const horse of this.state.horses) {
       if (horse.isEliminated) continue;
       if (horse.position >= 100) continue;
 
       const rs = this.horseRaceStates.get(horse.id);
       if (!rs) continue;
+
+      if (horse.isReversed) {
+        const pos = Math.max(0, rs.prevPos - avgDelta * 0.9);
+        const delta = pos - rs.prevPos;
+        rs.prevPos = pos;
+        horse.position = pos;
+        horse.effectiveSpeed = horse.effectiveSpeed * 0.82 + Math.abs(delta / avgDelta) * 4.2 * 0.18;
+        continue;
+      }
 
       const base = this.basePos(rs, p);
 
@@ -423,8 +479,13 @@ export class GameService implements OnModuleInit {
         if (duelWindow > 0 && gap > 1.2) wiggle += (gap - 1.2) * duelWindow;
       }
 
-      // Monotonic and capped: forward only, and 100 is only reachable at p=1
-      const pos = Math.min(100, Math.max(rs.prevPos, base + wiggle));
+      // A riderless horse runs 15% faster from the instant the jockey drops.
+      // The integrated bonus means an early fall is materially stronger.
+      if (horse.jockeyFallen) rs.boostBonus += avgDelta * 0.15;
+
+      // Forward-only for regular runners; a boost can now break the script
+      // and reach the line early, which is the intended gameplay advantage.
+      const pos = Math.min(100, Math.max(rs.prevPos, base + wiggle + rs.boostBonus));
       const delta = pos - rs.prevPos;
       rs.prevPos = pos;
       horse.position = pos;
@@ -471,6 +532,7 @@ export class GameService implements OnModuleInit {
     this.state.phase = "RESULTS";
     this.state.phaseStartedAt = Date.now();
     this.state.phaseDuration = PHASE_DURATIONS.RESULTS;
+    this.state.lightningEvent = null;
 
     this.tourneeDistributed = false;
 
@@ -482,8 +544,8 @@ export class GameService implements OnModuleInit {
       if (!player.currentBet) continue;
 
       if (player.currentBet.horseId === winnerHorse.id) {
-        // Winner: distributes double the horse's odds
-        sipsToDistribute = winnerHorse.odds * 2;
+        // A golden winner distributes triple the odds instead of double.
+        sipsToDistribute = winnerHorse.odds * (winnerHorse.isGolden ? 3 : 2);
         player.totalSipsGiven += sipsToDistribute;
         winnerPlayer = player;
       } else {
@@ -506,6 +568,11 @@ export class GameService implements OnModuleInit {
       };
     }
 
+    this.state.roundDrinks = losers.map(({ player, sips }) => ({ pseudo: player.pseudo, sips }));
+
+    // A completed race is a durable checkpoint for the whole evening.
+    this.persistence.dump(this.getDumpData());
+
     return { winnerId: winnerHorse.id, sipsToDistribute, losers };
   }
 
@@ -514,6 +581,7 @@ export class GameService implements OnModuleInit {
     this.state.phaseStartedAt = Date.now();
     this.state.phaseDuration = PHASE_DURATIONS.IDLE;
     this.state.activeEvent = null;
+    this.state.lightningEvent = null;
     this.state.racePaused = false;
 
     // Mark all players as disconnected — they must re-join for the next race
@@ -563,23 +631,55 @@ export class GameService implements OnModuleInit {
     return this.finishOrder;
   }
 
-  // Horse elimination + finish order recompute
-  eliminateHorse(horseId: string): void {
-    const horse = this.state.horses.find((h) => h.id === horseId);
-    if (!horse) return;
+  startLightning(): boolean {
+    const candidates = this.finishOrder
+      .map((id) => this.state.horses.find((horse) => horse.id === id))
+      .filter((horse): horse is Horse => !!horse && !horse.isEliminated && !horse.isReversed);
+    if (candidates.length < 2) return false;
 
-    horse.isEliminated = true;
+    const damageRoll = Math.random();
+    const requested = damageRoll < 0.65 ? 1 : damageRoll < 0.9 ? 2 : 3;
+    const count = Math.min(requested, candidates.length - 1);
+    const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+    const startedAt = Date.now();
+    this.state.lightningEvent = {
+      id: uuid(),
+      startedAt,
+      strikeAt: startedAt + 3_500,
+      clearAt: startedAt + 3_750,
+      endsAt: startedAt + 6_750,
+      targetHorseIds: shuffled.slice(0, count).map((horse) => horse.id),
+      phase: 'BLACKOUT',
+    };
+    return true;
+  }
 
-    // Remove from finish order and recompute ranks
+  strikeLightning(): void {
+    const lightning = this.state.lightningEvent;
+    if (!lightning) return;
+    lightning.phase = 'STRIKE';
+    for (const horseId of lightning.targetHorseIds) {
+      const horse = this.state.horses.find((candidate) => candidate.id === horseId);
+      if (!horse || horse.isEliminated) continue;
+      horse.isStruckByLightning = true;
+      this.eliminateHorse(horseId);
+    }
+  }
+
+  startLightningClearing(): void {
+    if (this.state.lightningEvent) this.state.lightningEvent.phase = 'CLEARING';
+  }
+
+  clearLightning(): void {
+    this.state.lightningEvent = null;
+  }
+
+  private removeFromFinishOrderAndRerank(horseId: string): void {
     this.finishOrder = this.finishOrder.filter((id) => id !== horseId);
 
-    // Reassign ranks and target positions for remaining horses. Re-anchor
-    // each plan at the horse's current position so the new curve starts
-    // exactly where it stands (waves fade back in via the segment window).
     const progress = Math.min(1, this.raceTick / RACE_TICKS);
-    const activeCount = this.finishOrder.length;
-    for (let i = 0; i < activeCount; i++) {
-      const h = this.state.horses.find((x) => x.id === this.finishOrder[i]);
+    for (let i = 0; i < this.finishOrder.length; i++) {
+      const h = this.state.horses.find((candidate) => candidate.id === this.finishOrder[i]);
       const rs = this.horseRaceStates.get(this.finishOrder[i]);
       if (rs && h) {
         rs.finishRank = i;
@@ -589,6 +689,18 @@ export class GameService implements OnModuleInit {
         rs.prevPos = h.position;
       }
     }
+  }
+
+  // Horse elimination + finish order recompute
+  eliminateHorse(horseId: string): void {
+    const horse = this.state.horses.find((h) => h.id === horseId);
+    if (!horse || horse.isEliminated) return;
+
+    // Always leave one finish-capable runner so a race cannot deadlock.
+    if (this.finishOrder.includes(horseId) && this.finishOrder.length <= 1) return;
+
+    horse.isEliminated = true;
+    this.removeFromFinishOrderAndRerank(horseId);
 
     console.log('🚫 HORSE ELIMINATED:', horse.name);
     console.log('📋 NEW FINISH ORDER:');
@@ -669,8 +781,12 @@ export class GameService implements OnModuleInit {
         target.debt += a.sips;
         target.totalSipsDrunk += a.sips;
       }
+      const existing = this.state.roundDrinks.find((drink) => drink.pseudo === a.pseudo);
+      if (existing) existing.sips += a.sips;
+      else this.state.roundDrinks.push({ pseudo: a.pseudo, sips: a.sips });
     }
     this.tourneeDistributed = true;
+    this.persistence.dump(this.getDumpData());
     return applied;
   }
 

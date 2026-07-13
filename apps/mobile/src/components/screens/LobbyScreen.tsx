@@ -4,7 +4,7 @@ import type { GameState, Player } from '@last-sip-derby/shared'
 import { Header, CountdownPill, usePhaseCountdown } from '../ui'
 
 export function LobbyScreen({ state, player, pseudo }: { state: GameState; player: Player | null; pseudo: string }) {
-  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration)
+  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow)
 
   return (
     <div className="flex h-full flex-col">

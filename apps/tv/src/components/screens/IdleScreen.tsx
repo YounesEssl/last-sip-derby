@@ -5,10 +5,10 @@ import { AmbientScene } from '../AmbientScene'
 import { Bulbs, JoinQR, Ticker, usePhaseCountdown } from '../shared'
 
 export function IdleScreen({ state }: { state: GameState }) {
-  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration)
+  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow)
   const players = state.players
   const hasPlayers = players.length > 0
-  const board = [...players].sort((a, b) => b.totalSipsDrunk - a.totalSipsDrunk).slice(0, 7)
+  const board = [...state.eveningLeaderboard].sort((a, b) => b.totalSipsDrunk - a.totalSipsDrunk).slice(0, 7)
 
   return (
     <div className="relative h-full overflow-hidden bg-derby-night">
@@ -26,7 +26,7 @@ export function IdleScreen({ state }: { state: GameState }) {
             <Bulbs count={30} />
           </div>
           <h1 className="text-engraved mt-2 text-center font-display text-[10vh] leading-[1.04] animate-flicker">
-            Last Sip Derby
+            L&apos;Apérodrome
           </h1>
           <div className="mt-2">
             <Bulbs count={30} />

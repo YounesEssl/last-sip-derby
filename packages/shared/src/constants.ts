@@ -3,7 +3,7 @@ export const HORSES_PER_RACE = 5
 
 export const PHASE_DURATIONS = {
   BETTING: 40_000,
-  RACING: 120_000,
+  RACING: 60_000,
   RESULTS: 45_000, // time for the winner to pick victims and send the tournée
   IDLE: 30_000,
 } as const

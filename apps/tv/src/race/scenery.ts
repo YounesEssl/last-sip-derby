@@ -245,7 +245,10 @@ export class Scenery {
 
   private billboard(ctx: CanvasRenderingContext2D, x: number, baseY: number, w: number, h: number, S: number, index: number) {
     if (w < 120 * S) return
-    const text = this.sponsorOrder[Math.abs(index) % this.sponsorOrder.length]
+    // Track sections get a stable slot instead of wrapping with modulo: a
+    // slogan can therefore never reappear later in the same race.
+    const text = this.sponsorOrder[index + 1]
+    if (!text) return
     const y = baseY - h - 20 * S
     // legs
     ctx.fillStyle = '#2B2118'

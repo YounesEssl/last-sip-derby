@@ -49,6 +49,11 @@ export class GameEvents {
     const title = EVENT_TITLES[Math.floor(Math.random() * EVENT_TITLES.length)]
     const rawDescription = EVENT_DESCRIPTIONS[Math.floor(Math.random() * EVENT_DESCRIPTIONS.length)]
     const description = rawDescription.replace('...', targetHorse.name)
+    const visualKind = rawDescription.startsWith('Un spectateur bourré')
+      ? 'DRUNK_SPECTATOR'
+      : rawDescription.startsWith('Un dindon')
+        ? 'TURKEY'
+        : 'NONE'
 
     const event: GameEvent = {
       id: uuid(),
@@ -63,6 +68,7 @@ export class GameEvents {
       votingDeadline: Date.now() + 30_000,
       resolved: false,
       horseEliminated: false,
+      visualKind,
     }
 
     return event

@@ -8,6 +8,7 @@ import { IdleScreen } from '@/components/screens/IdleScreen'
 import { BettingScreen } from '@/components/screens/BettingScreen'
 import { RaceScreen } from '@/components/screens/RaceScreen'
 import { ResultsScreen } from '@/components/screens/ResultsScreen'
+import { ExperienceControls } from '@/components/ExperienceControls'
 
 // After the winner crosses the line, hold the race view for the photo-finish
 // celebration before cutting to the podium.
@@ -51,7 +52,7 @@ export default function TVPage() {
     return (
       <div className="flex h-full items-center justify-center bg-derby-night">
         <div className="text-center">
-          <div className="text-engraved font-display text-6xl animate-flicker">LAST SIP DERBY</div>
+          <div className="text-engraved font-display text-6xl animate-flicker">L&apos;APÉRODROME</div>
           <div className="mt-4 font-terminal text-2xl text-derby-smoke animate-pulse-soft">
             {connected ? 'Chargement de l’hippodrome...' : 'Connexion au serveur...'}
           </div>
@@ -89,6 +90,8 @@ export default function TVPage() {
           )}
         </motion.div>
       </AnimatePresence>
+
+      <ExperienceControls state={gameState} activeEventId={activeEvent?.id ?? null} />
 
       {!connected && (
         <div className="absolute inset-x-0 top-0 z-50 bg-derby-red py-1 text-center font-headline tracking-[0.3em] text-derby-cream">

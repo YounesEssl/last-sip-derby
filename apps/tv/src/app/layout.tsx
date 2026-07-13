@@ -33,8 +33,8 @@ const caveat = Caveat({
 })
 
 export const metadata: Metadata = {
-  title: 'Last Sip Derby — TV',
-  description: 'Course de chevaux Last Sip Derby',
+  title: "L'Apérodrome — TV",
+  description: "Course de chevaux de L'Apérodrome",
 }
 
 export default function RootLayout({
