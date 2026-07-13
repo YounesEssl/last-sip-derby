@@ -45,7 +45,7 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
   }, [])
 
   useEffect(() => {
-    engineRef.current?.ingest(state.horses, state.raceProgress, state.racePaused)
+    engineRef.current?.ingest(state.horses, state.raceProgress, state.racePaused, state.serverNow)
   }, [state])
 
   useEffect(() => {

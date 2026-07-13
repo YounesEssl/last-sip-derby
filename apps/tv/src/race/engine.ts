@@ -81,6 +81,7 @@ export class RaceEngine {
   private dust = new DustPool()
   private confetti = new ConfettiPool()
   private resizeObs: ResizeObserver | null = null
+  private serverTimelineAnchor: { serverTime: number; clientTime: number } | null = null
 
   constructor(canvas: HTMLCanvasElement, seed: number) {
     this.canvas = canvas
@@ -108,8 +109,17 @@ export class RaceEngine {
   }
 
   /** Feed a fresh server snapshot. */
-  ingest(horses: Horse[], raceProgress: number, paused: boolean) {
-    const now = performance.now()
+  ingest(horses: Horse[], raceProgress: number, paused: boolean, serverNow: number) {
+    const receivedAt = performance.now()
+    if (!this.serverTimelineAnchor) {
+      this.serverTimelineAnchor = { serverTime: serverNow, clientTime: receivedAt }
+    }
+    // Keep animation time tied to the server's regular 100 ms cadence. Using
+    // receivedAt here made a 160 ms packet followed by a 40 ms packet look
+    // exactly like a horse stopping and then jumping forward.
+    const snapshotTime = Number.isFinite(serverNow)
+      ? this.serverTimelineAnchor.clientTime + (serverNow - this.serverTimelineAnchor.serverTime)
+      : receivedAt
     this.raceProgress = raceProgress
     this.paused = paused
     for (const h of horses) {
@@ -139,18 +149,18 @@ export class RaceEngine {
         this.horses.set(h.id, m)
         this.order = [...this.horses.values()].sort((a, b) => a.lane - b.lane).map((x) => x.id)
       }
-      m.tracker.push(h.position, now)
+      m.tracker.push(h.position, snapshotTime)
       m.appearance = h.appearance
       m.golden = h.isGolden
       m.reversed = h.isReversed
       m.struck = h.isStruckByLightning
       if (h.jockeyFallen && !m.jockeyFallen) {
         m.jockeyFallen = true
-        m.jockeyFallStart = now
+        m.jockeyFallStart = receivedAt
       }
       if (h.isEliminated && !m.eliminated) {
         m.eliminated = true
-        m.fallStart = now
+        m.fallStart = receivedAt
       }
     }
   }
@@ -216,8 +226,8 @@ export class RaceEngine {
     let alive = 0
     for (const id of this.order) {
       const m = this.horses.get(id)!
-      const stalled = m.tracker.isStalled(t)
-      let pos = m.tracker.sample(t)
+      const stalled = this.paused || m.tracker.isStalled(t)
+      let pos = m.tracker.sample(t, this.paused)
 
       // Victory overrun starts immediately while the final server snapshot is
       // still being interpolated. Waiting for the tracker to become "stalled"

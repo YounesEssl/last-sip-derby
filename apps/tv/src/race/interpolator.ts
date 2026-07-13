@@ -1,15 +1,18 @@
 // Converts 10 Hz server snapshots into smooth 60 fps positions.
-// Renders slightly in the past (RENDER_DELAY) so we can interpolate between
-// two known snapshots instead of guessing ahead.
+// Renders slightly in the past so normal internet jitter stays inside the
+// snapshot buffer instead of turning late/clustered packets into slowdowns
+// and catch-up jumps.
 
 interface Snapshot {
   t: number
   pos: number
 }
 
-const RENDER_DELAY_MS = 180
+const RENDER_DELAY_MS = 280
 const BUFFER_MAX = 30
-const STALL_MS = 350 // no fresh snapshot for this long → hold position (pause)
+const MAX_EXTRAPOLATION_MS = 220
+const STALL_MS = 700
+const MAX_SPEED_UNITS_PER_SECOND = 4
 
 export class HorseTracker {
   private buffer: Snapshot[] = []
@@ -29,15 +32,22 @@ export class HorseTracker {
     }
   }
 
-  sample(now: number): number {
+  sample(now: number, hold = false): number {
     const n = this.buffer.length
     if (n === 0) return 0
     const newest = this.buffer[n - 1]
     const rt = now - RENDER_DELAY_MS
 
-    if (now - newest.t > STALL_MS || rt >= newest.t) {
-      // Paused or slightly ahead of data: clamp to the newest known position.
+    if (hold || now - newest.t > STALL_MS) {
       return newest.pos
+    }
+    if (rt >= newest.t) {
+      // A packet can still miss the jitter buffer on a Wi-Fi spike. Continue
+      // briefly along the latest server-timed velocity rather than freezing,
+      // then hold if the connection is genuinely gone.
+      const horizon = Math.min(MAX_EXTRAPOLATION_MS, rt - newest.t)
+      const velocity = Math.max(-MAX_SPEED_UNITS_PER_SECOND, Math.min(MAX_SPEED_UNITS_PER_SECOND, this.velocity))
+      return Math.max(0, Math.min(101.5, newest.pos + velocity * (horizon / 1000)))
     }
     for (let i = n - 1; i > 0; i--) {
       const a = this.buffer[i - 1]
