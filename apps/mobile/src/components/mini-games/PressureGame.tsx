@@ -3,7 +3,9 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { playGameFeedback } from './feedback'
 
-const CYCLE_MS = 900
+const DEPLOYED_CYCLE_MS = 900
+const PRESSURE_SPEED_MULTIPLIER = 1.3
+const CYCLE_MS = DEPLOYED_CYCLE_MS / PRESSURE_SPEED_MULTIPLIER
 const GAUGE_TOP_Y = 5
 const GAUGE_BOTTOM_Y = 205
 const GAUGE_HALF_WIDTH = 46
