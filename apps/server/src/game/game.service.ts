@@ -19,6 +19,11 @@ import {
   MiniGameType,
   RACE_EVENT_ODDS,
   RACE_SPEED_BONUSES,
+  MINI_GAME_DURATIONS,
+  MINI_GAME_TYPES,
+  applyMiniGameAction,
+  resolveMiniGameState,
+  shouldEndMiniGameEarly,
 } from "@last-sip-derby/shared";
 import { PersistenceService } from "../persistence/persistence.service";
 
@@ -82,11 +87,6 @@ const CAPITALS = [
     ['Afghanistan','Kaboul'],['Angola','Luanda'],['Bangladesh','Dacca'],['Bolivie','La Paz / Sucre'],['Cambodge','Phnom Penh'],['Cameroun','Yaoundé'],['Corée du Nord','Pyongyang'],['Estonie','Tallinn'],['Fidji','Suva'],['Ghana','Accra'],['Guatemala','Guatemala'],['Haïti','Port-au-Prince'],['Jordanie','Amman'],['Kazakhstan','Astana'],['Lettonie','Riga'],['Lituanie','Vilnius'],['Mali','Bamako'],['Népal','Katmandou'],['Ouzbékistan','Tachkent'],['Panama','Panama'],['Papouasie-Nouvelle-Guinée','Port Moresby'],['Paraguay','Asuncion'],['République Dominicaine','Saint-Domingue'],['Sri Lanka','Colombo'],['Taïwan','Taipei'],['Uruguay','Montevideo'],
   ],
 ] as const;
-
-const MINI_DURATIONS: Record<MiniGameType, number> = {
-  GRID: 20_000, CODE: 25_000, CAPITAL: 20_000, MAZE: 60_000,
-  CLICKER: 10_000, ORDER: 45_000, PENALTY: 30_000, PRESSURE: 15_000,
-};
 
 @Injectable()
 export class GameService implements OnModuleInit {
@@ -910,8 +910,7 @@ export class GameService implements OnModuleInit {
     if (this.state.phase !== 'RACING' || this.state.miniGame) return null;
     const participants = this.getConnectedPlayers().filter((player) => !!player.currentBet && !player.miniGameEliminated);
     if (participants.length < 2) return null;
-    const types: MiniGameType[] = ['GRID','CODE','CAPITAL','MAZE','CLICKER','ORDER','PENALTY','PRESSURE'];
-    const picked = type ?? types[Math.floor(Math.random() * types.length)];
+    const picked = type ?? MINI_GAME_TYPES[Math.floor(Math.random() * MINI_GAME_TYPES.length)];
     const payload: Record<string, unknown> = {};
     let prompt = '';
     if (picked === 'GRID') {
@@ -937,7 +936,7 @@ export class GameService implements OnModuleInit {
 
     const startedAt = Date.now();
     this.state.miniGame = {
-      id: uuid(), type: picked, startedAt, endsAt: startedAt + MINI_DURATIONS[picked], status: 'PLAYING', resultsEndAt: null,
+      id: uuid(), type: picked, startedAt, endsAt: startedAt + MINI_GAME_DURATIONS[picked], status: 'PLAYING', resultsEndAt: null,
       prompt, payload,
       players: participants.map((player) => ({ playerId: player.id, pseudo: player.pseudo, score: 0, progress: 0, finishedAt: null, lives: 2, eliminated: false })),
     };
@@ -946,52 +945,18 @@ export class GameService implements OnModuleInit {
   }
 
   handleMiniGameAction(socketId: string, gameId: string, action: string, value?: number | string): boolean {
-    const game = this.state.miniGame;
-    if (!game || game.id !== gameId || game.status !== 'PLAYING' || Date.now() >= game.endsAt) return false;
-    const row = game.players.find((candidate) => candidate.playerId === socketId);
-    if (!row || row.eliminated || row.finishedAt) return false;
-    const finish = () => { row.finishedAt = Date.now(); row.progress = 100; };
-    if (game.type === 'GRID' && action === 'pick' && value === game.payload.target) finish();
-    else if (game.type === 'CODE' && action === 'answer' && Number(value) === game.payload.answer) finish();
-    else if (game.type === 'CAPITAL' && action === 'answer') {
-      if (value === game.payload.answer) finish();
-      else if (--row.lives <= 0) { row.eliminated = true; row.finishedAt = Date.now(); }
-    } else if (game.type === 'MAZE' && action === 'finish') finish();
-    else if (game.type === 'CLICKER' && action === 'click') { row.score = Math.min(300, row.score + 1); row.progress = row.score; }
-    else if (game.type === 'ORDER' && action === 'pick' && Number(value) === row.progress + 1) { row.progress++; if (row.progress === 16) finish(); }
-    else if (game.type === 'PENALTY' && action === 'shot' && row.progress < 10) { row.progress++; row.score += Number(value) === 1 ? 1 : 0; }
-    else if (game.type === 'PRESSURE' && action === 'score') { row.score = Math.max(0, Math.min(100, Number(value) || 0)); finish(); }
-    return true;
+    return applyMiniGameAction(this.state.miniGame, socketId, gameId, action, value).accepted;
   }
 
   shouldEndMiniGameEarly(): boolean {
-    const game = this.state.miniGame;
-    if (!game || game.status !== 'PLAYING' || ['CLICKER','PENALTY'].includes(game.type)) return false;
-    return game.players.filter((row) => !row.finishedAt && !row.eliminated).length <= 1;
+    return shouldEndMiniGameEarly(this.state.miniGame);
   }
 
   resolveMiniGame(): string[] {
     const game = this.state.miniGame;
     if (!game || game.status !== 'PLAYING') return [];
-    const unfinished = game.players.filter((row) => !row.finishedAt || row.eliminated);
-    let losers = unfinished;
-    if (['CLICKER','PENALTY','PRESSURE'].includes(game.type)) {
-      const worst = Math.min(...game.players.map((row) => row.score));
-      losers = game.players.filter((row) => row.score === worst);
-    } else if (!unfinished.length) {
-      const lastTime = Math.max(...game.players.map((row) => row.finishedAt ?? 0));
-      losers = game.players.filter((row) => row.finishedAt === lastTime);
-    }
-    const baseline = game.players[0];
-    const allSame = losers.length === game.players.length && game.players.every((row) =>
-      row.score === baseline.score &&
-      row.progress === baseline.progress &&
-      row.finishedAt === baseline.finishedAt &&
-      row.lives === baseline.lives,
-    );
-    if (allSame) losers = [];
+    const losers = resolveMiniGameState(game);
     for (const row of losers) {
-      row.eliminated = true;
       const player = this.getPlayerByPseudo(row.pseudo);
       if (!player?.currentBet) continue;
       player.miniGameEliminated = true;
@@ -1002,8 +967,6 @@ export class GameService implements OnModuleInit {
         if (horse) horse.miniGameJockeyFallen = true;
       }
     }
-    game.status = 'RESULTS';
-    game.resultsEndAt = Date.now() + 5_000;
     return losers.map((row) => row.playerId);
   }
 
