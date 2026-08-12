@@ -16,6 +16,7 @@ interface MiniHorse {
   color: string
   lane: number
   eliminated: boolean
+  reversed: boolean
 }
 
 interface Props {
@@ -79,11 +80,13 @@ export function MiniRace({ horses, myHorseId, paused }: Props) {
             color: horse.color,
             lane: horse.lane,
             eliminated: horse.isEliminated,
+            reversed: horse.isReversed,
           }
           stateRef.current.set(horse.id, m)
         }
         m.target = horse.position
         m.eliminated = horse.isEliminated
+        m.reversed = horse.isReversed
         m.display += (m.target - m.display) * Math.min(1, dt * 7)
         if (!m.eliminated) {
           if (m.display > leader) leader = m.display
@@ -180,7 +183,9 @@ function drawMiniHorse(
     ctx.stroke()
   }
 
+  ctx.save()
   if (m.eliminated) ctx.rotate(-0.35)
+  if (m.reversed) ctx.scale(-1, 1)
 
   // legs
   ctx.strokeStyle = color
@@ -212,8 +217,9 @@ function drawMiniHorse(
   ctx.quadraticCurveTo(-12, -4 + Math.sin(time * 3 + m.lane) * 1.5, -14, -1)
   ctx.stroke()
 
+  ctx.restore()
+
   if (m.eliminated) {
-    ctx.rotate(0.35)
     ctx.fillStyle = 'rgba(244,232,206,0.8)'
     ctx.font = 'bold 10px sans-serif'
     ctx.textAlign = 'center'

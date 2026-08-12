@@ -70,21 +70,6 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
     return [...alive, ...dead]
   }, [state.horses])
 
-  // "X prend la tête !" callout, synced with the engine's punch-zoom
-  const [leadChange, setLeadChange] = useState<{ name: string; color: string; key: number } | null>(null)
-  const prevLeaderRef = useRef<string | null>(null)
-  useEffect(() => {
-    const leader = ranking[0]
-    if (!leader || leader.isEliminated) return
-    const prev = prevLeaderRef.current
-    prevLeaderRef.current = leader.id
-    if (prev && prev !== leader.id && leader.position > 12 && leader.position < 82 && !state.racePaused && !finished) {
-      setLeadChange({ name: leader.name, color: leader.color, key: Date.now() })
-      const timer = setTimeout(() => setLeadChange(null), 1700)
-      return () => clearTimeout(timer)
-    }
-  }, [ranking, state.racePaused, finished])
-
   const winnerBettors = useMemo(() => {
     if (!winner) return []
     return state.players.filter((p) => p.currentBet?.horseId === winner.id).map((p) => p.pseudo)
@@ -109,32 +94,24 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
 
       {/* ── Minimap ── */}
       <div className="pointer-events-none absolute left-1/2 top-[9vh] z-20 w-[44vw] -translate-x-1/2">
-        <div className="relative h-[2.4vh] rounded-full border border-derby-gold/50 bg-derby-night/75 backdrop-blur-sm">
+        <div className="relative h-[4.4vh] rounded-full border border-derby-gold/50 bg-derby-night/75 backdrop-blur-sm">
           <div className="absolute right-[2.2vh] top-1/2 h-[60%] w-[3px] -translate-y-1/2 bg-derby-cream/70" />
           <div className="absolute right-[1vh] top-1/2 -translate-y-1/2 font-headline text-[2vh] text-derby-cream/80">🏁</div>
           {state.horses.map((h) => (
             <div
               key={h.id}
-              className="absolute top-1/2 flex h-[2.2vh] w-[2.2vh] -translate-y-1/2 items-center justify-center"
+              aria-label={`${h.name} : ${Math.round(h.position)} %`}
+              className="absolute h-[1.05vh] w-[1.05vh] -translate-x-1/2 -translate-y-1/2 rounded-full border-[0.16vh] shadow-[0_0_0_.14vh_rgba(0,0,0,.65),0_0_.45vh_rgba(255,255,255,.35)]"
               style={{
-                left: `calc(${Math.min(96, 1 + h.position * 0.95)}% - 1.1vh)`,
+                left: `${Math.min(94, 2 + h.position * 0.92)}%`,
+                top: `calc(50% + ${(h.lane - 2) * 0.72}vh)`,
+                backgroundColor: h.isEliminated ? '#4a4a48' : h.color,
+                borderColor: h.isEliminated ? '#76736d' : '#f4e8ce',
                 opacity: h.isEliminated ? 0.55 : 1,
-                transition: 'left 140ms linear',
+                transition: 'left 140ms linear, top 180ms ease',
                 zIndex: Math.round(h.position),
               }}
-            >
-              <span
-                aria-hidden
-                className="block font-serif text-[2.15vh] leading-none [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]"
-                style={{
-                  color: h.isEliminated ? '#4a4a48' : h.color,
-                  transform: `scaleX(${h.isReversed ? 1 : -1})`,
-                  transition: 'transform 180ms ease',
-                }}
-              >
-                ♞
-              </span>
-            </div>
+            />
           ))}
         </div>
       </div>
@@ -162,30 +139,9 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
         ))}
       </div>
 
-      {/* ── Lead-change callout ── */}
-      <AnimatePresence>
-        {leadChange && !activeEvent && (
-          <motion.div
-            key={leadChange.key}
-            initial={{ y: 40, opacity: 0, scale: 0.85 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: -20, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-            className="pointer-events-none absolute left-1/2 top-[16vh] z-30 -translate-x-1/2"
-          >
-            <div
-              className="rounded-xl border-2 px-7 py-2 font-headline text-[2.8vh] font-medium tracking-[0.2em] text-derby-cream shadow-deep backdrop-blur-sm"
-              style={{ borderColor: leadChange.color, background: 'rgba(14,10,6,0.82)' }}
-            >
-              🔥 {leadChange.name.toUpperCase()} PREND LA TÊTE !
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <RaceCommentator
         state={state}
-        suppressed={showStart || !!activeEvent || !!state.lightningEvent || finished}
+        suppressed={showStart || !!activeEvent || !!state.lightningEvent || !!state.miniGame || !!state.executionEvent || finished}
       />
 
       {/* ── Start flash ── */}

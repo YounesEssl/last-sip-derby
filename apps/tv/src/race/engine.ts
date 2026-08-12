@@ -284,7 +284,7 @@ export class RaceEngine {
         this.dust.spawn(m.visX + hoof.x * k, laneGroundY(m.lane, H) - 2, k, Math.min(1.2, m.speedNorm * 1.25))
       }
       if (
-        (m.golden || m.diamond) &&
+        (m.golden || m.diamond || m.blackKnight) &&
         !m.eliminated &&
         !this.paused &&
         m.speedNorm > 0.12 &&
@@ -292,7 +292,7 @@ export class RaceEngine {
       ) {
         const k = laneScale(m.lane) * S
         const direction: -1 | 1 = m.reversed ? 1 : -1
-        const color = m.diamond ? [82, 197, 255] as const : [235, 181, 55] as const
+        const color = m.blackKnight ? [18, 20, 24] as const : m.diamond ? [82, 197, 255] as const : [235, 181, 55] as const
         this.dust.spawnTrail(
           m.visX + direction * 54 * k,
           laneGroundY(m.lane, H) - 5 * k,

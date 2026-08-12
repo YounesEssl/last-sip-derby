@@ -1,6 +1,9 @@
 import {
   MINI_GAME_DURATIONS,
   MINI_GAME_TYPES,
+  MAZE_BANK_SIZE,
+  PENALTY_GOAL_LEFT_PERCENT,
+  PENALTY_GOAL_RIGHT_PERCENT,
   applyMiniGameAction,
   resolveMiniGameState,
   shouldEndMiniGameEarly,
@@ -40,15 +43,15 @@ export const GAME_SPECS: Readonly<Record<MiniGameType, MiniGameSpec>> = {
     label: 'Capitales',
     icon: '◎',
     summary: 'Choisir la bonne capitale parmi quatre réponses.',
-    rule: 'Deux vies : une erreur retire un cœur, la seconde élimine. Une bonne réponse qualifie.',
+    rule: 'Deux vies : une erreur retire une vie, la seconde élimine. Une bonne réponse qualifie.',
     checks: ['Quatre choix visibles', 'Flash après erreur', 'Deux vies correctement décomptées', 'Bonne réponse qualifiante'],
   },
   MAZE: {
     label: 'Labyrinthe',
     icon: '⌁',
-    summary: 'Guider le point rouge jusqu’à la sortie verte.',
-    rule: 'Les murs bloquent le déplacement. Atteindre la sortie qualifie le joueur.',
-    checks: ['Labyrinthe entièrement visible', 'Murs bloquants', 'Commandes tactiles réactives', 'Sortie qualifiante'],
+    summary: 'Piloter une bille avec inertie jusqu’à la sortie du labyrinthe commun.',
+    rule: 'Joystick analogique, collisions physiques et même parcours pour tous. Limite : 60 secondes.',
+    checks: ['50 parcours exploitables', 'Joystick utilisable au pouce', 'Inertie et collisions fiables', 'Ordre de sortie TV'],
   },
   CLICKER: {
     label: 'Clicker',
@@ -68,15 +71,15 @@ export const GAME_SPECS: Readonly<Record<MiniGameType, MiniGameSpec>> = {
     label: 'Penalty',
     icon: '⚽',
     summary: 'Déclencher dix tirs pendant que le ballon se déplace.',
-    rule: 'Un tir entre 32 % et 68 % marque. Après dix tirs, le plus faible score perd.',
-    checks: ['Ballon fluide', 'Zone de but compréhensible', 'Dix tirs maximum', 'Buts et ratés classés'],
+    rule: `Le centre du ballon doit être entre ${PENALTY_GOAL_LEFT_PERCENT} % et ${PENALTY_GOAL_RIGHT_PERCENT} %. Après dix tirs, le plus faible score perd.`,
+    checks: ['Ballon rapide et continu', 'Trajectoire avant impact', 'Dix tirs maximum en 30 s', 'Classement TV en direct'],
   },
   PRESSURE: {
     label: 'Pression',
     icon: '▲',
     summary: 'Arrêter la jauge aussi près que possible de 100 %.',
     rule: 'Le score est borné entre 0 et 100. Le plus faible résultat est éliminé.',
-    checks: ['Jauge fluide', 'Arrêt unique', 'Score décimal lisible', 'Message adapté au score'],
+    checks: ['Cône rouge vers vert', 'Retour instantané à zéro', 'Arrêt unique', 'Score décimal et message lisibles'],
   },
 }
 
@@ -84,7 +87,7 @@ export const SCENARIOS: ReadonlyArray<{ id: LabScenario; label: string; descript
   { id: 'fresh', label: 'Départ propre', description: 'Tous les joueurs commencent à zéro.' },
   { id: 'midway', label: 'En cours', description: 'Scores et qualifications déjà mélangés.' },
   { id: 'results', label: 'Résultats', description: 'Classement final avec un perdant.' },
-  { id: 'tie', label: 'Égalité totale', description: 'Personne ne doit être éliminé.' },
+  { id: 'tie', label: 'Égalité totale', description: 'Vérifie la règle d’égalité propre au jeu, y compris l’élimination collective aux tirs et à la pression.' },
   { id: 'crowd', label: '12 joueurs', description: 'Pseudos longs et charge maximale visuelle.' },
   { id: 'timeout', label: 'Fin imminente', description: 'Il reste environ deux secondes.' },
 ]
@@ -162,7 +165,7 @@ function makePayload(type: MiniGameType, seed: number): { prompt: string; payloa
     }
   }
   if (type === 'MAZE') {
-    return { prompt: 'Sortez du labyrinthe', payload: { seed: Math.floor(random() * 1_000_000), level: Math.floor(random() * 50) } }
+    return { prompt: 'Sortez du labyrinthe', payload: { mazeIndex: Math.floor(random() * MAZE_BANK_SIZE) } }
   }
   if (type === 'ORDER') {
     return { prompt: '1 → 16', payload: { values: shuffled(Array.from({ length: 16 }, (_, index) => index + 1), random) } }
@@ -337,7 +340,7 @@ export function createBotActions(game: MiniGameState, humanPlayerId: string, now
     } else if (game.type === 'ORDER') {
       actions.push({ playerId: row.playerId, action: 'pick', value: row.progress + 1 })
     } else if (game.type === 'PENALTY') {
-      if (row.progress < 10) actions.push({ playerId: row.playerId, action: 'shot', value: (row.progress + index) % 4 === 0 ? 0 : 1 })
+      if (row.progress < 10) actions.push({ playerId: row.playerId, action: 'shot', value: (row.progress + index) % 4 === 0 ? 18 : 50 })
     } else if (game.type === 'PRESSURE') {
       if (elapsed > 2_100 + index * 760) actions.push({ playerId: row.playerId, action: 'score', value: Math.min(99.5, 54 + index * 8.7) })
     } else if (elapsed > 2_000 + index * 850) {

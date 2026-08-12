@@ -83,7 +83,7 @@ export function RaceScreen({ state, player, onBlackKnightKill }: { state: GameSt
                   {myHorse.isGolden ? '✨ CHEVAL DORÉ · ' : ''}
                   {myHorse.isDiamond ? '💎 CHEVAL DIAMANT ×5 · ' : ''}
                   {myHorse.isBlackKnight ? '⚔️ CAVALIER NOIR · ' : ''}
-                  {myHorse.appearance === 'CAMEL' ? '🐪 CHAMEAU · ' : myHorse.appearance === 'MOTORCYCLE' ? '🏍️ MOTO CROSS +5% · ' : myHorse.appearance === 'SCOOTER' ? '🛴 ADRIEN HOURMAND +15% · ' : ''}
+                  {myHorse.appearance === 'CAMEL' ? '🐪 CHAMEAU · ' : myHorse.appearance === 'MOTORCYCLE' ? '🏍️ MOTO CROSS +5% · ' : myHorse.appearance === 'SCOOTER' ? '🛴 ADRIEN HOURMAND +8% · ' : ''}
                   {myHorse.jockeyFallen ? 'JOCKEY À TERRE +5% · ' : ''}
                   {myHorse.isReversed ? '↩ COURSE À L’ENVERS' : ''}
                 </div>

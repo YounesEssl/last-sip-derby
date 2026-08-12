@@ -1212,8 +1212,8 @@ export function drawScooter(ctx: CanvasRenderingContext2D, o: AlternateRunnerOpt
   ctx.fillText(String(o.number), -9, -77)
 
   // The combined skin keeps Adrien's body shape but turns his clothes and
-  // scooter black, then gives him the executioner's oversized double axe.
-  if (o.blackKnight) drawRaisedDoubleAxe(ctx, -16, -91, -42, -164, 1.05)
+  // scooter black, then gives him the knight's readable double axe.
+  if (o.blackKnight) drawRaisedDoubleAxe(ctx, -16, -91, -42, -160, 0.84)
   ctx.restore()
 }
 
@@ -1265,79 +1265,140 @@ function drawRaisedDoubleAxe(
   ctx.restore()
 }
 
-/** Hooded executioner shared by horse, camel and motocross combinations. */
+/** Structured black knight shared by horse, camel and motocross combinations. */
 export function drawBlackKnightRider(ctx: CanvasRenderingContext2D, x: number, y: number, time: number) {
-  const bob = Math.sin(time * 5.2) * 1.5
+  const bob = Math.sin(time * 5.2) * 1.25
   ctx.save()
   ctx.translate(x, y + bob)
-  drawRaisedDoubleAxe(ctx, -7, -7, -34, -75, 1.08)
+  drawRaisedDoubleAxe(ctx, -8, -8, -33, -72, 0.86)
 
-  // Heavy cloak and broad executioner shoulders.
-  ctx.fillStyle = '#08090B'
-  ctx.strokeStyle = '#010101'
-  ctx.lineWidth = 3
-  ctx.beginPath()
-  ctx.moveTo(-25, 17)
-  ctx.quadraticCurveTo(-20, -25, 5, -30)
-  ctx.quadraticCurveTo(28, -19, 25, 19)
-  ctx.lineTo(8, 10)
-  ctx.lineTo(-8, 19)
-  ctx.closePath()
-  ctx.fill()
-  ctx.stroke()
-  ctx.fillStyle = '#1C1E22'
-  ctx.beginPath()
-  ctx.moveTo(-16, 9)
-  ctx.quadraticCurveTo(-10, -16, 10, -20)
-  ctx.lineTo(4, 13)
-  ctx.closePath()
-  ctx.fill()
-  ctx.strokeStyle = '#761017'
+  // Squared cloak panels create a readable lower silhouette without becoming
+  // one uniform black blob.
+  ctx.fillStyle = '#101217'
+  ctx.strokeStyle = '#030405'
   ctx.lineWidth = 2.5
   ctx.beginPath()
-  ctx.moveTo(-20, 13)
-  ctx.quadraticCurveTo(0, 2, 22, 14)
-  ctx.stroke()
-
-  // Pointed hood with a deep face opening and hostile red eyes.
-  ctx.fillStyle = '#111318'
-  ctx.strokeStyle = '#010101'
-  ctx.beginPath()
-  ctx.moveTo(-10, -31)
-  ctx.quadraticCurveTo(2, -59, 20, -34)
-  ctx.lineTo(16, -12)
-  ctx.lineTo(-13, -13)
+  ctx.moveTo(-22, 19)
+  ctx.lineTo(-18, -10)
+  ctx.lineTo(18, -10)
+  ctx.lineTo(25, 19)
+  ctx.lineTo(8, 12)
+  ctx.lineTo(-7, 20)
   ctx.closePath()
   ctx.fill()
   ctx.stroke()
-  ctx.fillStyle = '#010101'
-  ctx.beginPath()
-  ctx.ellipse(5, -29, 12, 14, 0.08, 0, TWO_PI)
-  ctx.fill()
-  ctx.fillStyle = '#E3262E'
-  ctx.shadowColor = '#E3262E'
-  ctx.shadowBlur = 7
-  ctx.beginPath()
-  ctx.ellipse(1, -31, 2.7, 1.4, -0.2, 0, TWO_PI)
-  ctx.ellipse(10, -31, 2.7, 1.4, 0.2, 0, TWO_PI)
-  ctx.fill()
-  ctx.shadowBlur = 0
 
-  // Both hands visibly brace the axe shaft.
-  ctx.strokeStyle = '#16181C'
-  ctx.lineWidth = 9
+  // Angular breastplate, central ridge and segmented faulds.
+  const plate = ctx.createLinearGradient(-18, -23, 20, 10)
+  plate.addColorStop(0, '#707681')
+  plate.addColorStop(.38, '#292D34')
+  plate.addColorStop(.68, '#555B65')
+  plate.addColorStop(1, '#171A20')
+  ctx.fillStyle = plate
+  ctx.strokeStyle = '#08090B'
+  ctx.beginPath()
+  ctx.moveTo(-16, -22)
+  ctx.lineTo(14, -22)
+  ctx.lineTo(19, -1)
+  ctx.lineTo(10, 13)
+  ctx.lineTo(-10, 13)
+  ctx.lineTo(-19, -1)
+  ctx.closePath()
+  ctx.fill()
+  ctx.stroke()
+  ctx.strokeStyle = '#858B94'
+  ctx.lineWidth = 1.4
+  ctx.beginPath()
+  ctx.moveTo(-1, -20)
+  ctx.lineTo(-1, 11)
+  ctx.moveTo(-14, -3)
+  ctx.lineTo(15, -3)
+  ctx.moveTo(-11, 5)
+  ctx.lineTo(12, 5)
+  ctx.stroke()
+
+  // Strict, rectangular pauldrons make the shoulders unmistakably armoured.
+  for (const side of [-1, 1]) {
+    ctx.save()
+    ctx.translate(side * 19, -18)
+    ctx.scale(side, 1)
+    ctx.fillStyle = '#454A53'
+    ctx.strokeStyle = '#08090B'
+    ctx.beginPath()
+    ctx.moveTo(-4, -7)
+    ctx.lineTo(13, -4)
+    ctx.lineTo(16, 4)
+    ctx.lineTo(5, 9)
+    ctx.lineTo(-5, 4)
+    ctx.closePath()
+    ctx.fill()
+    ctx.stroke()
+    ctx.fillStyle = '#8B919A'
+    ctx.fillRect(5, -3, 6, 2)
+    ctx.restore()
+  }
+
+  // Full helm: flat crown, cheek plates and a slotted visor.
+  ctx.fillStyle = '#4A4F58'
+  ctx.strokeStyle = '#07080A'
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  ctx.moveTo(-13, -51)
+  ctx.lineTo(11, -51)
+  ctx.lineTo(17, -43)
+  ctx.lineTo(14, -22)
+  ctx.lineTo(6, -16)
+  ctx.lineTo(-7, -17)
+  ctx.lineTo(-16, -25)
+  ctx.lineTo(-17, -43)
+  ctx.closePath()
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = '#17191E'
+  ctx.fillRect(-15, -39, 29, 10)
+  ctx.fillStyle = '#08090B'
+  for (let slit = 0; slit < 5; slit++) ctx.fillRect(-10 + slit * 5, -36, 2.3, 5)
+  ctx.fillStyle = '#C9212A'
+  ctx.shadowColor = '#E3262E'
+  ctx.shadowBlur = 6
+  ctx.fillRect(-10, -38, 7, 1.8)
+  ctx.fillRect(4, -38, 7, 1.8)
+  ctx.shadowBlur = 0
+  ctx.fillStyle = '#8B919A'
+  ctx.beginPath()
+  ctx.moveTo(-2, -56)
+  ctx.lineTo(3, -56)
+  ctx.lineTo(3, -17)
+  ctx.lineTo(-2, -17)
+  ctx.closePath()
+  ctx.fill()
+
+  // Articulated arms and gauntlets visibly brace the raised shaft.
+  ctx.strokeStyle = '#3C4149'
+  ctx.lineWidth = 8
   ctx.lineCap = 'round'
   ctx.beginPath()
-  ctx.moveTo(-11, -10)
+  ctx.moveTo(-15, -14)
   ctx.lineTo(-17, -31)
-  ctx.moveTo(10, -8)
+  ctx.moveTo(14, -12)
   ctx.lineTo(-8, -20)
   ctx.stroke()
-  ctx.fillStyle = '#454950'
+  ctx.fillStyle = '#777D86'
+  ctx.strokeStyle = '#121419'
+  ctx.lineWidth = 1.5
   ctx.beginPath()
-  ctx.arc(-17, -31, 5, 0, TWO_PI)
-  ctx.arc(-8, -20, 5, 0, TWO_PI)
+  ctx.roundRect(-22, -35, 10, 9, 2)
+  ctx.roundRect(-13, -24, 10, 9, 2)
   ctx.fill()
+  ctx.stroke()
+
+  // Rivets retain contrast at TV distance.
+  ctx.fillStyle = '#B4BAC1'
+  for (const [rx, ry] of [[-12, -8], [10, -8], [-7, 9], [7, 9]]) {
+    ctx.beginPath()
+    ctx.arc(rx, ry, 1.6, 0, TWO_PI)
+    ctx.fill()
+  }
   ctx.restore()
 }
 

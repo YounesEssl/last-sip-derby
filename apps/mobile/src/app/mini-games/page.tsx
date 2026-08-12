@@ -30,7 +30,7 @@ function standaloneFixture(type: MiniGameType): MiniGameState {
     payload = { country: 'Australie', answer: 'Canberra', choices: ['Sydney', 'Canberra', 'Melbourne', 'Perth'] }
   } else if (type === 'MAZE') {
     prompt = 'Sortez du labyrinthe'
-    payload = { seed: 2202, level: 7 }
+    payload = { mazeIndex: 7 }
   } else if (type === 'CLICKER') prompt = 'Cliquez le plus vite possible'
   else if (type === 'ORDER') {
     prompt = '1 → 16'

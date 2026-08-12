@@ -5,7 +5,7 @@
 
 import { useEffect, useRef } from 'react'
 import type { Horse } from '@last-sip-derby/shared'
-import { drawHorse } from '../race/horse'
+import { drawBlackKnightRider, drawCamel, drawHorse, drawMotorcycle, drawScooter } from '../race/horse'
 import { ConfettiPool } from '../race/particles'
 import { COATS } from '../race/palette'
 
@@ -19,6 +19,10 @@ const SLOTS: Array<{ x: number; h: number; s: number; label: string }> = [
   { x: 0.2, h: 0.24, s: 0.88, label: '2' },
   { x: 0.8, h: 0.17, s: 0.8, label: '3' },
 ]
+
+const GOLDEN_COAT = { body: '#D9A943', dark: '#7A5518', light: '#FFE79A', mane: '#5A3B0E' }
+const DIAMOND_COAT = { body: '#52B9E8', dark: '#1A6199', light: '#D8F7FF', mane: '#163C70' }
+const BLACK_COAT = { body: '#17191D', dark: '#050607', light: '#454A52', mane: '#010101' }
 
 export function PodiumCanvas({ top3 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -128,34 +132,54 @@ export function PodiumCanvas({ top3 }: Props) {
         ctx.font = `${Math.round((idx === 0 ? 22 : 16) * S)}px ${displayFont}`
         ctx.fillText(idx === 0 ? 'er' : 'e', bx + (idx === 0 ? 34 : 24) * S, topY + bh * 0.38)
 
-        // horse (idle breathing), winner nods with pride
+        // Preserve the exact final runner skin instead of substituting a base horse.
         const k = slot.s * S * 0.92
+        if (horse.isGolden || horse.isDiamond || horse.isBlackKnight) {
+          const trailColor = horse.isBlackKnight ? '18,20,24' : horse.isDiamond ? '80,195,235' : '217,169,63'
+          for (let puff = 0; puff < 4; puff++) {
+            const drift = ((time * 22 + puff * 29) % 92) * slot.s * S
+            const alpha = Math.max(0, .28 - drift / (420 * slot.s * S))
+            ctx.fillStyle = `rgba(${trailColor},${alpha})`
+            ctx.beginPath()
+            ctx.ellipse(bx - 25 * k - drift, topY - 3 * S, (18 + puff * 4) * k, (4 + puff) * k, 0, 0, Math.PI * 2)
+            ctx.fill()
+          }
+        }
         ctx.save()
         ctx.translate(bx, topY - 2 * S)
-        ctx.scale(k, k)
-        drawHorse(ctx, {
-          coat: COATS[horse.lane % COATS.length],
+        ctx.scale(horse.isReversed ? -k : k, k)
+        if (horse.isGolden) {
+          ctx.shadowColor = '#FFE36A'
+          ctx.shadowBlur = 20
+        }
+        if (horse.isDiamond) {
+          ctx.shadowColor = '#69D9FF'
+          ctx.shadowBlur = 28
+        }
+        const jockeyFall = horse.jockeyFallen || horse.miniGameJockeyFallen ? 1 : 0
+        const runnerOpts = {
           silk: horse.color,
           number: horse.lane + 1,
           phase: 0,
           speedNorm: 0,
           time: time + idx * 2.4,
           fall: 0,
-          dizzy: false,
-        })
-        // winner rosette
-        if (idx === 0) {
-          ctx.fillStyle = '#D9A943'
-          for (let i = 0; i < 8; i++) {
-            const a = (i / 8) * Math.PI * 2 + time * 0.4
-            ctx.beginPath()
-            ctx.ellipse(8 + Math.cos(a) * 13, -62 + Math.sin(a) * 13, 7, 4, a, 0, Math.PI * 2)
-            ctx.fill()
-          }
-          ctx.fillStyle = '#C63C2E'
-          ctx.beginPath()
-          ctx.arc(8, -62, 8, 0, Math.PI * 2)
-          ctx.fill()
+          jockeyFall,
+          golden: horse.isGolden,
+          diamond: horse.isDiamond,
+          blackKnight: horse.isBlackKnight,
+        }
+        if (horse.appearance === 'CAMEL') drawCamel(ctx, runnerOpts)
+        else if (horse.appearance === 'MOTORCYCLE') drawMotorcycle(ctx, runnerOpts)
+        else if (horse.appearance === 'SCOOTER') drawScooter(ctx, runnerOpts)
+        else {
+          drawHorse(ctx, {
+            ...runnerOpts,
+            coat: horse.isBlackKnight ? BLACK_COAT : horse.isDiamond ? DIAMOND_COAT : horse.isGolden ? GOLDEN_COAT : COATS[horse.lane % COATS.length],
+            jockeyFall: horse.isBlackKnight ? 1 : jockeyFall,
+            dizzy: false,
+          })
+          if (horse.isBlackKnight) drawBlackKnightRider(ctx, -2, -80, time + idx * 2.4)
         }
         ctx.restore()
 
