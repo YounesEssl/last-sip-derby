@@ -17,8 +17,16 @@ interface ShotVisual {
 
 const BALL_MIN_X = 7
 const BALL_MAX_X = 93
-const ROUND_TRIP_MS = 1_050
+const PREVIOUS_ROUND_TRIP_MS = 1_050
+const BALL_SPEED_MULTIPLIER = 1.5
+const ROUND_TRIP_MS = PREVIOUS_ROUND_TRIP_MS / BALL_SPEED_MULTIPLIER
 const SHOT_FLIGHT_MS = 330
+
+function getBallPosition(elapsedMs: number): number {
+  const phase = ((elapsedMs % ROUND_TRIP_MS) + ROUND_TRIP_MS) % ROUND_TRIP_MS / ROUND_TRIP_MS
+  const travel = phase < 0.5 ? phase * 2 : (1 - phase) * 2
+  return BALL_MIN_X + travel * (BALL_MAX_X - BALL_MIN_X)
+}
 
 export function PenaltyGame({
   shots,
@@ -32,7 +40,6 @@ export function PenaltyGame({
   onShot: (centerPercent: number) => void
 }) {
   const startedAtRef = useRef(0)
-  const xRef = useRef(50)
   const localShotsRef = useRef(shots)
   const timersRef = useRef<number[]>([])
   const [x, setX] = useState(50)
@@ -47,11 +54,7 @@ export function PenaltyGame({
     startedAtRef.current = performance.now()
     let frame = 0
     const tick = (time: number) => {
-      const phase = ((time - startedAtRef.current) % ROUND_TRIP_MS) / ROUND_TRIP_MS
-      const travel = phase < 0.5 ? phase * 2 : (1 - phase) * 2
-      const nextX = BALL_MIN_X + travel * (BALL_MAX_X - BALL_MIN_X)
-      xRef.current = nextX
-      setX(nextX)
+      setX(getBallPosition(time - startedAtRef.current))
       frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
@@ -62,7 +65,9 @@ export function PenaltyGame({
 
   const shoot = () => {
     if (!active || localShotsRef.current >= 10) return
-    const centerPercent = xRef.current
+    // `x` is the value from the last committed render: it is exactly where the
+    // player sees the ball, even when the pointer event lands between two frames.
+    const centerPercent = x
     const shot: ShotVisual = { id: Date.now() + localShotsRef.current, x: centerPercent, goal: isPenaltyGoal(centerPercent) }
     localShotsRef.current += 1
     setFlights((current) => [...current, shot])
@@ -112,6 +117,7 @@ export function PenaltyGame({
       {impacts.map((impact) => (
         <div
           key={impact.id}
+          data-testid="penalty-impact"
           data-goal={impact.goal ? 'true' : 'false'}
           className={`absolute top-[40%] z-20 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rotate-12 rounded-[45%_55%_40%_60%] border-2 shadow-[0_2px_3px_rgba(0,0,0,.45)] ${impact.goal ? 'border-green-950 bg-[#56ee73]' : 'border-red-950 bg-[#f04646]'}`}
           style={{ left: `${impact.x}%` }}
@@ -124,6 +130,7 @@ export function PenaltyGame({
       {flights.map((flight) => (
         <div
           key={flight.id}
+          data-testid="penalty-shot-flight"
           className="absolute bottom-[12%] z-40 h-11 w-11 -translate-x-1/2 animate-[penalty-shot_330ms_cubic-bezier(.2,.8,.25,1)_forwards]"
           style={{ left: `${flight.x}%`, ['--shot-x' as string]: `${flight.x}%` }}
         >
@@ -131,7 +138,7 @@ export function PenaltyGame({
         </div>
       ))}
 
-      <div className="absolute bottom-[8%] z-30 h-14 w-14 -translate-x-1/2" style={{ left: `${x}%` }}>
+      <div data-testid="penalty-moving-ball" className="absolute bottom-[8%] z-30 h-14 w-14 -translate-x-1/2" style={{ left: `${x}%` }}>
         <SoccerBall className="h-full w-full drop-shadow-[0_6px_4px_rgba(0,0,0,.55)]" />
       </div>
       <div className="absolute inset-x-0 bottom-1.5 font-body text-[11px] font-bold uppercase tracking-[.18em] text-white/80">Touchez n’importe où pour frapper</div>

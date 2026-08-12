@@ -1364,15 +1364,6 @@ export function drawBlackKnightRider(ctx: CanvasRenderingContext2D, x: number, y
   ctx.fillRect(-10, -38, 7, 1.8)
   ctx.fillRect(4, -38, 7, 1.8)
   ctx.shadowBlur = 0
-  ctx.fillStyle = '#8B919A'
-  ctx.beginPath()
-  ctx.moveTo(-2, -56)
-  ctx.lineTo(3, -56)
-  ctx.lineTo(3, -17)
-  ctx.lineTo(-2, -17)
-  ctx.closePath()
-  ctx.fill()
-
   // Articulated arms and gauntlets visibly brace the raised shaft.
   ctx.strokeStyle = '#3C4149'
   ctx.lineWidth = 8
