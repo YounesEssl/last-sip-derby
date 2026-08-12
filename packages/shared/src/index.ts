@@ -1,4 +1,5 @@
 export * from './types'
 export * from './constants'
 export * from './event-content'
+export * from './minigames'
 export { default as horseNamesBySips } from './horses.json'
