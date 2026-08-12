@@ -9,7 +9,12 @@ rsync -avz --delete \
   --exclude node_modules \
   --exclude .next \
   --exclude dist \
+  --exclude .turbo \
   --exclude .git \
+  --exclude .claude \
+  --exclude .DS_Store \
+  --exclude '*.tsbuildinfo' \
+  --exclude '.env*' \
   --exclude state-dump.json \
   ./ "$VPS:$APP_DIR/"
 
