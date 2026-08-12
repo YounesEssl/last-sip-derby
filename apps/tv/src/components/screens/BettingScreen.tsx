@@ -43,12 +43,17 @@ export function BettingScreen({ state }: { state: GameState }) {
             le starter s&apos;impatiente...
           </div>
           <div
-            className={`rounded-xl border-2 px-6 py-2 text-center ${
-              urgent ? 'animate-pulse border-derby-red bg-derby-red/15' : 'border-derby-gold/50 bg-derby-night/60'
+            key={`${state.phaseStartedAt}:${state.phaseDuration}`}
+            aria-live="polite"
+            aria-atomic="true"
+            className={`isolate overflow-hidden rounded-xl border-2 px-6 py-2 text-center ${
+              urgent
+                ? 'border-derby-red bg-derby-night/95 shadow-[0_0_22px_rgba(198,60,46,0.3)]'
+                : 'border-derby-gold/50 bg-derby-night/80'
             }`}
           >
             <div className="font-headline text-[1.5vh] font-light tracking-[0.4em] text-derby-smoke">FERMETURE</div>
-            <div className={`font-terminal text-[7.2vh] leading-none ${urgent ? 'text-derby-red' : 'text-derby-gold'}`}>
+            <div className={`whitespace-nowrap font-terminal text-[7.2vh] leading-none ${urgent ? 'text-derby-red' : 'text-derby-gold'}`}>
               {String(Math.floor(seconds / 60)).padStart(2, '0')}:{String(seconds % 60).padStart(2, '0')}
             </div>
           </div>
@@ -112,7 +117,7 @@ export function BettingScreen({ state }: { state: GameState }) {
               <span className="text-derby-smoke">/{state.players.length}</span>
             </div>
             <div className="mt-2 border-t border-dashed border-derby-gold/30 pt-2 text-left font-body text-[1.7vh] leading-relaxed text-derby-smoke">
-              → gagnant : distribue <b className="text-derby-gold">2× la cote</b> (3× si doré)
+              → gagnant : distribue <b className="text-derby-gold">2× la cote</b> (3× doré, 5× diamant)
               <br />
               → perdant : boit <b className="text-derby-red">la cote</b> de son cheval
               <br />

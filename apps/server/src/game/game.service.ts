@@ -13,6 +13,12 @@ import {
   DRINK_CONFIRM_TIMEOUT_MS,
   DRINK_PENALTY_SIPS,
   PHASE_DURATIONS,
+  PLAYER_INACTIVITY_MS,
+  BLACK_KNIGHT_KILL_COOLDOWN_MS,
+  MiniGameState,
+  MiniGameType,
+  RACE_EVENT_ODDS,
+  RACE_SPEED_BONUSES,
 } from "@last-sip-derby/shared";
 import { PersistenceService } from "../persistence/persistence.service";
 
@@ -65,6 +71,23 @@ function smooth01(x: number): number {
   return t * t * (3 - 2 * t);
 }
 
+const CAPITALS = [
+  [
+    ['Algérie','Alger'],['Allemagne','Berlin'],['Argentine','Buenos Aires'],['Autriche','Vienne'],['Belgique','Bruxelles'],['Chili','Santiago'],['Chine','Pékin'],['Colombie','Bogota'],['Corée du Sud','Séoul'],['Cuba','La Havane'],['Danemark','Copenhague'],['Égypte','Le Caire'],['Espagne','Madrid'],['États-Unis','Washington, D.C.'],['France','Paris'],['Grèce','Athènes'],['Inde','New Delhi'],['Irak','Bagdad'],['Irlande','Dublin'],['Israël','Jérusalem'],['Italie','Rome'],['Japon','Tokyo'],['Liban','Beyrouth'],['Maroc','Rabat'],['Mexique','Mexico'],['Norvège','Oslo'],['Pays-Bas','Amsterdam'],['Pérou','Lima'],['Pologne','Varsovie'],['Portugal','Lisbonne'],['République Tchèque','Prague'],['Royaume-Uni','Londres'],['Russie','Moscou'],['Sénégal','Dakar'],['Suède','Stockholm'],['Thaïlande','Bangkok'],['Tunisie','Tunis'],['Ukraine','Kiev'],
+  ],
+  [
+    ['Afrique du Sud','Pretoria'],['Arabie Saoudite','Riyad'],['Australie','Canberra'],['Brésil','Brasilia'],['Bulgarie','Sofia'],['Canada','Ottawa'],['Costa Rica','San José'],["Côte d'Ivoire",'Yamoussoukro'],['Croatie','Zagreb'],['Émirats Arabes Unis','Abou Dabi'],['Équateur','Quito'],['Éthiopie','Addis-Abeba'],['Finlande','Helsinki'],['Hongrie','Budapest'],['Indonésie','Jakarta'],['Iran','Téhéran'],['Islande','Reykjavik'],['Jamaïque','Kingston'],['Kenya','Nairobi'],['Madagascar','Antananarivo'],['Malaisie','Kuala Lumpur'],['Nigeria','Abuja'],['Nouvelle-Zélande','Wellington'],['Pakistan','Islamabad'],['Philippines','Manille'],['Qatar','Doha'],['République Démocratique du Congo','Kinshasa'],['Roumanie','Bucarest'],['Serbie','Belgrade'],['Singapour','Singapour'],['Slovaquie','Bratislava'],['Suisse','Berne'],['Syrie','Damas'],['Turquie','Ankara'],['Venezuela','Caracas'],['Vietnam','Hanoï'],
+  ],
+  [
+    ['Afghanistan','Kaboul'],['Angola','Luanda'],['Bangladesh','Dacca'],['Bolivie','La Paz / Sucre'],['Cambodge','Phnom Penh'],['Cameroun','Yaoundé'],['Corée du Nord','Pyongyang'],['Estonie','Tallinn'],['Fidji','Suva'],['Ghana','Accra'],['Guatemala','Guatemala'],['Haïti','Port-au-Prince'],['Jordanie','Amman'],['Kazakhstan','Astana'],['Lettonie','Riga'],['Lituanie','Vilnius'],['Mali','Bamako'],['Népal','Katmandou'],['Ouzbékistan','Tachkent'],['Panama','Panama'],['Papouasie-Nouvelle-Guinée','Port Moresby'],['Paraguay','Asuncion'],['République Dominicaine','Saint-Domingue'],['Sri Lanka','Colombo'],['Taïwan','Taipei'],['Uruguay','Montevideo'],
+  ],
+] as const;
+
+const MINI_DURATIONS: Record<MiniGameType, number> = {
+  GRID: 20_000, CODE: 25_000, CAPITAL: 20_000, MAZE: 60_000,
+  CLICKER: 10_000, ORDER: 45_000, PENALTY: 30_000, PRESSURE: 15_000,
+};
+
 @Injectable()
 export class GameService implements OnModuleInit {
   private state: GameState = {
@@ -78,6 +101,8 @@ export class GameService implements OnModuleInit {
     queue: [],
     activeEvent: null,
     lightningEvent: null,
+    miniGame: null,
+    executionEvent: null,
     racePaused: false,
     raceProgress: 0,
     phaseStartedAt: Date.now(),
@@ -88,6 +113,7 @@ export class GameService implements OnModuleInit {
   private playersByPseudo: Map<string, Player> = new Map();
   private socketToPlayer: Map<string, string> = new Map(); // socketId -> pseudo
   private drinkTimers: Map<string, NodeJS.Timeout> = new Map();
+  private kickedSocketIds: string[] = [];
 
   // Race simulation state (reset each race)
   private horseRaceStates: Map<string, HorseRaceState> = new Map();
@@ -106,6 +132,10 @@ export class GameService implements OnModuleInit {
           isConnected: false,
           currentBet: null,
           lastSeen: Date.now(),
+          lastBetAt: (p as Player).lastBetAt ?? Date.now(),
+          miniGameEliminated: false,
+          blackKnightKillsUsed: 0,
+          blackKnightLastKillAt: 0,
         };
         this.playersByPseudo.set(p.pseudo, player);
       }
@@ -182,6 +212,10 @@ export class GameService implements OnModuleInit {
       totalSipsDrunk: 0,
       debt: 0,
       lastSeen: Date.now(),
+      lastBetAt: Date.now(),
+      miniGameEliminated: false,
+      blackKnightKillsUsed: 0,
+      blackKnightLastKillAt: 0,
     };
 
     this.playersByPseudo.set(pseudo, player);
@@ -229,17 +263,21 @@ export class GameService implements OnModuleInit {
     };
 
     player.currentBet = bet;
+    player.lastBetAt = Date.now();
     return bet;
   }
 
   // Phase transitions
   startBetting(): void {
+    this.purgeInactivePlayers();
     this.state.raceNumber++;
     this.state.phase = "BETTING";
     this.state.phaseStartedAt = Date.now();
     this.state.phaseDuration = PHASE_DURATIONS.BETTING;
     this.state.activeEvent = null;
     this.state.lightningEvent = null;
+    this.state.miniGame = null;
+    this.state.executionEvent = null;
     this.state.lastRaceWinner = null;
     this.state.roundDrinks = [];
     this.state.raceProgress = 0;
@@ -262,7 +300,11 @@ export class GameService implements OnModuleInit {
         effectiveSpeed: 0,
         appearance: 'HORSE',
         isGolden: false,
+        isDiamond: false,
+        isBlackKnight: false,
+        isAdrien: false,
         jockeyFallen: false,
+        miniGameJockeyFallen: false,
         isReversed: false,
         isStruckByLightning: false,
       };
@@ -271,6 +313,9 @@ export class GameService implements OnModuleInit {
     // Clear bets
     for (const player of this.playersByPseudo.values()) {
       player.currentBet = null;
+      player.miniGameEliminated = false;
+      player.blackKnightKillsUsed = 0;
+      player.blackKnightLastKillAt = 0;
     }
 
     // Move queue players to active
@@ -288,6 +333,8 @@ export class GameService implements OnModuleInit {
     this.state.racePaused = false;
     this.state.raceProgress = 0;
     this.state.lightningEvent = null;
+    this.state.miniGame = null;
+    this.state.executionEvent = null;
 
     // Pre-determine finishing order (weighted by sip odds)
     this.finishOrder = this.rollFinishOrder(this.state.horses);
@@ -304,16 +351,21 @@ export class GameService implements OnModuleInit {
       horse.position = 0;
       horse.effectiveSpeed = 3;
       horse.jockeyFallen = false;
+      horse.miniGameJockeyFallen = false;
       horse.isReversed = false;
       horse.isStruckByLightning = false;
       horse.isEliminated = false;
 
       // Every roll is per horse. Camel and motorcycle are independent rolls;
       // in the exceptionally rare double hit, the motorcycle wins visually.
-      const camel = Math.random() < 1 / 25;
-      const motorcycle = Math.random() < 1 / 30;
+      const camel = Math.random() < 1 / RACE_EVENT_ODDS.CAMEL;
+      const motorcycle = Math.random() < 1 / RACE_EVENT_ODDS.MOTORCYCLE;
       horse.appearance = motorcycle ? 'MOTORCYCLE' : camel ? 'CAMEL' : 'HORSE';
-      horse.isGolden = Math.random() < 1 / 15;
+      horse.isGolden = Math.random() < 1 / RACE_EVENT_ODDS.GOLDEN;
+      horse.isDiamond = Math.random() < 1 / RACE_EVENT_ODDS.DIAMOND;
+      horse.isBlackKnight = Math.random() < 1 / 35;
+      horse.isAdrien = Math.random() < 1 / RACE_EVENT_ODDS.ADRIEN;
+      if (horse.isAdrien) horse.appearance = 'SCOOTER';
 
       const rank = finishOrder.indexOf(horse.id);
       const target = FINISH_POSITIONS[rank];
@@ -345,8 +397,8 @@ export class GameService implements OnModuleInit {
         leadActs: [],
         gateBurst: Math.random() * 1.4,
         prevPos: 0,
-        jockeyFallTick: Math.random() < 1 / 25 ? 60 + Math.floor(Math.random() * 430) : null,
-        reverseTick: Math.random() < 1 / 30 ? 90 + Math.floor(Math.random() * 390) : null,
+        jockeyFallTick: Math.random() < 1 / RACE_EVENT_ODDS.JOCKEY_FALL ? 60 + Math.floor(Math.random() * 430) : null,
+        reverseTick: Math.random() < 1 / RACE_EVENT_ODDS.REVERSE ? 90 + Math.floor(Math.random() * 390) : null,
         boostBonus: 0,
       });
     }
@@ -479,9 +531,14 @@ export class GameService implements OnModuleInit {
         if (duelWindow > 0 && gap > 1.2) wiggle += (gap - 1.2) * duelWindow;
       }
 
-      // A riderless horse runs 15% faster from the instant the jockey drops.
+      // V2.2 permanent boosts are integrated from the instant they apply.
       // The integrated bonus means an early fall is materially stronger.
-      if (horse.jockeyFallen) rs.boostBonus += avgDelta * 0.15;
+      const permanentBoost =
+        (horse.appearance === 'MOTORCYCLE' ? RACE_SPEED_BONUSES.MOTORCYCLE : 0) +
+        (horse.isAdrien ? RACE_SPEED_BONUSES.ADRIEN : 0);
+      if (horse.jockeyFallen || permanentBoost > 0) {
+        rs.boostBonus += avgDelta * ((horse.jockeyFallen ? RACE_SPEED_BONUSES.JOCKEY_FALLEN : 0) + permanentBoost);
+      }
 
       // Forward-only for regular runners; a boost can now break the script
       // and reach the line early, which is the intended gameplay advantage.
@@ -543,9 +600,9 @@ export class GameService implements OnModuleInit {
     for (const player of this.playersByPseudo.values()) {
       if (!player.currentBet) continue;
 
-      if (player.currentBet.horseId === winnerHorse.id) {
+      if (player.currentBet.horseId === winnerHorse.id && !player.miniGameEliminated) {
         // A golden winner distributes triple the odds instead of double.
-        sipsToDistribute = winnerHorse.odds * (winnerHorse.isGolden ? 3 : 2);
+        sipsToDistribute = winnerHorse.odds * (winnerHorse.isDiamond ? 5 : winnerHorse.isGolden ? 3 : 2);
         player.totalSipsGiven += sipsToDistribute;
         winnerPlayer = player;
       } else {
@@ -553,7 +610,10 @@ export class GameService implements OnModuleInit {
         const betHorse = this.state.horses.find(
           (h) => h.id === player.currentBet!.horseId,
         );
-        const sips = betHorse ? betHorse.odds : player.currentBet.amount;
+        const blackKnightBackfire = !!betHorse?.isBlackKnight;
+        const sips = blackKnightBackfire
+          ? player.currentBet.amount * 3
+          : betHorse ? betHorse.odds : player.currentBet.amount;
         player.debt += sips;
         player.totalSipsDrunk += sips;
         losers.push({ player, sips });
@@ -582,6 +642,8 @@ export class GameService implements OnModuleInit {
     this.state.phaseDuration = PHASE_DURATIONS.IDLE;
     this.state.activeEvent = null;
     this.state.lightningEvent = null;
+    this.state.miniGame = null;
+    this.state.executionEvent = null;
     this.state.racePaused = false;
 
     // Mark all players as disconnected — they must re-join for the next race
@@ -593,6 +655,11 @@ export class GameService implements OnModuleInit {
 
   /** Reset the IDLE countdown (e.g. when first player joins) */
   setIdleCountdown(durationMs: number): void {
+    this.state.phaseStartedAt = Date.now();
+    this.state.phaseDuration = durationMs;
+  }
+
+  setPhaseCountdown(durationMs: number): void {
     this.state.phaseStartedAt = Date.now();
     this.state.phaseDuration = durationMs;
   }
@@ -638,7 +705,7 @@ export class GameService implements OnModuleInit {
     if (candidates.length < 2) return false;
 
     const damageRoll = Math.random();
-    const requested = damageRoll < 0.65 ? 1 : damageRoll < 0.9 ? 2 : 3;
+    const requested = damageRoll < 0.67 ? 1 : damageRoll < 0.92 ? 2 : damageRoll < 0.97 ? 3 : 4;
     const count = Math.min(requested, candidates.length - 1);
     const shuffled = [...candidates].sort(() => Math.random() - 0.5);
     const startedAt = Date.now();
@@ -838,6 +905,165 @@ export class GameService implements OnModuleInit {
     }
   }
 
+  // ── Défi mignon ──────────────────────────────────────────────────────────
+  startMiniGame(type?: MiniGameType): MiniGameState | null {
+    if (this.state.phase !== 'RACING' || this.state.miniGame) return null;
+    const participants = this.getConnectedPlayers().filter((player) => !!player.currentBet && !player.miniGameEliminated);
+    if (participants.length < 2) return null;
+    const types: MiniGameType[] = ['GRID','CODE','CAPITAL','MAZE','CLICKER','ORDER','PENALTY','PRESSURE'];
+    const picked = type ?? types[Math.floor(Math.random() * types.length)];
+    const payload: Record<string, unknown> = {};
+    let prompt = '';
+    if (picked === 'GRID') {
+      const values = Array.from({ length: 36 }, (_, index) => index + 1).sort(() => Math.random() - .5);
+      const target = values[Math.floor(Math.random() * values.length)];
+      Object.assign(payload, { values, target }); prompt = `Trouvez le ${target}`;
+    } else if (picked === 'CODE') {
+      const a = 1 + Math.floor(Math.random() * 12), b = 1 + Math.floor(Math.random() * 12);
+      Object.assign(payload, { a, b, answer: a * b }); prompt = `${a} × ${b}`;
+    } else if (picked === 'CAPITAL') {
+      const roll = Math.random(), category = roll < .6 ? 0 : roll < .9 ? 1 : 2;
+      const bank = CAPITALS[category], entry = bank[Math.floor(Math.random() * bank.length)];
+      const wrong = bank.filter((candidate) => candidate[1] !== entry[1]).sort(() => Math.random() - .5).slice(0, 3).map((candidate) => candidate[1]);
+      const choices = [entry[1], ...wrong].sort(() => Math.random() - .5);
+      Object.assign(payload, { country: entry[0], answer: entry[1], choices }); prompt = `Capitale : ${entry[0]}`;
+    } else if (picked === 'MAZE') {
+      Object.assign(payload, { seed: Math.floor(Math.random() * 1_000_000), level: Math.floor(Math.random() * 50) }); prompt = 'Sortez du labyrinthe';
+    } else if (picked === 'CLICKER') prompt = 'Cliquez le plus vite possible';
+    else if (picked === 'ORDER') {
+      Object.assign(payload, { values: Array.from({ length: 16 }, (_, index) => index + 1).sort(() => Math.random() - .5) }); prompt = '1 → 16';
+    } else if (picked === 'PENALTY') prompt = '10 tirs — visez entre les poteaux';
+    else prompt = 'Arrêtez la jauge au plus près de 100 %';
+
+    const startedAt = Date.now();
+    this.state.miniGame = {
+      id: uuid(), type: picked, startedAt, endsAt: startedAt + MINI_DURATIONS[picked], status: 'PLAYING', resultsEndAt: null,
+      prompt, payload,
+      players: participants.map((player) => ({ playerId: player.id, pseudo: player.pseudo, score: 0, progress: 0, finishedAt: null, lives: 2, eliminated: false })),
+    };
+    this.pauseRace();
+    return this.state.miniGame;
+  }
+
+  handleMiniGameAction(socketId: string, gameId: string, action: string, value?: number | string): boolean {
+    const game = this.state.miniGame;
+    if (!game || game.id !== gameId || game.status !== 'PLAYING' || Date.now() >= game.endsAt) return false;
+    const row = game.players.find((candidate) => candidate.playerId === socketId);
+    if (!row || row.eliminated || row.finishedAt) return false;
+    const finish = () => { row.finishedAt = Date.now(); row.progress = 100; };
+    if (game.type === 'GRID' && action === 'pick' && value === game.payload.target) finish();
+    else if (game.type === 'CODE' && action === 'answer' && Number(value) === game.payload.answer) finish();
+    else if (game.type === 'CAPITAL' && action === 'answer') {
+      if (value === game.payload.answer) finish();
+      else if (--row.lives <= 0) { row.eliminated = true; row.finishedAt = Date.now(); }
+    } else if (game.type === 'MAZE' && action === 'finish') finish();
+    else if (game.type === 'CLICKER' && action === 'click') { row.score = Math.min(300, row.score + 1); row.progress = row.score; }
+    else if (game.type === 'ORDER' && action === 'pick' && Number(value) === row.progress + 1) { row.progress++; if (row.progress === 16) finish(); }
+    else if (game.type === 'PENALTY' && action === 'shot' && row.progress < 10) { row.progress++; row.score += Number(value) === 1 ? 1 : 0; }
+    else if (game.type === 'PRESSURE' && action === 'score') { row.score = Math.max(0, Math.min(100, Number(value) || 0)); finish(); }
+    return true;
+  }
+
+  shouldEndMiniGameEarly(): boolean {
+    const game = this.state.miniGame;
+    if (!game || game.status !== 'PLAYING' || ['CLICKER','PENALTY'].includes(game.type)) return false;
+    return game.players.filter((row) => !row.finishedAt && !row.eliminated).length <= 1;
+  }
+
+  resolveMiniGame(): string[] {
+    const game = this.state.miniGame;
+    if (!game || game.status !== 'PLAYING') return [];
+    const unfinished = game.players.filter((row) => !row.finishedAt || row.eliminated);
+    let losers = unfinished;
+    if (['CLICKER','PENALTY','PRESSURE'].includes(game.type)) {
+      const worst = Math.min(...game.players.map((row) => row.score));
+      losers = game.players.filter((row) => row.score === worst);
+    } else if (!unfinished.length) {
+      const lastTime = Math.max(...game.players.map((row) => row.finishedAt ?? 0));
+      losers = game.players.filter((row) => row.finishedAt === lastTime);
+    }
+    const baseline = game.players[0];
+    const allSame = losers.length === game.players.length && game.players.every((row) =>
+      row.score === baseline.score &&
+      row.progress === baseline.progress &&
+      row.finishedAt === baseline.finishedAt &&
+      row.lives === baseline.lives,
+    );
+    if (allSame) losers = [];
+    for (const row of losers) {
+      row.eliminated = true;
+      const player = this.getPlayerByPseudo(row.pseudo);
+      if (!player?.currentBet) continue;
+      player.miniGameEliminated = true;
+      const bettors = this.getAllPlayers().filter((candidate) => !candidate.miniGameEliminated && candidate.currentBet?.horseId === player.currentBet!.horseId);
+      if (bettors.length === 0) this.eliminateHorse(player.currentBet.horseId);
+      else {
+        const horse = this.state.horses.find((candidate) => candidate.id === player.currentBet!.horseId);
+        if (horse) horse.miniGameJockeyFallen = true;
+      }
+    }
+    game.status = 'RESULTS';
+    game.resultsEndAt = Date.now() + 5_000;
+    return losers.map((row) => row.playerId);
+  }
+
+  clearMiniGame(): void { this.state.miniGame = null; this.resumeRace(); }
+
+  useBlackKnightPower(socketId: string, targetHorseId: string): { targetIds: string[]; affectedPlayerIds: string[] } | null {
+    if (this.state.phase !== 'RACING' || this.state.racePaused) return null;
+    const player = this.getPlayerBySocket(socketId);
+    const knight = player?.currentBet ? this.state.horses.find((horse) => horse.id === player.currentBet!.horseId) : undefined;
+    const target = this.state.horses.find((horse) => horse.id === targetHorseId);
+    if (!player || !knight?.isBlackKnight || !target || target.id === knight.id || target.isEliminated || player.blackKnightKillsUsed >= 2) return null;
+    if (Date.now() - player.blackKnightLastKillAt < BLACK_KNIGHT_KILL_COOLDOWN_MS) return null;
+    player.blackKnightKillsUsed++; player.blackKnightLastKillAt = Date.now();
+    const affectedPlayerIds = this.getConnectedPlayers()
+      .filter((candidate) => candidate.currentBet?.horseId === target.id)
+      .map((candidate) => candidate.id);
+    this.execution(target.id, knight.id);
+    return { targetIds: [target.id], affectedPlayerIds };
+  }
+
+  autoBlackKnightKill(): { affectedPlayerIds: string[] } | null {
+    const knight = this.state.horses.find((horse) => horse.isBlackKnight && !horse.isEliminated);
+    if (!knight || this.getAllPlayers().some((player) => player.currentBet?.horseId === knight.id)) return null;
+    const target = this.state.horses.filter((horse) => !horse.isEliminated && horse.id !== knight.id).sort(() => Math.random() - .5)[0];
+    if (!target) return null;
+    const affectedPlayerIds = this.getConnectedPlayers()
+      .filter((candidate) => candidate.currentBet?.horseId === target.id)
+      .map((candidate) => candidate.id);
+    this.execution(target.id, knight.id);
+    return { affectedPlayerIds };
+  }
+
+  private execution(targetHorseId: string, attackerHorseId: string) {
+    const startedAt = Date.now();
+    this.state.executionEvent = { id: uuid(), attackerHorseId, targetHorseId, startedAt, endsAt: startedAt + 3_000 };
+    this.eliminateHorse(targetHorseId);
+  }
+
+  clearExecution(): void { this.state.executionEvent = null; }
+
+  purgeInactivePlayers(now = Date.now()): string[] {
+    const removed: string[] = [];
+    for (const [pseudo, player] of this.playersByPseudo) {
+      if (now - player.lastBetAt < PLAYER_INACTIVITY_MS) continue;
+      if (player.id) this.kickedSocketIds.push(player.id);
+      removed.push(pseudo); this.playersByPseudo.delete(pseudo); this.state.queue = this.state.queue.filter((name) => name !== pseudo);
+      for (const [socket, mapped] of this.socketToPlayer) if (mapped === pseudo) this.socketToPlayer.delete(socket);
+    }
+    return removed;
+  }
+
+  consumeKickedSocketIds(): string[] { return this.kickedSocketIds.splice(0); }
+
+  resetSession(): void {
+    for (const timer of this.drinkTimers.values()) clearTimeout(timer);
+    this.drinkTimers.clear(); this.playersByPseudo.clear(); this.socketToPlayer.clear();
+    this.state.players = []; this.state.eveningLeaderboard = []; this.state.roundDrinks = []; this.state.queue = []; this.state.lastRaceWinner = null; this.state.raceNumber = 0;
+    this.persistence.dump(this.getDumpData());
+  }
+
   // Persistence
   getDumpData() {
     return {
@@ -846,6 +1072,7 @@ export class GameService implements OnModuleInit {
         totalSipsGiven: p.totalSipsGiven,
         totalSipsDrunk: p.totalSipsDrunk,
         debt: p.debt,
+        lastBetAt: p.lastBetAt,
       })),
       raceNumber: this.state.raceNumber,
       dumpedAt: Date.now(),

@@ -4,7 +4,7 @@
 
 import type { Horse } from '@last-sip-derby/shared'
 import { HorseTracker } from './interpolator'
-import { drawCamel, drawHorse, drawMotorcycle, hoofContactSample, type Coat } from './horse'
+import { drawBlackKnightRider, drawCamel, drawHorse, drawMotorcycle, drawScooter, hoofContactSample, type Coat } from './horse'
 import { Scenery } from './scenery'
 import { Track } from './track'
 import { DustPool, ConfettiPool } from './particles'
@@ -23,6 +23,8 @@ interface HorseMeta {
   eliminated: boolean
   appearance: Horse['appearance']
   golden: boolean
+  diamond: boolean
+  blackKnight: boolean
   reversed: boolean
   jockeyFallen: boolean
   jockeyFallStart: number | null
@@ -138,8 +140,10 @@ export class RaceEngine {
           eliminated: false,
           appearance: h.appearance,
           golden: h.isGolden,
+          diamond: h.isDiamond,
+          blackKnight: h.isBlackKnight,
           reversed: h.isReversed,
-          jockeyFallen: h.jockeyFallen,
+          jockeyFallen: h.jockeyFallen || h.miniGameJockeyFallen,
           jockeyFallStart: null,
           struck: h.isStruckByLightning,
           fallStart: null,
@@ -152,9 +156,11 @@ export class RaceEngine {
       m.tracker.push(h.position, snapshotTime)
       m.appearance = h.appearance
       m.golden = h.isGolden
+      m.diamond = h.isDiamond
+      m.blackKnight = h.isBlackKnight
       m.reversed = h.isReversed
       m.struck = h.isStruckByLightning
-      if (h.jockeyFallen && !m.jockeyFallen) {
+      if ((h.jockeyFallen || h.miniGameJockeyFallen) && !m.jockeyFallen) {
         m.jockeyFallen = true
         m.jockeyFallStart = receivedAt
       }
@@ -276,6 +282,25 @@ export class RaceEngine {
       if (contact > 0.35 && Math.random() < contact * 1.1) {
         const k = laneScale(m.lane) * S
         this.dust.spawn(m.visX + hoof.x * k, laneGroundY(m.lane, H) - 2, k, Math.min(1.2, m.speedNorm * 1.25))
+      }
+      if (
+        (m.golden || m.diamond) &&
+        !m.eliminated &&
+        !this.paused &&
+        m.speedNorm > 0.12 &&
+        Math.random() < rawDt * 24
+      ) {
+        const k = laneScale(m.lane) * S
+        const direction: -1 | 1 = m.reversed ? 1 : -1
+        const color = m.diamond ? [82, 197, 255] as const : [235, 181, 55] as const
+        this.dust.spawnTrail(
+          m.visX + direction * 54 * k,
+          laneGroundY(m.lane, H) - 5 * k,
+          k,
+          color,
+          direction,
+          Math.min(1.15, m.speedNorm),
+        )
       }
       // Fall impact burst
       if (m.fallStart && t - m.fallStart < 60) {
@@ -438,6 +463,7 @@ export class RaceEngine {
         ctx.shadowColor = '#FFE36A'
         ctx.shadowBlur = 22
       }
+      if (m.diamond && !m.struck) { ctx.shadowColor = '#69d9ff'; ctx.shadowBlur = 30 }
       const runnerOpts = {
         silk: m.silk,
         number: m.lane + 1,
@@ -447,17 +473,25 @@ export class RaceEngine {
         fall,
         jockeyFall,
         golden: m.golden,
+        diamond: m.diamond,
+        blackKnight: m.blackKnight,
       }
       if (m.appearance === 'CAMEL') {
         drawCamel(ctx, runnerOpts)
       } else if (m.appearance === 'MOTORCYCLE') {
         drawMotorcycle(ctx, runnerOpts)
+      } else if (m.appearance === 'SCOOTER') {
+        drawScooter(ctx, runnerOpts)
       } else {
         drawHorse(ctx, {
           ...runnerOpts,
-          coat: m.struck ? CHARRED_COAT : m.golden ? GOLDEN_COAT : m.coat,
+          jockeyFall: m.blackKnight ? 1 : jockeyFall,
+          coat: m.struck ? CHARRED_COAT : m.blackKnight ? { body:'#111',dark:'#050505',light:'#292929',mane:'#000' } : m.diamond ? { body:'#52b9e8',dark:'#1a6199',light:'#d8f7ff',mane:'#163c70' } : m.golden ? GOLDEN_COAT : m.coat,
           dizzy: m.eliminated && !m.struck,
         })
+        if (m.blackKnight && !m.eliminated) {
+          drawBlackKnightRider(ctx, -2, -80, this.simTime + m.lane * 1.7)
+        }
       }
       if (m.struck) {
         ctx.shadowBlur = 0

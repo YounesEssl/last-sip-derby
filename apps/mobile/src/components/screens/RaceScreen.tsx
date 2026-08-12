@@ -1,11 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { GameState, Player } from '@last-sip-derby/shared'
 import { MiniRace } from '../MiniRace'
 import { Header, SilkChip } from '../ui'
 
-export function RaceScreen({ state, player }: { state: GameState; player: Player | null }) {
+export function RaceScreen({ state, player, onBlackKnightKill }: { state: GameState; player: Player | null; onBlackKnightKill: (horseId: string) => void }) {
   const myHorse = player?.currentBet ? state.horses.find((h) => h.id === player.currentBet!.horseId) ?? null : null
 
   const rank = useMemo(() => {
@@ -18,9 +18,11 @@ export function RaceScreen({ state, player }: { state: GameState; player: Player
     const alive = state.horses.filter((h) => !h.isEliminated)
     return alive.sort((a, b) => b.position - a.position)[0] ?? null
   }, [state.horses])
+  const [targetId, setTargetId] = useState<string | null>(null)
+  const knightReady = !!myHorse?.isBlackKnight && (player?.blackKnightKillsUsed ?? 0) < 2
 
   return (
-    <div className="flex h-full flex-col">
+    <div className={`flex h-full flex-col ${myHorse?.isBlackKnight ? 'bg-black' : ''}`}>
       <Header
         raceNumber={state.raceNumber}
         right={
@@ -53,14 +55,14 @@ export function RaceScreen({ state, player }: { state: GameState; player: Player
       {/* my horse status */}
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6">
         {myHorse ? (
-          myHorse.isEliminated ? (
+          myHorse.isEliminated || player?.miniGameEliminated ? (
             <div className="paper w-full max-w-sm rounded-lg px-6 py-6 text-center">
               <SilkChip color="#5a544a" number={myHorse.lane + 1} size={52} />
               <div className="mt-2 font-body text-2xl font-bold text-derby-coal line-through">{myHorse.name}</div>
               <div className="mx-auto mt-3 w-fit animate-stamp border-4 border-derby-red px-5 py-1 font-headline text-3xl tracking-[0.2em] text-derby-red">
                 ÉLIMINÉ
               </div>
-              <p className="mt-3 font-mono text-sm text-derby-coal/70">Ton canasson a rendu l&apos;âme. Prépare ton verre...</p>
+              <p className="mt-3 font-mono text-sm text-derby-coal/70">{player?.miniGameEliminated && !myHorse.isEliminated ? 'Tu as perdu le défi. Le cheval continue sans toi.' : 'Ton canasson a rendu l’âme. Prépare ton verre...'}</p>
             </div>
           ) : (
             <div className="w-full max-w-sm text-center">
@@ -76,11 +78,13 @@ export function RaceScreen({ state, player }: { state: GameState; player: Player
                 <SilkChip color={myHorse.color} number={myHorse.lane + 1} size={36} />
                 <span className="font-body text-xl font-bold text-derby-cream">{myHorse.name}</span>
               </div>
-              {(myHorse.isGolden || myHorse.jockeyFallen || myHorse.isReversed || myHorse.appearance !== 'HORSE') && (
+              {(myHorse.isGolden || myHorse.isDiamond || myHorse.isBlackKnight || myHorse.isAdrien || myHorse.jockeyFallen || myHorse.isReversed || myHorse.appearance !== 'HORSE') && (
                 <div className="mt-2 font-headline text-sm tracking-[0.12em] text-derby-gold">
                   {myHorse.isGolden ? '✨ CHEVAL DORÉ · ' : ''}
-                  {myHorse.appearance === 'CAMEL' ? '🐪 CHAMEAU · ' : myHorse.appearance === 'MOTORCYCLE' ? '🏍️ MOTO CROSS · ' : ''}
-                  {myHorse.jockeyFallen ? 'JOCKEY À TERRE +15% · ' : ''}
+                  {myHorse.isDiamond ? '💎 CHEVAL DIAMANT ×5 · ' : ''}
+                  {myHorse.isBlackKnight ? '⚔️ CAVALIER NOIR · ' : ''}
+                  {myHorse.appearance === 'CAMEL' ? '🐪 CHAMEAU · ' : myHorse.appearance === 'MOTORCYCLE' ? '🏍️ MOTO CROSS +5% · ' : myHorse.appearance === 'SCOOTER' ? '🛴 ADRIEN HOURMAND +15% · ' : ''}
+                  {myHorse.jockeyFallen ? 'JOCKEY À TERRE +5% · ' : ''}
                   {myHorse.isReversed ? '↩ COURSE À L’ENVERS' : ''}
                 </div>
               )}
@@ -95,6 +99,13 @@ export function RaceScreen({ state, player }: { state: GameState; player: Player
                         ? 'Dans le paquet, ça peut le faire.'
                         : 'Aïe... hydrate-toi en prévision.'}
               </p>
+              {knightReady && (
+                <div className="mt-4 rounded-xl border-2 border-red-800 bg-black p-3 text-left">
+                  <div className="text-center font-headline text-xl tracking-[.15em] text-red-600">⚔️ POUVOIR DU CAVALIER NOIR</div>
+                  <div className="mt-2 grid grid-cols-2 gap-2">{state.horses.filter((horse) => horse.id !== myHorse.id && !horse.isEliminated).map((horse) => <button key={horse.id} onClick={() => setTargetId(horse.id)} className="rounded-lg border border-red-900 px-2 py-2 font-body text-sm text-white">{horse.name}<span className="block text-[10px] text-red-400">{state.players.filter((p) => p.currentBet?.horseId === horse.id).map((p) => p.pseudo).join(', ') || 'aucun parieur'}</span></button>)}</div>
+                  <div className="mt-2 text-center font-terminal text-red-500">{2 - (player?.blackKnightKillsUsed ?? 0)} coup(s) de hache</div>
+                </div>
+              )}
             </div>
           )
         ) : (
@@ -110,6 +121,7 @@ export function RaceScreen({ state, player }: { state: GameState; player: Player
       <div className="pb-[max(1rem,env(safe-area-inset-bottom))] text-center font-mono text-xs text-derby-smoke/60">
         garde l&apos;œil sur la TV — ici c&apos;est juste le moniteur des stands
       </div>
+      {targetId && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-5"><div className="w-full max-w-sm rounded-2xl border-2 border-red-700 bg-derby-coal p-5 text-center"><div className="font-display text-3xl text-red-500">VOULEZ-VOUS TUER CE CHEVAL ?</div><div className="mt-3 font-body text-xl text-white">{state.horses.find((h) => h.id === targetId)?.name}</div><div className="mt-1 font-mono text-sm text-red-300">Parieurs : {state.players.filter((p) => p.currentBet?.horseId === targetId).map((p) => p.pseudo).join(', ') || 'aucun'}</div><div className="mt-5 flex gap-3"><button onClick={() => setTargetId(null)} className="flex-1 rounded-xl border border-white/30 py-3">NON</button><button onClick={() => { onBlackKnightKill(targetId); setTargetId(null) }} className="flex-1 rounded-xl bg-red-700 py-3 font-bold">OUI ⚔️</button></div></div></div>}
     </div>
   )
 }

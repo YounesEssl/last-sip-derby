@@ -21,7 +21,7 @@ export function BetScreen({ state, player, onBet }: Props) {
     return (
       <div className="flex h-full flex-col">
         <Header raceNumber={state.raceNumber} right={<CountdownPill seconds={seconds} label="DÉPART" />} />
-        <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6">
+        <div className="flex flex-1 flex-col items-center gap-5 overflow-y-auto px-6 pb-10 pt-5">
           <div className="paper ticket-edge w-full max-w-sm rounded-lg px-6 py-7 text-center animate-rise">
             <div className="font-headline text-lg tracking-[0.35em] text-derby-coal">TICKET DE PARI N°{state.raceNumber}</div>
             <div className="mt-4 flex items-center justify-center gap-4">
@@ -33,7 +33,7 @@ export function BetScreen({ state, player, onBet }: Props) {
             </div>
             <div className="mt-4 border-t-2 border-dashed border-derby-coal/30 pt-3 font-mono text-sm text-derby-coal">
               <div>
-                🏆 il gagne → tu distribues <b>{betHorse.odds * 2} gorgées</b> (×3 s&apos;il devient doré)
+                🏆 il gagne → tu distribues <b>{betHorse.odds * 2} gorgées</b> (×3 doré, ×5 diamant)
               </div>
               <div className="mt-1">
                 💀 il perd → tu bois <b>{betHorse.odds} gorgée{betHorse.odds > 1 ? 's' : ''}</b>
@@ -57,7 +57,7 @@ export function BetScreen({ state, player, onBet }: Props) {
       <Header raceNumber={state.raceNumber} right={<CountdownPill seconds={seconds} label="FERMETURE" />} />
       <div className="px-5 pt-3">
         <h2 className="font-headline text-2xl tracking-[0.2em] text-derby-cream">CHOISIS TON CANASSON</h2>
-        <p className="font-body text-xs text-derby-smoke">Gagnant : distribue 2× la cote (3× si doré) · Perdant : boit la cote</p>
+        <p className="font-body text-xs text-derby-smoke">Gagnant : distribue 2× la cote (3× doré, 5× diamant) · Perdant : boit la cote</p>
       </div>
 
       <div className="mt-3 flex-1 overflow-y-auto px-5 pb-40">

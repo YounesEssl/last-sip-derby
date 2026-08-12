@@ -9,6 +9,7 @@ import { BetScreen } from '@/components/screens/BetScreen'
 import { RaceScreen } from '@/components/screens/RaceScreen'
 import { ResultScreen } from '@/components/screens/ResultScreen'
 import { DrinkOverlay, VoteOverlay } from '@/components/Overlays'
+import { MiniGameOverlay } from '@/components/MiniGameOverlay'
 
 export default function MobilePage() {
   const {
@@ -17,12 +18,15 @@ export default function MobilePage() {
     connected,
     drinkNotification,
     voteRequest,
+    eliminationNotice,
     pseudo,
     join,
     placeBet,
     confirmDrink,
     vote,
     distributeSips,
+    miniGameAction,
+    blackKnightKill,
   } = usePlayerSocket()
   useNoSleep()
 
@@ -69,7 +73,7 @@ export default function MobilePage() {
         screen = <BetScreen state={gameState} player={player} onBet={bet} />
         break
       case 'RACING':
-        screen = <RaceScreen state={gameState} player={player} />
+        screen = <RaceScreen state={gameState} player={player} onBlackKnightKill={blackKnightKill} />
         break
       case 'RESULTS':
         screen = <ResultScreen state={gameState} player={player} onDistribute={distribute} />
@@ -87,6 +91,10 @@ export default function MobilePage() {
     <div className="bg-hippodrome relative h-full overflow-hidden">
       {screen}
 
+      {gameState?.miniGame && player && gameState.miniGame.players.some((row) => row.playerId === player.id) && (
+        <MiniGameOverlay game={gameState.miniGame} playerId={player.id} onAction={miniGameAction} />
+      )}
+
       {voteRequest && !voteRequest.resolved && (
         <VoteOverlay
           event={voteRequest}
@@ -101,6 +109,13 @@ export default function MobilePage() {
           deadline={drinkNotification.deadline}
           onConfirm={confirmDrink}
         />
+      )}
+
+      {eliminationNotice && (
+        <div className="pointer-events-none fixed inset-x-4 top-20 z-[80] rounded-2xl border-4 border-derby-red bg-black/95 px-5 py-5 text-center shadow-2xl">
+          <div className="font-display text-4xl text-derby-red">ÉLIMINÉ(E)</div>
+          <div className="mt-2 font-body text-lg text-derby-cream">{eliminationNotice}</div>
+        </div>
       )}
 
       {!connected && pseudo && (

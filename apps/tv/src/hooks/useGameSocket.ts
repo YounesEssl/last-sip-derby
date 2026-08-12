@@ -76,5 +76,7 @@ export function useGameSocket() {
     socketRef.current?.emit('dev:resetRace')
   }, [])
 
-  return { gameState, activeEvent, eventResolution, connected, startRace, resetRace }
+  const resetSession = useCallback(() => socketRef.current?.emit('master:resetSession'), [])
+
+  return { gameState, activeEvent, eventResolution, connected, startRace, resetRace, resetSession }
 }

@@ -1,6 +1,38 @@
 export type GamePhase = 'BETTING' | 'RACING' | 'RESULTS' | 'IDLE'
 
-export type HorseAppearance = 'HORSE' | 'CAMEL' | 'MOTORCYCLE'
+export type HorseAppearance = 'HORSE' | 'CAMEL' | 'MOTORCYCLE' | 'SCOOTER'
+
+export type MiniGameType = 'GRID' | 'CODE' | 'CAPITAL' | 'MAZE' | 'CLICKER' | 'ORDER' | 'PENALTY' | 'PRESSURE'
+
+export interface MiniGamePlayerState {
+  playerId: string
+  pseudo: string
+  score: number
+  progress: number
+  finishedAt: number | null
+  lives: number
+  eliminated: boolean
+}
+
+export interface MiniGameState {
+  id: string
+  type: MiniGameType
+  startedAt: number
+  endsAt: number
+  status: 'PLAYING' | 'RESULTS'
+  resultsEndAt: number | null
+  prompt: string
+  payload: Record<string, unknown>
+  players: MiniGamePlayerState[]
+}
+
+export interface ExecutionEvent {
+  id: string
+  attackerHorseId: string
+  targetHorseId: string
+  startedAt: number
+  endsAt: number
+}
 
 export type RaceIncidentVisual = 'NONE' | 'DRUNK_SPECTATOR' | 'TURKEY'
 
@@ -27,7 +59,11 @@ export interface Horse {
   effectiveSpeed: number
   appearance: HorseAppearance
   isGolden: boolean
+  isDiamond: boolean
+  isBlackKnight: boolean
+  isAdrien: boolean
   jockeyFallen: boolean
+  miniGameJockeyFallen: boolean
   isReversed: boolean
   isStruckByLightning: boolean
 }
@@ -47,6 +83,10 @@ export interface Player {
   totalSipsDrunk: number
   debt: number
   lastSeen: number
+  lastBetAt: number
+  miniGameEliminated: boolean
+  blackKnightKillsUsed: number
+  blackKnightLastKillAt: number
 }
 
 export interface GameEvent {
@@ -76,6 +116,8 @@ export interface GameState {
   queue: string[]
   activeEvent: GameEvent | null
   lightningEvent: LightningEvent | null
+  miniGame: MiniGameState | null
+  executionEvent: ExecutionEvent | null
   racePaused: boolean
   raceProgress: number
   phaseStartedAt: number
@@ -99,8 +141,11 @@ export interface ClientToServerEvents {
   'player:vote': (data: { eventId: string; valid: boolean }) => void
   'player:snitch': (data: { targetPseudo: string }) => void
   'winner:distributeSips': (allocations: SipAllocation[]) => void
+  'minigame:action': (data: { gameId: string; action: string; value?: number | string }) => void
+  'blackKnight:kill': (data: { horseId: string }) => void
   'dev:startRace': () => void
   'dev:resetRace': () => void
+  'master:resetSession': () => void
 }
 
 export interface ServerToClientEvents {
@@ -110,4 +155,6 @@ export interface ServerToClientEvents {
   'game:phaseChange': (phase: GamePhase) => void
   'player:joined': (player: Player) => void
   'player:drinkNotification': (data: { sips: number; reason: string; deadline?: number }) => void
+  'player:eliminated': (data: { reason: string }) => void
+  'player:sessionReset': () => void
 }

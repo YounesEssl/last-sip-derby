@@ -21,7 +21,8 @@ export function ResultScreen({
   }, [state.horses])
 
   const myBetHorse = player?.currentBet ? state.horses.find((h) => h.id === player.currentBet!.horseId) : null
-  const won = !!(winner && myBetHorse && winner.id === myBetHorse.id)
+  const won = !!(winner && myBetHorse && winner.id === myBetHorse.id && !player?.miniGameEliminated)
+  const myRoundSips = state.roundDrinks.find((drink) => drink.pseudo === player?.pseudo)?.sips ?? myBetHorse?.odds ?? 0
 
   const losers = useMemo(
     () =>
@@ -54,7 +55,7 @@ export function ResultScreen({
             <WinnerPanel
               state={state}
               player={player}
-              totalSips={(winner?.odds ?? 1) * (winner?.isGolden ? 3 : 2)}
+              totalSips={(winner?.odds ?? 1) * (winner?.isDiamond ? 5 : winner?.isGolden ? 3 : 2)}
               onDistribute={onDistribute}
             />
           ) : (
@@ -67,9 +68,9 @@ export function ResultScreen({
                 {myBetHorse.name} {myBetHorse.isEliminated ? "s'est fait éliminer" : 'a couru comme une chèvre'}
               </div>
               <div className="mt-3 font-headline text-lg font-light tracking-[0.3em] text-derby-cream">TU BOIS</div>
-              <div className="font-terminal text-[4.6rem] leading-none text-derby-red">{myBetHorse.odds}</div>
+              <div className="font-terminal text-[4.6rem] leading-none text-derby-red">{myRoundSips}</div>
               <div className="font-headline text-xl tracking-[0.35em] text-derby-cream">
-                GORGÉE{myBetHorse.odds > 1 ? 'S' : ''}
+                GORGÉE{myRoundSips > 1 ? 'S' : ''}
               </div>
             </div>
           )

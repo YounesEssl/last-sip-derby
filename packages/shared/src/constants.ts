@@ -28,3 +28,27 @@ export const EVENT_RESOLVE_DISPLAY_MS = 5_000
 export const EVENT_EARLIEST_TICK = 130   // no events before ~13s
 export const EVENT_LATEST_TICK = 460     // no events after ~46s (race lasts 60s)
 export const EVENT_MIN_TICK_GAP = 140    // minimum ~14s between events
+
+export const PLAYER_INACTIVITY_MS = 2 * 60 * 60 * 1000
+export const BLACK_KNIGHT_KILL_COOLDOWN_MS = 15_000
+export const MINIGAME_RESULTS_MS = 5_000
+
+// V2.2 balancing. Denominators keep the product spec readable at call sites:
+// `Math.random() < 1 / RACE_EVENT_ODDS.JOCKEY_FALL`, for example.
+export const RACE_EVENT_ODDS = {
+  LIGHTNING: 8,
+  CUTE_CHALLENGE: 2,
+  JOCKEY_FALL: 35,
+  CAMEL: 30,
+  MOTORCYCLE: 30,
+  REVERSE: 40,
+  GOLDEN: 30,
+  DIAMOND: 60,
+  ADRIEN: 50,
+} as const
+
+export const RACE_SPEED_BONUSES = {
+  JOCKEY_FALLEN: 0.05,
+  MOTORCYCLE: 0.05,
+  ADRIEN: 0.15,
+} as const

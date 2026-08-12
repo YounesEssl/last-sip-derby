@@ -6,6 +6,7 @@ import type { GameEvent, GameState, Horse, LightningEvent, Player } from '@last-
 import { RaceEngine } from '../../race/engine'
 import { SilkDot, useNow } from '../shared'
 import { RaceCommentator } from '../RaceCommentator'
+import { MiniGameBoard } from '../MiniGameBoard'
 
 interface Props {
   state: GameState
@@ -114,15 +115,25 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
           {state.horses.map((h) => (
             <div
               key={h.id}
-              className="absolute top-1/2 h-[1.25vh] w-[1.25vh] -translate-y-1/2 rounded-full border border-white/70 shadow"
+              className="absolute top-1/2 flex h-[2.2vh] w-[2.2vh] -translate-y-1/2 items-center justify-center"
               style={{
-                left: `calc(${Math.min(96, 1 + h.position * 0.95)}% - .625vh)`,
-                background: h.isEliminated ? '#4a4a48' : h.color,
+                left: `calc(${Math.min(96, 1 + h.position * 0.95)}% - 1.1vh)`,
                 opacity: h.isEliminated ? 0.55 : 1,
                 transition: 'left 140ms linear',
                 zIndex: Math.round(h.position),
               }}
             >
+              <span
+                aria-hidden
+                className="block font-serif text-[2.15vh] leading-none [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]"
+                style={{
+                  color: h.isEliminated ? '#4a4a48' : h.color,
+                  transform: `scaleX(${h.isReversed ? 1 : -1})`,
+                  transition: 'transform 180ms ease',
+                }}
+              >
+                ♞
+              </span>
             </div>
           ))}
         </div>
@@ -142,10 +153,10 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
             <span className="w-8 font-headline text-[2.8vh] text-derby-gold">{h.isEliminated ? '—' : `${i + 1}${i === 0 ? 'ᵉʳ' : 'ᵉ'}`}</span>
             <SilkDot color={h.isEliminated ? '#4a4a48' : h.color} size={16} />
             <span className={`min-w-0 flex-1 truncate font-body text-[2vh] font-bold text-derby-cream ${h.isEliminated ? 'line-through' : ''}`}>
-              {h.isGolden ? '✨ ' : ''}{h.appearance === 'CAMEL' ? '🐪 ' : h.appearance === 'MOTORCYCLE' ? '🏍️ ' : ''}{h.name}
+              {h.isDiamond ? '💎 ' : h.isBlackKnight ? '⚔️ ' : h.isGolden ? '✨ ' : ''}{h.appearance === 'CAMEL' ? '🐪 ' : h.appearance === 'MOTORCYCLE' ? '🏍️ ' : h.appearance === 'SCOOTER' ? '🛴 ' : ''}{h.name}
             </span>
             <span className="font-terminal text-[1.8vh] text-derby-smoke">
-              {h.isStruckByLightning ? '⚡' : h.isReversed ? '↩' : h.jockeyFallen ? '+15%' : `${h.odds}G`}
+              {h.isStruckByLightning ? '⚡' : h.isReversed ? '↩' : h.jockeyFallen ? '+5%' : `${h.odds}G`}
             </span>
           </motion.div>
         ))}
@@ -206,6 +217,12 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
 
       {activeEvent && activeEvent.visualKind !== 'NONE' && !finished && <TrackIncident event={activeEvent} />}
       {state.lightningEvent && !finished && <LightningOverlay event={state.lightningEvent} horses={state.horses} />}
+      {state.miniGame && !finished && <MiniGameBoard game={state.miniGame} />}
+      {state.executionEvent && !finished && (() => {
+        const attacker = state.horses.find((horse) => horse.id === state.executionEvent!.attackerHorseId)
+        const target = state.horses.find((horse) => horse.id === state.executionEvent!.targetHorseId)
+        return <div className="pointer-events-none absolute inset-0 z-[58] flex items-center justify-center bg-black/80"><motion.div initial={{scale:.5,rotate:-35}} animate={{scale:1.25,rotate:[-35,25,-15]}} transition={{duration:3}} className="text-center"><div className="text-[16vh]">🪓</div><div className="font-display text-[7vh] text-red-600">{attacker?.name} EXÉCUTE {target?.name}</div></motion.div></div>
+      })()}
 
       {/* ── Photo finish ── */}
       {finished && (
@@ -231,7 +248,7 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
                 </div>
                 <div className="mt-2 font-mono text-lg text-derby-coal/80">
                   {winnerBettors.length > 0
-                    ? `${winnerBettors.join(', ')} distribue${winnerBettors.length > 1 ? 'nt' : ''} ${winner.odds * (winner.isGolden ? 3 : 2)} gorgées${winner.isGolden ? ' — JACKPOT DORÉ ×3 !' : ' !'}`
+                    ? `${winnerBettors.join(', ')} distribue${winnerBettors.length > 1 ? 'nt' : ''} ${winner.odds * (winner.isDiamond ? 5 : winner.isGolden ? 3 : 2)} gorgées${winner.isDiamond ? ' — JACKPOT DIAMANT ×5 !' : winner.isGolden ? ' — JACKPOT DORÉ ×3 !' : ' !'}`
                     : 'Personne ne l’avait joué... tout le monde trinque !'}
                 </div>
               </div>

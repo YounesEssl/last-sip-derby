@@ -8,6 +8,7 @@ interface DumpData {
     totalSipsGiven: number
     totalSipsDrunk: number
     debt: number
+    lastBetAt?: number
   }>
   raceNumber: number
   dumpedAt: number

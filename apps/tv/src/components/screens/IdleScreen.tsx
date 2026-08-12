@@ -68,7 +68,7 @@ export function IdleScreen({ state }: { state: GameState }) {
           </div>
 
           <div
-            className="panel-gold w-[26vw] rounded-xl px-6 py-5 animate-rise backdrop-blur-[2px]"
+            className="panel-gold mb-[3.5vh] w-[26vw] rounded-xl px-6 py-5 animate-rise backdrop-blur-[2px]"
             style={{ animationDelay: '0.35s' }}
           >
             <div className="flex items-baseline justify-between border-b border-derby-gold/30 pb-2">

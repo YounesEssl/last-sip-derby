@@ -15,7 +15,7 @@ import { ExperienceControls } from '@/components/ExperienceControls'
 const FINISH_HOLD_MS = 5200
 
 export default function TVPage() {
-  const { gameState, activeEvent, eventResolution, connected, startRace, resetRace } = useGameSocket()
+  const { gameState, activeEvent, eventResolution, connected, startRace, resetRace, resetSession } = useGameSocket()
   const [displayPhase, setDisplayPhase] = useState<GamePhase | null>(null)
   const [finishHold, setFinishHold] = useState(false)
   const prevPhaseRef = useRef<GamePhase | null>(null)
@@ -91,7 +91,12 @@ export default function TVPage() {
         </motion.div>
       </AnimatePresence>
 
-      <ExperienceControls state={gameState} activeEventId={activeEvent?.id ?? null} />
+      <ExperienceControls
+        state={gameState}
+        activeEventId={activeEvent?.id ?? null}
+        showReset={!showRace}
+        onResetSession={resetSession}
+      />
 
       {!connected && (
         <div className="absolute inset-x-0 top-0 z-50 bg-derby-red py-1 text-center font-headline tracking-[0.3em] text-derby-cream">

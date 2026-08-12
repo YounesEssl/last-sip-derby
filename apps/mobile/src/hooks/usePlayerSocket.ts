@@ -34,6 +34,8 @@ export function usePlayerSocket() {
     deadline?: number
   } | null>(null)
   const [voteRequest, setVoteRequest] = useState<GameEvent | null>(null)
+  const [eliminationNotice, setEliminationNotice] = useState<string | null>(null)
+  const eliminationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Loaded after mount: reading sessionStorage during the first render makes
   // the client HTML diverge from the server HTML (hydration error).
   const [pseudo, setPseudo] = useState<string | null>(null)
@@ -110,9 +112,26 @@ export function usePlayerSocket() {
     socket.on('game:phaseChange', () => {
       setVoteRequest(null)
       setDrinkNotification(null)
+      setEliminationNotice(null)
+    })
+
+    socket.on('player:eliminated', ({ reason }) => {
+      setEliminationNotice(reason)
+      if (eliminationTimerRef.current) clearTimeout(eliminationTimerRef.current)
+      eliminationTimerRef.current = setTimeout(() => setEliminationNotice(null), 5_000)
+      if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 500])
+    })
+
+    socket.on('player:sessionReset', () => {
+      sessionStorage.removeItem('derby_pseudo')
+      setPseudo(null)
+      setPlayer(null)
+      setVoteRequest(null)
+      setDrinkNotification(null)
     })
 
     return () => {
+      if (eliminationTimerRef.current) clearTimeout(eliminationTimerRef.current)
       socket.disconnect()
     }
   }, [pseudo])
@@ -141,17 +160,31 @@ export function usePlayerSocket() {
     socketRef.current?.emit('winner:distributeSips', allocations)
   }, [])
 
+  const miniGameAction = useCallback((gameId: string, action: string, value?: number | string) => {
+    socketRef.current?.emit('minigame:action', { gameId, action, value })
+  }, [])
+
+  const blackKnightKill = useCallback((horseId: string) => {
+    socketRef.current?.emit('blackKnight:kill', { horseId })
+  }, [])
+
+  const resetSession = useCallback(() => socketRef.current?.emit('master:resetSession'), [])
+
   return {
     gameState,
     player,
     connected,
     drinkNotification,
     voteRequest,
+    eliminationNotice,
     pseudo,
     join,
     placeBet,
     confirmDrink,
     vote,
     distributeSips,
+    miniGameAction,
+    blackKnightKill,
+    resetSession,
   }
 }

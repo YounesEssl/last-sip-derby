@@ -8,6 +8,11 @@ interface Dust {
   r: number
   life: number
   maxLife: number
+  color: readonly [number, number, number]
+  opacity: number
+  stretchX: number
+  stretchY: number
+  rotation: number
 }
 
 export class DustPool {
@@ -25,6 +30,11 @@ export class DustPool {
         r: (4 + Math.random() * 7) * scale,
         life: 0,
         maxLife: 0.45 + Math.random() * 0.5,
+        color: [196, 152, 110],
+        opacity: 0.3,
+        stretchX: 1.25 + Math.random() * 0.65,
+        stretchY: 0.62 + Math.random() * 0.25,
+        rotation: (Math.random() - 0.5) * 0.18,
       })
     }
   }
@@ -39,8 +49,40 @@ export class DustPool {
         r: (7 + Math.random() * 12) * scale,
         life: 0,
         maxLife: 0.7 + Math.random() * 0.5,
+        color: [196, 152, 110],
+        opacity: 0.34,
+        stretchX: 1.2 + Math.random() * 0.8,
+        stretchY: 0.65 + Math.random() * 0.3,
+        rotation: (Math.random() - 0.5) * 0.3,
       })
     }
+  }
+
+  /** Low, soft smoke for golden/diamond runners; kept in world space so the
+   * runner naturally pulls away from each wisp instead of dragging circles. */
+  spawnTrail(
+    x: number,
+    y: number,
+    scale: number,
+    color: readonly [number, number, number],
+    direction: -1 | 1,
+    intensity: number,
+  ) {
+    if (this.pool.length > 360) this.pool.shift()
+    this.pool.push({
+      x: x + (Math.random() - 0.5) * 18 * scale,
+      y: y - Math.random() * 5 * scale,
+      vx: direction * (18 + Math.random() * 30) * scale * intensity,
+      vy: (-5 - Math.random() * 13) * scale,
+      r: (10 + Math.random() * 10) * scale,
+      life: 0,
+      maxLife: 0.85 + Math.random() * 0.65,
+      color,
+      opacity: 0.34 + Math.random() * 0.12,
+      stretchX: 1.7 + Math.random() * 1.15,
+      stretchY: 0.48 + Math.random() * 0.22,
+      rotation: (Math.random() - 0.5) * 0.16,
+    })
   }
 
   update(dt: number) {
@@ -55,7 +97,9 @@ export class DustPool {
       d.y += d.vy * dt
       d.vx *= 1 - 2.4 * dt
       d.vy *= 1 - 2.4 * dt
-      d.r += 26 * dt
+      d.r += 22 * dt
+      d.stretchX += 0.38 * dt
+      d.stretchY += 0.08 * dt
     }
   }
 
@@ -63,11 +107,22 @@ export class DustPool {
   draw(ctx: CanvasRenderingContext2D, camX: number, W: number) {
     for (const d of this.pool) {
       const t = d.life / d.maxLife
-      const alpha = 0.3 * (1 - t)
-      ctx.fillStyle = `rgba(196,152,110,${alpha.toFixed(3)})`
+      const alpha = d.opacity * Math.pow(1 - t, 1.65)
+      const [red, green, blue] = d.color
+      const sx = d.x - camX + W / 2
+      ctx.save()
+      ctx.translate(sx, d.y)
+      ctx.rotate(d.rotation)
+      ctx.scale(d.stretchX, d.stretchY)
+      const gradient = ctx.createRadialGradient(-d.r * 0.25, -d.r * 0.12, d.r * 0.08, 0, 0, d.r)
+      gradient.addColorStop(0, `rgba(${red},${green},${blue},${(alpha * 0.72).toFixed(3)})`)
+      gradient.addColorStop(0.46, `rgba(${red},${green},${blue},${(alpha * 0.42).toFixed(3)})`)
+      gradient.addColorStop(1, `rgba(${red},${green},${blue},0)`)
+      ctx.fillStyle = gradient
       ctx.beginPath()
-      ctx.arc(d.x - camX + W / 2, d.y, d.r, 0, Math.PI * 2)
+      ctx.ellipse(0, 0, d.r, d.r, 0, 0, Math.PI * 2)
       ctx.fill()
+      ctx.restore()
     }
   }
 }
