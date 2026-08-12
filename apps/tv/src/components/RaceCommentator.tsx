@@ -10,6 +10,8 @@ interface CommentMessage {
   id: number
   key: string
   text: string
+  playerName?: string
+  parts?: HighlightedTextPart[]
   priority: number
   duration: number
   mood: CommentMood
@@ -55,32 +57,187 @@ const SURGE_LINES = [
   '{horse} met les gaz et revient très fort !',
 ] as const
 
-const LAST_LINES = [
-  '{name}, joli panorama depuis le fond du classement !',
-  '{name}, ton cheval visite la piste à son rythme, visiblement.',
-  '{name}, même le panneau d’arrivée commence à s’impatienter.',
-  '{name}, tu fermes la marche avec une élégance très personnelle.',
-  '{name}, excellente stratégie… si le but était d’arriver demain.',
-  '{name}, le peloton demande si tu as besoin d’un plan.',
+export const VILLAIN_LAST_LINES = [
+  'Alors… t’es dernier tocard ?',
+  'Je crois que… veut pas gagner.',
+  'C’est fou d’être nul comme…',
+  'Bon… tu commences à jouer ?',
+  'Ptdrr regardez… il est dernier',
+  '… est pas pressé hein…',
+  'Aller on encourage…',
+  'Miskine…',
+  '… est un beau perdant',
+  '… ça parle pas trop là hein ?',
+  'Je crois que… est dernier',
+  'j’suis mort comment il est nul…',
+  '… tu veux un café chef ?',
+  '… est dernier, regardez-le',
+  'HAHAHAHA… aller mon grand continue',
+  '… qui se fait enculer en détente',
+  '… tu te fais enculer par ton cheval ou quoi ? Pleure pas…',
+  'Bah alors… c’est qui qui va boire ?',
+  '… t’es nul',
+  '… looserrrrrr',
+  't’es un gros nullos…',
+  '… t’avais espoir de gagner en plus mdrrr ?',
+  '… aller remplis ton verre garçon',
+  "Oh… t'as oublié de démarrer ou quoi ?",
+  "… même à pied t'irais plus vite",
+  "Y'a… et y'a les autres.",
+  "Mais lâche ton téléphone… t'es dernier là",
+  '… tu joues à quoi là sérieux ?',
+  "Franchement… lâche l'affaire, bois direct",
+  "… ce soir c'est toi la victime, on l'a tous compris",
+  "Petit rappel… : le but c'est d'avancer",
+  '… ton verre va être plein ce soir mon pauvre',
+  'Ohhh… il est encore là au fond mdrrr',
+  "… t'as parié avec tes pieds ou quoi ?",
+  "Courage… t'es pas dernier… ah si en fait",
+  '… même ma grand-mère te dépasse',
+  "… ton cheval il t'aime pas c'est tout",
+  "… faut le dire si tu veux pas jouer hein",
+  "… t'inquiète, dernier c'est une place aussi",
+  '… t’as une copine ?',
+  'NARLESHEITAN ...',
+  '... hônnetement tu pues la merde',
+  '... wesh accelère frère',
+  "... p'tite pute va",
+  "... T'es vraiment mauvais",
+  'ça va ... ? Il sont beaux les culs vus de derrière ?',
+  'Espèce de grosse salope...',
+  '... arrête de jouer stp',
+  "Pfff...ferme là 5min stp on veut plus t'entendre",
+  '.... tu pues',
+  'Regardez miskine ... il est dernier hahaha',
+  "Hahaha aller ... avance par pitié t'es si nul",
 ] as const
 
-const REVERSE_LINES = [
-  '{name}, demi-tour artistique ! La sortie est pourtant de l’autre côté.',
-  '{name}, ton cheval vient de contester le sens de circulation.',
-  '{name}, superbe idée : courir vers le départ pour finir plus vite.',
+export const VILLAIN_FIRST_LINES = [
+  'T’es si rapide…',
+  '… t’es sur une fusée ou un cheval ?',
+  '… t’as un T-Max ou un cheval ?',
+  'Le GOAT…',
+  '… vous met une tempête',
+  '… t’es prime',
+  '… quel étalon',
+  '… gros beau gosse va',
+  'un vrai champion ce…',
+  '… t’es un roi',
+  'Personne peut suivre…',
+  '… roule en Ferrari, les autres en trottinette',
+  'Chapeau bas… quel monstre',
+  '… a mis le turbo, RIP les autres',
+  'On arrête le chrono ? … a déjà gagné',
+  '… laisse-en un peu aux autres steuplé',
+  "Le patron c'est… point barre",
+  '… tu cours ou tu voles là ?',
+  '… est en mode Fast and Furious',
+  "Tout le monde derrière… comme d'hab",
+  "… distribue une leçon d'humilité à la piste",
+  "Génie… t'as vendu ton âme ou quoi ?",
+  'Standing ovation pour… quelle machine',
+  "… a pris l'autoroute, les autres la départementale",
+  "Respect… t'écrases tout le monde là",
+  "… c'est Mbappé version cheval",
+  "Personne au niveau de… c'est plié les gars",
+  '… en tête, préparez vos verres les autres',
 ] as const
 
-const INCIDENT_LINES = [
-  '{name}, ça pique ! On va faire comme si personne n’avait vu.',
-  '{name}, ton plan vient de prendre un léger coup de sabot.',
-  '{name}, la piste t’envoie ses salutations les moins distinguées.',
-] as const
+export type VillainCommentCategory = 'FIRST' | 'LAST'
 
-const FIRST_LINES = [
-  '{name} est devant. Profite, ça ne durera peut-être pas.',
-  '{name} mène la danse… les autres, vous pouvez applaudir.',
-  '{name} en tête : enfin quelqu’un qui a lu les règles.',
-] as const
+export interface VillainPhraseHistory {
+  recent: number[]
+  used: number[]
+}
+
+export interface VillainPhraseSelection {
+  text: string
+  template: string
+  templateIndex: number
+  parts: HighlightedTextPart[]
+  history: VillainPhraseHistory
+}
+
+export interface HighlightedTextPart {
+  text: string
+  highlighted: boolean
+}
+
+/**
+ * Tokenise les marqueurs de la banque avant insertion. Le pseudonyme n'est
+ * jamais interprété comme du HTML et seules les positions des marqueurs sont
+ * signalées comme mises en valeur, même pour un pseudo court comme « est ».
+ */
+export function tokenizeVillainPhrase(template: string, playerName: string): HighlightedTextPart[] {
+  const markerRe = /(?:…|\.{3,})/g
+  const parts: HighlightedTextPart[] = []
+  let cursor = 0
+  let marker = markerRe.exec(template)
+
+  const append = (text: string, highlighted: boolean) => {
+    if (!text) return
+    const previous = parts[parts.length - 1]
+    if (previous && previous.highlighted === highlighted) previous.text += text
+    else parts.push({ text, highlighted })
+  }
+
+  while (marker) {
+    const markerStart = marker.index
+    const markerEnd = markerStart + marker[0].length
+    append(template.slice(cursor, markerStart), false)
+    if (markerStart > 0 && !/\s/.test(template[markerStart - 1])) append(' ', false)
+    append(playerName, true)
+    const after = template.slice(markerEnd)
+    if (after.length > 0 && !/^\s|^[,.;:!?)}\]]/.test(after)) append(' ', false)
+    cursor = markerEnd
+    marker = markerRe.exec(template)
+  }
+  append(template.slice(cursor), false)
+  return parts.length ? parts : [{ text: template, highlighted: false }]
+}
+
+/** Remplace les marqueurs en conservant une version texte pour la file et l'accessibilité. */
+export function replaceVillainNameMarkers(template: string, playerName: string): string {
+  return tokenizeVillainPhrase(template, playerName).map((part) => part.text).join('')
+}
+
+export function createVillainPhraseHistory(): VillainPhraseHistory {
+  return { recent: [], used: [] }
+}
+
+/**
+ * Sélection déterministe et testable : aucun modèle génératif, aucun texte hors banque.
+ * Les phrases récentes sont exclues et le cycle repart après 60 % de la banque.
+ */
+export function selectVillainPhrase(
+  category: VillainCommentCategory,
+  playerName: string,
+  history: VillainPhraseHistory,
+  seed: number,
+): VillainPhraseSelection {
+  const bank = category === 'FIRST' ? VILLAIN_FIRST_LINES : VILLAIN_LAST_LINES
+  const resetThreshold = Math.max(1, Math.ceil(bank.length * .6))
+  const used = history.used.length >= resetThreshold ? [] : history.used.filter((index) => index < bank.length)
+  const recent = history.recent.filter((index) => index < bank.length)
+  const preferred = bank.map((_, index) => index).filter((index) => !used.includes(index) && !recent.includes(index))
+  const fallback = bank.map((_, index) => index).filter((index) => !recent.includes(index))
+  const candidates = preferred.length ? preferred : fallback.length ? fallback : bank.map((_, index) => index)
+  const templateIndex = candidates[Math.abs(Math.trunc(seed)) % candidates.length]
+  const template = bank[templateIndex]
+  const recentLimit = Math.min(6, Math.max(1, bank.length - 1))
+  const parts = tokenizeVillainPhrase(template, playerName)
+
+  return {
+    text: parts.map((part) => part.text).join(''),
+    template,
+    templateIndex,
+    parts,
+    history: {
+      recent: [...recent, templateIndex].slice(-recentLimit),
+      used: [...used, templateIndex],
+    },
+  }
+}
 
 function fill(template: string, values: Record<string, string | number>): string {
   return Object.entries(values).reduce((text, [key, value]) => text.replace(`{${key}}`, String(value)), template)
@@ -90,9 +247,9 @@ function pick<T>(items: readonly T[], seed: number): T {
   return items[Math.abs(seed) % items.length]
 }
 
-function bettorName(state: GameState, horse: Horse): string {
+function bettorName(state: GameState, horse: Horse): string | null {
   const bettors = state.players.filter((player) => player.currentBet?.horseId === horse.id)
-  if (!bettors.length) return horse.name
+  if (!bettors.length) return null
   return bettors[Math.abs(Math.round(horse.position * 10) + state.raceNumber) % bettors.length].pseudo
 }
 
@@ -157,6 +314,10 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
   const previousLeaderRef = useRef<string | null>(null)
   const milestonesRef = useRef(new Set<number>())
   const stableLeaderRef = useRef<{ id: string | null; since: number; praised: boolean }>({ id: null, since: 0, praised: false })
+  const villainPhraseHistoryRef = useRef<Record<VillainCommentCategory, VillainPhraseHistory>>({
+    FIRST: createVillainPhraseHistory(),
+    LAST: createVillainPhraseHistory(),
+  })
 
   const ranking = useMemo(
     () => state.horses.filter((horse) => !horse.isEliminated).sort((a, b) => b.position - a.position),
@@ -169,6 +330,10 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
     previousLeaderRef.current = null
     milestonesRef.current.clear()
     stableLeaderRef.current = { id: null, since: Date.now(), praised: false }
+    villainPhraseHistoryRef.current = {
+      FIRST: createVillainPhraseHistory(),
+      LAST: createVillainPhraseHistory(),
+    }
   }, [state.raceNumber])
 
   useEffect(() => {
@@ -241,23 +406,6 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
         })
       }
 
-      if (!old.isReversed && horse.isReversed) {
-        enqueueVillain({
-          key: `reverse:${horse.id}`,
-          text: fill(pick(REVERSE_LINES, now + horse.lane), { name: bettorName(state, horse) }),
-          priority: 4,
-          duration: 4_700,
-          mood: 'LAUGH',
-        })
-      } else if ((!old.isEliminated && horse.isEliminated) || (!old.jockeyFallen && horse.jockeyFallen)) {
-        enqueueVillain({
-          key: `incident:${horse.id}`,
-          text: fill(pick(INCIDENT_LINES, now + horse.lane), { name: bettorName(state, horse) }),
-          priority: 4,
-          duration: 4_500,
-          mood: 'REACT',
-        })
-      }
     }
 
     if (leader) {
@@ -276,14 +424,30 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
       if (stableLeaderRef.current.id !== leader.id) {
         stableLeaderRef.current = { id: leader.id, since: now, praised: false }
       } else if (canComment && !stableLeaderRef.current.praised && now - stableLeaderRef.current.since > 11_000) {
-        stableLeaderRef.current.praised = true
-        enqueueVillain({
-          key: `first:${leader.id}`,
-          text: fill(pick(FIRST_LINES, now + leader.lane), { name: bettorName(state, leader) }),
-          priority: 1,
-          duration: 4_300,
-          mood: 'TALK',
-        })
+        const playerName = bettorName(state, leader)
+        if (playerName) {
+          const selection = selectVillainPhrase(
+            'FIRST',
+            playerName,
+            villainPhraseHistoryRef.current.FIRST,
+            now + leader.lane,
+          )
+          const accepted = enqueueVillain({
+            key: `first:${leader.id}`,
+            text: selection.text,
+            playerName,
+            parts: selection.parts,
+            priority: 1,
+            duration: 4_300,
+            mood: 'TALK',
+          })
+          if (accepted) {
+            villainPhraseHistoryRef.current.FIRST = selection.history
+            stableLeaderRef.current.praised = true
+          }
+        } else {
+          stableLeaderRef.current.praised = true
+        }
       }
     }
 
@@ -293,13 +457,25 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
       const becameLast = oldLast && oldLast.rank !== ranking.length - 1
       const gap = (ranking[ranking.length - 2]?.position ?? last.position) - last.position
       if (becameLast || gap > 4.5) {
-        enqueueVillain({
-          key: `last:${last.id}`,
-          text: fill(pick(LAST_LINES, now + last.lane), { name: bettorName(state, last) }),
-          priority: gap > 7 ? 3 : 2,
-          duration: 4_700,
-          mood: 'LAUGH',
-        })
+        const playerName = bettorName(state, last)
+        if (playerName) {
+          const selection = selectVillainPhrase(
+            'LAST',
+            playerName,
+            villainPhraseHistoryRef.current.LAST,
+            now + last.lane,
+          )
+          const accepted = enqueueVillain({
+            key: `last:${last.id}`,
+            text: selection.text,
+            playerName,
+            parts: selection.parts,
+            priority: gap > 7 ? 3 : 2,
+            duration: 4_700,
+            mood: 'LAUGH',
+          })
+          if (accepted) villainPhraseHistoryRef.current.LAST = selection.history
+        }
       }
     }
 
@@ -337,20 +513,20 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: .98 }}
             transition={{ duration: .25, ease: 'easeOut' }}
-            className="absolute left-[22vw] top-[14vh] w-[41vw] overflow-hidden rounded-xl border border-[#7db8c7]/70 bg-[#09161c]/92 shadow-[0_12px_30px_rgba(0,0,0,.55)] backdrop-blur-md"
+            className="absolute left-[18vw] top-[14vh] w-[36vw] min-h-[10.5vh] overflow-hidden rounded-xl border border-[#7db8c7]/70 bg-[#09161c]/92 shadow-[0_12px_30px_rgba(0,0,0,.55)] backdrop-blur-md"
           >
             <div className="flex items-center gap-[.7vw] border-b border-white/10 bg-[#17434e]/70 px-[1.1vw] py-[.45vh]">
               <span className="h-[.7vh] w-[.7vh] animate-pulse rounded-full bg-[#79d4e8]" />
               <span className="font-headline text-[1.35vh] tracking-[.3em] text-[#b9ebf2]">COMMENTAIRE DE COURSE</span>
             </div>
-            <div className="px-[1.2vw] py-[1vh] font-headline text-[2.45vh] leading-[1.05] tracking-[.045em] text-derby-cream">
+            <div className="flex min-h-[6.6vh] items-center break-words px-[1.2vw] py-[.9vh] font-headline text-[2.7vh] font-normal leading-[1.18] tracking-[.025em] text-derby-cream">
               {mainComment.text}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="absolute right-[1.4vw] top-[13.2vh] flex w-[34vw] items-start justify-end gap-[.8vw]">
+      <div className="absolute right-[1.4vw] top-[14vh] flex w-[42vw] items-start justify-end gap-[.9vw]">
         <AnimatePresence mode="wait">
           {villainComment && (
             <motion.div
@@ -360,11 +536,12 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
               animate={{ opacity: 1, x: 0, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, x: 16, scale: .9 }}
               transition={{ type: 'spring', stiffness: 380, damping: 24 }}
-              className="relative mt-[1.4vh] w-[21vw] rounded-[1.1rem] border-[.22vh] border-derby-red bg-[#190a0c]/95 px-[1.15vw] pb-[1.15vh] pt-[.8vh] shadow-[0_12px_28px_rgba(0,0,0,.6)]"
+              className="relative flex min-h-[10.5vh] w-[28vw] items-center rounded-[1.1rem] border-[.22vh] border-derby-red bg-[#190a0c]/95 px-[1.35vw] py-[1.1vh] shadow-[0_12px_28px_rgba(0,0,0,.6)]"
             >
               <span className="absolute -right-[.65vw] top-[3.4vh] h-[1.2vw] w-[1.2vw] rotate-45 border-r-[.22vh] border-t-[.22vh] border-derby-red bg-[#190a0c]" />
-              <div className="mb-[.3vh] font-headline text-[1.15vh] tracking-[.25em] text-derby-red">LA MAUVAISE LANGUE</div>
-              <div className="font-hand text-[2.2vh] font-bold leading-[1.08] text-derby-cream">{villainComment.text}</div>
+              <div className="min-w-0 break-words font-headline text-[2.7vh] font-normal leading-[1.18] tracking-[.025em] text-derby-cream">
+                <HighlightedCommentText message={villainComment} />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -372,6 +549,15 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
       </div>
     </motion.div>
   )
+}
+
+function HighlightedCommentText({ message }: { message: CommentMessage }) {
+  const parts = message.parts ?? [{ text: message.text, highlighted: false }]
+  return parts.map((part, index) => (
+    part.highlighted
+      ? <strong key={`${index}:${part.text}`} className="font-bold text-white">{part.text}</strong>
+      : <span key={`${index}:${part.text}`}>{part.text}</span>
+  ))
 }
 
 function VillainAvatar({ mood, speaking }: { mood: CommentMood; speaking: boolean }) {
@@ -385,51 +571,52 @@ function VillainAvatar({ mood, speaking }: { mood: CommentMood; speaking: boolea
           ? { y: [0, -2, 0], rotate: [-1, 1, -1] }
           : { y: [0, -3, 0], rotate: [-1, .5, -1] }}
       transition={{ duration: laughing ? .42 : speaking ? .75 : 3.8, repeat: Infinity, ease: 'easeInOut' }}
-      className="relative h-[16vh] w-[12vw] shrink-0 drop-shadow-[0_12px_9px_rgba(0,0,0,.65)]"
+      className="relative h-[17vh] w-[12.5vw] shrink-0 drop-shadow-[0_12px_9px_rgba(0,0,0,.65)]"
     >
-      <svg viewBox="0 0 220 190" role="img" aria-label="Commentateur cartoon moqueur" className="h-full w-full overflow-visible">
+      <svg viewBox="0 0 240 210" role="img" aria-label="Personnage cartoon" className="h-full w-full overflow-visible">
         <defs>
           <linearGradient id="villain-face" x1="0" y1="0" x2="1" y2="1">
-            <stop stopColor="#f3b46d" />
-            <stop offset=".55" stopColor="#d77b45" />
-            <stop offset="1" stopColor="#9c472e" />
+            <stop stopColor="#f8d0ac" />
+            <stop offset=".58" stopColor="#e9a987" />
+            <stop offset="1" stopColor="#c97865" />
           </linearGradient>
-          <linearGradient id="villain-hair" x1="0" y1="0" x2="0" y2="1">
-            <stop stopColor="#31151d" />
-            <stop offset="1" stopColor="#10070a" />
+          <linearGradient id="villain-beanie" x1="0" y1="0" x2="0" y2="1">
+            <stop stopColor="#8f2636" />
+            <stop offset="1" stopColor="#49131f" />
           </linearGradient>
         </defs>
-        <path d="M34 84C25 42 52 11 88 20 116-6 176 13 180 54c27 12 21 52 0 61l-14-20L49 105Z" fill="url(#villain-hair)" stroke="#070405" strokeWidth="7" strokeLinejoin="round" />
-        <path d="m48 48-24-29 38 12L70 3l20 25 21-24 5 27 35-18-12 31Z" fill="#441927" stroke="#10070a" strokeWidth="6" strokeLinejoin="round" />
-        <ellipse cx="36" cy="96" rx="20" ry="27" fill="#bf603a" stroke="#5c261f" strokeWidth="6" />
-        <ellipse cx="184" cy="96" rx="20" ry="27" fill="#bf603a" stroke="#5c261f" strokeWidth="6" />
-        <path d="M43 78C45 31 78 22 111 25c42-4 72 18 72 67 0 59-32 90-74 90-45 0-72-36-66-104Z" fill="url(#villain-face)" stroke="#5c261f" strokeWidth="7" />
-        <path d="M58 65c14-18 37-15 48-5M159 64c-13-17-33-16-45-5" fill="none" stroke="#341015" strokeWidth="10" strokeLinecap="round" />
-        <path d="m62 72 42 10-39 12ZM158 72l-42 10 39 12Z" fill="#fff8dd" stroke="#6b2c25" strokeWidth="4" strokeLinejoin="round" />
-        <motion.circle animate={speaking ? { cx: [84, 89, 84] } : { cx: 84 }} transition={{ duration: 1.1, repeat: Infinity }} cx="84" cy="83" r="6" fill="#13070a" />
-        <motion.circle animate={speaking ? { cx: [136, 131, 136] } : { cx: 136 }} transition={{ duration: 1.1, repeat: Infinity }} cx="136" cy="83" r="6" fill="#13070a" />
-        <path d="M111 78 98 113l18 5" fill="none" stroke="#803628" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M69 119q42 42 84-1-3 55-44 55-36 0-40-54Z" fill="#23080c" stroke="#5c1a1d" strokeWidth="5" />
-        <path d="M75 123q35 23 71-1l-6 18H82Z" fill="#fff7dc" stroke="#c6aa8a" strokeWidth="3" strokeLinejoin="round" />
-        <g stroke="#b08c73" strokeWidth="2">
-          <path d="M94 130v12M109 133v12M124 130v12" />
-        </g>
+        <path d="M43 82C42 36 72 13 112 14c43-2 78 23 78 69l-14 20-121 4Z" fill="#1b0a0f" stroke="#090407" strokeWidth="7" strokeLinejoin="round" />
+        <path d="M49 60C53 22 80 7 116 8c38 0 65 18 69 54Z" fill="url(#villain-beanie)" stroke="#210911" strokeWidth="7" strokeLinejoin="round" />
+        <path d="M47 55h140v28H47Z" fill="#6c1c2c" stroke="#210911" strokeWidth="7" strokeLinejoin="round" />
+        <path d="M63 58h108" fill="none" stroke="#a8404e" strokeWidth="4" strokeLinecap="round" opacity=".65" />
+        <ellipse cx="40" cy="111" rx="20" ry="27" fill="#dfa080" stroke="#7d443f" strokeWidth="6" />
+        <ellipse cx="188" cy="111" rx="20" ry="27" fill="#dfa080" stroke="#7d443f" strokeWidth="6" />
+        <path d="M48 88C50 51 80 42 114 43c43-3 70 19 70 64 0 59-29 91-72 91-45 0-70-36-64-110Z" fill="url(#villain-face)" stroke="#7d443f" strokeWidth="7" />
+        <path d="M61 79c14-17 36-14 47-4M163 79c-13-16-34-15-46-4" fill="none" stroke="#431822" strokeWidth="10" strokeLinecap="round" />
+        <path d="m65 88 42 9-39 13ZM161 88l-42 9 39 13Z" fill="#fffaf0" stroke="#814842" strokeWidth="4" strokeLinejoin="round" />
+        <circle cx="87" cy="99" r="6" fill="#13070a" />
+        <circle cx="139" cy="99" r="6" fill="#13070a" />
+        <path d="M114 95 102 128l18 5" fill="none" stroke="#a65f53" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
         <motion.g
-          animate={speaking ? { scaleY: laughing ? [1, 1.65, .9, 1.7, 1] : [1, 1.28, .9, 1.38, 1] } : { scaleY: 1 }}
-          transition={{ duration: laughing ? .34 : .5, repeat: speaking ? Infinity : 0, ease: 'easeInOut' }}
-          style={{ transformOrigin: '110px 151px' }}
+          animate={speaking
+            ? { scaleX: laughing ? [1, 1.12, 1.05, 1.15, 1] : [1, 1.07, 1.02, 1.09, 1], scaleY: laughing ? [1, 1.05, 1] : [1, .97, 1.03, 1] }
+            : { scaleX: 1, scaleY: 1 }}
+          transition={{ duration: laughing ? .42 : .58, repeat: speaking ? Infinity : 0, ease: 'easeInOut' }}
+          style={{ transformOrigin: '113px 159px' }}
         >
-          <path d="M84 145q27 17 53-1-7 27-28 27-18 0-25-26Z" fill="#a62635" />
-          <path d="M93 159q16-8 32 0-15 10-32 0Z" fill="#e4556b" />
+          <path d="M72 136q42 40 86-1-5 55-45 55-36 0-41-54Z" fill="#23080c" stroke="#6d2028" strokeWidth="5" />
+          <path d="M79 140q36 22 72-1l-7 18H87Z" fill="#fff8e8" stroke="#c6aa8a" strokeWidth="3" strokeLinejoin="round" />
+          <path d="M95 176q17-8 34 0-16 10-34 0Z" fill="#e86c82" />
         </motion.g>
-        <path d="M57 112q-16 9-20 22M162 112q17 8 21 22" fill="none" stroke="#8c3c2e" strokeWidth="4" strokeLinecap="round" />
+        <g stroke="#b08c73" strokeWidth="2">
+          <path d="M97 147v12M113 150v12M129 147v12" />
+        </g>
+        <path d="M33 92C32 35 70 5 116 5c49 0 83 31 83 87" fill="none" stroke="#35404a" strokeWidth="10" strokeLinecap="round" />
+        <rect x="25" y="82" width="25" height="57" rx="11" fill="#242c34" stroke="#0b0f12" strokeWidth="6" />
+        <rect x="179" y="82" width="25" height="57" rx="11" fill="#242c34" stroke="#0b0f12" strokeWidth="6" />
+        <path d="M197 128q9 27-25 40" fill="none" stroke="#35404a" strokeWidth="7" strokeLinecap="round" />
+        <circle cx="169" cy="169" r="8" fill="#171d22" stroke="#090c0e" strokeWidth="4" />
       </svg>
-      {laughing && (
-        <>
-          <motion.span animate={{ opacity: [0, 1, 0], x: [0, -18], y: [0, -28] }} transition={{ duration: .8, repeat: Infinity }} className="absolute left-0 top-[2vh] font-display text-[2.2vh] text-derby-red">HA!</motion.span>
-          <motion.span animate={{ opacity: [0, 1, 0], x: [0, 18], y: [0, -25] }} transition={{ duration: .8, delay: .28, repeat: Infinity }} className="absolute right-0 top-[4vh] font-display text-[1.8vh] text-derby-gold">HA!</motion.span>
-        </>
-      )}
     </motion.div>
   )
 }

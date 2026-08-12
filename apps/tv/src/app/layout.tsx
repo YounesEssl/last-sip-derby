@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Yeseva_One, Oswald, Courier_Prime, VT323, Caveat } from 'next/font/google'
 import './globals.css'
 
@@ -35,6 +35,11 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   title: "L'Apérodrome — TV",
   description: "Course de chevaux de L'Apérodrome",
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({

@@ -261,10 +261,43 @@ export class Scenery {
     ctx.fillRect(x, y, w, h)
     ctx.strokeRect(x, y, w, h)
     ctx.fillStyle = '#4A3018'
-    ctx.font = `bold ${Math.min(26 * S, (w / text.length) * 1.55)}px Georgia, serif`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText(text, x + w / 2, y + h / 2)
+
+    // Keep long slogans readable: wrap at word boundaries before shrinking,
+    // with at most two centred lines and a floor suitable for a TV display.
+    const maxWidth = w - 18 * S
+    const maxFontSize = 26 * S
+    const minFontSize = 15 * S
+    let fontSize = maxFontSize
+    let lines = [text]
+    const wrap = (value: string): string[] => {
+      const words = value.split(' ')
+      if (words.length < 2) return [value]
+      let best: string[] = [value]
+      let bestWidth = Number.POSITIVE_INFINITY
+      for (let split = 1; split < words.length; split++) {
+        const candidate = [words.slice(0, split).join(' '), words.slice(split).join(' ')]
+        const candidateWidth = Math.max(...candidate.map((line) => ctx.measureText(line).width))
+        if (candidateWidth < bestWidth) {
+          best = candidate
+          bestWidth = candidateWidth
+        }
+      }
+      return best
+    }
+
+    while (fontSize > minFontSize) {
+      ctx.font = `bold ${fontSize}px Georgia, serif`
+      lines = ctx.measureText(text).width <= maxWidth ? [text] : wrap(text)
+      if (lines.every((line) => ctx.measureText(line).width <= maxWidth)) break
+      fontSize -= S
+    }
+    ctx.font = `bold ${Math.max(minFontSize, fontSize)}px Georgia, serif`
+    if (lines.some((line) => ctx.measureText(line).width > maxWidth)) lines = wrap(text)
+    const lineHeight = Math.max(minFontSize, fontSize) * 1.08
+    const firstLineY = y + h / 2 - ((lines.length - 1) * lineHeight) / 2
+    lines.forEach((line, lineIndex) => ctx.fillText(line, x + w / 2, firstLineY + lineIndex * lineHeight, maxWidth))
   }
 
   /** White rail on the far side of the track (parallax 1 — track plane). */

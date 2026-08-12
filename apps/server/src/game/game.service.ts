@@ -68,6 +68,7 @@ interface HorseRaceState {
   gateBurst: number; // early surge amplitude
   prevPos: number;
   jockeyFallTick: number | null;
+  jockeyBoostStartTick: number | null;
   reverseTick: number | null;
   boostBonus: number;
 }
@@ -399,6 +400,7 @@ export class GameService implements OnModuleInit {
         gateBurst: Math.random() * 1.4,
         prevPos: 0,
         jockeyFallTick: Math.random() < 1 / RACE_EVENT_ODDS.JOCKEY_FALL ? 60 + Math.floor(Math.random() * 430) : null,
+        jockeyBoostStartTick: null,
         reverseTick: Math.random() < 1 / RACE_EVENT_ODDS.REVERSE ? 90 + Math.floor(Math.random() * 390) : null,
         boostBonus: 0,
       });
@@ -475,7 +477,12 @@ export class GameService implements OnModuleInit {
     for (const horse of this.state.horses) {
       const rs = this.horseRaceStates.get(horse.id);
       if (!rs || horse.isEliminated) continue;
-      if (rs.jockeyFallTick === this.raceTick) horse.jockeyFallen = true;
+      if (rs.jockeyFallTick === this.raceTick) {
+        // Publish the fall and activate its boost in the same server tick, so
+        // every snapshot observes both state changes at the same instant.
+        horse.jockeyFallen = true;
+        rs.jockeyBoostStartTick = this.raceTick;
+      }
       if (rs.reverseTick === this.raceTick && !horse.isReversed && this.finishOrder.length > 1) {
         horse.isReversed = true;
         this.removeFromFinishOrderAndRerank(horse.id);
@@ -537,8 +544,13 @@ export class GameService implements OnModuleInit {
       const permanentBoost =
         (horse.appearance === 'MOTORCYCLE' ? RACE_SPEED_BONUSES.MOTORCYCLE : 0) +
         (horse.isAdrien ? RACE_SPEED_BONUSES.ADRIEN : 0);
-      if (horse.jockeyFallen || permanentBoost > 0) {
-        rs.boostBonus += avgDelta * ((horse.jockeyFallen ? RACE_SPEED_BONUSES.JOCKEY_FALLEN : 0) + permanentBoost);
+      // Integrate the jockey bonus only from its activation tick onward. It is
+      // never applied as an absolute multiplier to distance already covered.
+      const jockeyBonus = rs.jockeyBoostStartTick !== null && this.raceTick >= rs.jockeyBoostStartTick
+        ? RACE_SPEED_BONUSES.JOCKEY_FALLEN
+        : 0;
+      if (jockeyBonus > 0 || permanentBoost > 0) {
+        rs.boostBonus += avgDelta * (jockeyBonus + permanentBoost);
       }
 
       // Forward-only for regular runners; a boost can now break the script

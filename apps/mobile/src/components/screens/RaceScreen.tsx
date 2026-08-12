@@ -5,6 +5,33 @@ import type { GameState, Player } from '@last-sip-derby/shared'
 import { MiniRace } from '../MiniRace'
 import { Header, SilkChip } from '../ui'
 
+function parseHexColor(color: string): [number, number, number] | null {
+  const hex = color.trim().replace(/^#/, '')
+  const normalized = hex.length === 3
+    ? hex.split('').map((character) => character.repeat(2)).join('')
+    : hex
+  if (!/^[0-9a-f]{6}$/i.test(normalized)) return null
+  return [
+    Number.parseInt(normalized.slice(0, 2), 16),
+    Number.parseInt(normalized.slice(2, 4), 16),
+    Number.parseInt(normalized.slice(4, 6), 16),
+  ]
+}
+
+function relativeLuminance(channel: number): number {
+  const value = channel / 255
+  return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+}
+
+export function readableTextColor(backgroundColor: string): '#111111' | '#FFFFFF' {
+  const rgb = parseHexColor(backgroundColor)
+  if (!rgb) return '#FFFFFF'
+  const luminance = 0.2126 * relativeLuminance(rgb[0]) + 0.7152 * relativeLuminance(rgb[1]) + 0.0722 * relativeLuminance(rgb[2])
+  const whiteContrast = 1.05 / (luminance + 0.05)
+  const blackContrast = (luminance + 0.05) / 0.05
+  return blackContrast >= whiteContrast ? '#111111' : '#FFFFFF'
+}
+
 export function RaceScreen({ state, player, onBlackKnightKill }: { state: GameState; player: Player | null; onBlackKnightKill: (horseId: string) => void }) {
   const myHorse = player?.currentBet ? state.horses.find((h) => h.id === player.currentBet!.horseId) ?? null : null
 
@@ -19,10 +46,11 @@ export function RaceScreen({ state, player, onBlackKnightKill }: { state: GameSt
     return alive.sort((a, b) => b.position - a.position)[0] ?? null
   }, [state.horses])
   const [targetId, setTargetId] = useState<string | null>(null)
+  const targetHorse = targetId ? state.horses.find((horse) => horse.id === targetId) ?? null : null
   const knightReady = !!myHorse?.isBlackKnight && (player?.blackKnightKillsUsed ?? 0) < 2
 
   return (
-    <div className={`flex h-full flex-col ${myHorse?.isBlackKnight ? 'bg-black' : ''}`}>
+    <div className={`flex h-full flex-col overflow-y-auto overscroll-contain ${myHorse?.isBlackKnight ? 'bg-black' : ''}`}>
       <Header
         raceNumber={state.raceNumber}
         right={
@@ -83,7 +111,7 @@ export function RaceScreen({ state, player, onBlackKnightKill }: { state: GameSt
                   {myHorse.isGolden ? '✨ CHEVAL DORÉ · ' : ''}
                   {myHorse.isDiamond ? '💎 CHEVAL DIAMANT ×5 · ' : ''}
                   {myHorse.isBlackKnight ? '⚔️ CAVALIER NOIR · ' : ''}
-                  {myHorse.appearance === 'CAMEL' ? '🐪 CHAMEAU · ' : myHorse.appearance === 'MOTORCYCLE' ? '🏍️ MOTO CROSS +5% · ' : myHorse.appearance === 'SCOOTER' ? '🛴 ADRIEN HOURMAND +8% · ' : ''}
+                  {myHorse.appearance === 'CAMEL' ? '🐪 CHAMEAU · ' : myHorse.appearance === 'MOTORCYCLE' ? '🏍️ MOTO CROSS +3,5% · ' : myHorse.appearance === 'SCOOTER' ? '🛴 ADRIEN HOURMAND +6,5% · ' : ''}
                   {myHorse.jockeyFallen ? 'JOCKEY À TERRE +5% · ' : ''}
                   {myHorse.isReversed ? '↩ COURSE À L’ENVERS' : ''}
                 </div>
@@ -100,9 +128,33 @@ export function RaceScreen({ state, player, onBlackKnightKill }: { state: GameSt
                         : 'Aïe... hydrate-toi en prévision.'}
               </p>
               {knightReady && (
-                <div className="mt-4 rounded-xl border-2 border-red-800 bg-black p-3 text-left">
+                <div data-testid="black-knight-targets" className="mt-4 rounded-xl border-2 border-red-800 bg-black p-3 text-left">
                   <div className="text-center font-headline text-xl tracking-[.15em] text-red-600">⚔️ POUVOIR DU CAVALIER NOIR</div>
-                  <div className="mt-2 grid grid-cols-2 gap-2">{state.horses.filter((horse) => horse.id !== myHorse.id && !horse.isEliminated).map((horse) => <button key={horse.id} onClick={() => setTargetId(horse.id)} className="rounded-lg border border-red-900 px-2 py-2 font-body text-sm text-white">{horse.name}<span className="block text-[10px] text-red-400">{state.players.filter((p) => p.currentBet?.horseId === horse.id).map((p) => p.pseudo).join(', ') || 'aucun parieur'}</span></button>)}</div>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {state.horses.filter((horse) => horse.id !== myHorse.id && !horse.isEliminated).map((horse) => {
+                      const textColor = readableTextColor(horse.color)
+                      return (
+                        <button
+                          key={horse.id}
+                          type="button"
+                          data-testid="black-knight-target"
+                          data-horse-color={horse.color}
+                          onClick={() => setTargetId(horse.id)}
+                          aria-label={`Cibler ${horse.name}, cheval ${horse.color}`}
+                          className="min-h-14 rounded-lg border-2 px-2 py-2 font-body text-sm font-bold shadow-[inset_0_0_0_1px_rgba(255,255,255,.22),0_3px_10px_rgba(0,0,0,.45)] transition-transform active:scale-95"
+                          style={{ backgroundColor: horse.color, borderColor: textColor, color: textColor }}
+                        >
+                          <span className="flex items-center justify-center gap-1.5">
+                            <span className="h-3 w-3 shrink-0 rounded-full border" style={{ backgroundColor: horse.color, borderColor: textColor }} aria-hidden="true" />
+                            {horse.name}
+                          </span>
+                          <span className="block text-[10px] font-normal opacity-80">
+                            {state.players.filter((p) => p.currentBet?.horseId === horse.id).map((p) => p.pseudo).join(', ') || 'aucun parieur'}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
                   <div className="mt-2 text-center font-terminal text-red-500">{2 - (player?.blackKnightKillsUsed ?? 0)} coup(s) de hache</div>
                 </div>
               )}
@@ -121,7 +173,7 @@ export function RaceScreen({ state, player, onBlackKnightKill }: { state: GameSt
       <div className="pb-[max(1rem,env(safe-area-inset-bottom))] text-center font-mono text-xs text-derby-smoke/60">
         garde l&apos;œil sur la TV — ici c&apos;est juste le moniteur des stands
       </div>
-      {targetId && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-5"><div className="w-full max-w-sm rounded-2xl border-2 border-red-700 bg-derby-coal p-5 text-center"><div className="font-display text-3xl text-red-500">VOULEZ-VOUS TUER CE CHEVAL ?</div><div className="mt-3 font-body text-xl text-white">{state.horses.find((h) => h.id === targetId)?.name}</div><div className="mt-1 font-mono text-sm text-red-300">Parieurs : {state.players.filter((p) => p.currentBet?.horseId === targetId).map((p) => p.pseudo).join(', ') || 'aucun'}</div><div className="mt-5 flex gap-3"><button onClick={() => setTargetId(null)} className="flex-1 rounded-xl border border-white/30 py-3">NON</button><button onClick={() => { onBlackKnightKill(targetId); setTargetId(null) }} className="flex-1 rounded-xl bg-red-700 py-3 font-bold">OUI ⚔️</button></div></div></div>}
+      {targetHorse && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-5"><div className="w-full max-w-sm rounded-2xl border-2 border-red-700 bg-derby-coal p-5 text-center"><div className="font-display text-3xl text-red-500">VOULEZ-VOUS TUER CE CHEVAL ?</div><div className="mt-3 flex items-center justify-center gap-3"><SilkChip color={targetHorse.color} number={targetHorse.lane + 1} size={42} /><div className="font-body text-xl text-white">{targetHorse.name}</div></div><div className="mt-1 font-mono text-sm text-red-300">Parieurs : {state.players.filter((p) => p.currentBet?.horseId === targetHorse.id).map((p) => p.pseudo).join(', ') || 'aucun'}</div><div className="mt-5 flex gap-3"><button onClick={() => setTargetId(null)} className="flex-1 rounded-xl border border-white/30 py-3">NON</button><button onClick={() => { onBlackKnightKill(targetHorse.id); setTargetId(null) }} className="flex-1 rounded-xl bg-red-700 py-3 font-bold">OUI ⚔️</button></div></div></div>}
     </div>
   )
 }
