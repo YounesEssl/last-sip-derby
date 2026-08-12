@@ -513,13 +513,10 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: .98 }}
             transition={{ duration: .25, ease: 'easeOut' }}
-            className="absolute left-[18vw] top-[14vh] w-[36vw] min-h-[10.5vh] overflow-hidden rounded-xl border border-[#7db8c7]/70 bg-[#09161c]/92 shadow-[0_12px_30px_rgba(0,0,0,.55)] backdrop-blur-md"
+            className="absolute top-[14vh] inline-flex w-fit min-w-[12vw] max-w-[30vw] items-center justify-center rounded-xl border border-[#7db8c7]/70 bg-[#09161c]/92 px-[1.1vw] py-[.75vh] text-center shadow-[0_12px_30px_rgba(0,0,0,.55)] backdrop-blur-md"
+            style={{ left: 'max(23vw, calc(19vw + 3rem))' }}
           >
-            <div className="flex items-center gap-[.7vw] border-b border-white/10 bg-[#17434e]/70 px-[1.1vw] py-[.45vh]">
-              <span className="h-[.7vh] w-[.7vh] animate-pulse rounded-full bg-[#79d4e8]" />
-              <span className="font-headline text-[1.35vh] tracking-[.3em] text-[#b9ebf2]">COMMENTAIRE DE COURSE</span>
-            </div>
-            <div className="flex min-h-[6.6vh] items-center break-words px-[1.2vw] py-[.9vh] font-headline text-[2.7vh] font-normal leading-[1.18] tracking-[.025em] text-derby-cream">
+            <div className="min-w-0 break-words font-headline text-[3.4vh] font-medium leading-[1.15] tracking-[.015em] text-derby-cream">
               {mainComment.text}
             </div>
           </motion.div>
@@ -536,10 +533,10 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
               animate={{ opacity: 1, x: 0, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, x: 16, scale: .9 }}
               transition={{ type: 'spring', stiffness: 380, damping: 24 }}
-              className="relative flex min-h-[10.5vh] w-[28vw] items-center rounded-[1.1rem] border-[.22vh] border-derby-red bg-[#190a0c]/95 px-[1.35vw] py-[1.1vh] shadow-[0_12px_28px_rgba(0,0,0,.6)]"
+              className="relative inline-flex w-fit min-w-[10vw] max-w-[27.5vw] items-center justify-center rounded-[1.1rem] border-[.22vh] border-derby-red bg-[#190a0c]/95 px-[1.1vw] py-[.75vh] text-center shadow-[0_12px_28px_rgba(0,0,0,.6)]"
             >
-              <span className="absolute -right-[.65vw] top-[3.4vh] h-[1.2vw] w-[1.2vw] rotate-45 border-r-[.22vh] border-t-[.22vh] border-derby-red bg-[#190a0c]" />
-              <div className="min-w-0 break-words font-headline text-[2.7vh] font-normal leading-[1.18] tracking-[.025em] text-derby-cream">
+              <span className="absolute -right-[.65vw] top-1/2 h-[1.2vw] w-[1.2vw] -translate-y-1/2 rotate-45 border-r-[.22vh] border-t-[.22vh] border-derby-red bg-[#190a0c]" />
+              <div className="min-w-0 break-words font-headline text-[3.4vh] font-medium leading-[1.15] tracking-[.015em] text-derby-cream">
                 <HighlightedCommentText message={villainComment} />
               </div>
             </motion.div>
