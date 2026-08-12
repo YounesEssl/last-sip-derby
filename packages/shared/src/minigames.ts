@@ -23,6 +23,14 @@ export const MINI_GAME_DURATIONS: Readonly<Record<MiniGameType, number>> = {
 }
 
 export const MINI_GAME_RESULTS_DURATION_MS = 5_000
+export const PENALTY_GOAL_LEFT_PERCENT = 36
+export const PENALTY_GOAL_RIGHT_PERCENT = 64
+
+export function isPenaltyGoal(centerPercent: number): boolean {
+  return Number.isFinite(centerPercent) &&
+    centerPercent >= PENALTY_GOAL_LEFT_PERCENT &&
+    centerPercent <= PENALTY_GOAL_RIGHT_PERCENT
+}
 
 export interface MiniGameActionResult {
   accepted: boolean
@@ -110,10 +118,12 @@ export function applyMiniGameAction(
     } else reason = `Le prochain nombre attendu est ${row.progress + 1}`
   } else if (game.type === 'PENALTY' && action === 'shot') {
     if (row.progress < 10) {
+      const centerPercent = Number(value)
+      const goal = isPenaltyGoal(centerPercent)
       row.progress++
-      row.score += Number(value) === 1 ? 1 : 0
+      row.score += goal ? 1 : 0
       changed = true
-      reason = Number(value) === 1 ? 'But marqué' : 'Tir manqué'
+      reason = goal ? 'But marqué' : 'Tir manqué'
     } else reason = 'Les dix tirs ont déjà été joués'
   } else if (game.type === 'PRESSURE' && action === 'score') {
     row.score = Math.max(0, Math.min(100, Number(value) || 0))
@@ -129,7 +139,9 @@ export function applyMiniGameAction(
 
 export function shouldEndMiniGameEarly(game: MiniGameState | null): boolean {
   if (!game || game.status !== 'PLAYING' || ['CLICKER', 'PENALTY'].includes(game.type)) return false
-  return game.players.filter((row) => !row.finishedAt && !row.eliminated).length <= 1
+  const activePlayers = game.players.filter((row) => !row.finishedAt && !row.eliminated)
+  if (['MAZE', 'PRESSURE'].includes(game.type)) return activePlayers.length === 0
+  return activePlayers.length <= 1
 }
 
 export function getMiniGameLosers(game: MiniGameState): MiniGamePlayerState[] {
@@ -153,6 +165,9 @@ export function getMiniGameLosers(game: MiniGameState): MiniGamePlayerState[] {
     row.lives === baseline.lives,
   )
 
+  // Penalty and pressure explicitly eliminate every player tied at the lowest
+  // score, including the edge case where everybody ends on the same score.
+  if (game.type === 'PENALTY' || game.type === 'PRESSURE') return losers
   return allSame ? [] : losers
 }
 

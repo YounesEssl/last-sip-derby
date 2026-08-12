@@ -24,6 +24,7 @@ import {
   applyMiniGameAction,
   resolveMiniGameState,
   shouldEndMiniGameEarly,
+  MAZE_BANK_SIZE,
 } from "@last-sip-derby/shared";
 import { PersistenceService } from "../persistence/persistence.service";
 
@@ -927,7 +928,7 @@ export class GameService implements OnModuleInit {
       const choices = [entry[1], ...wrong].sort(() => Math.random() - .5);
       Object.assign(payload, { country: entry[0], answer: entry[1], choices }); prompt = `Capitale : ${entry[0]}`;
     } else if (picked === 'MAZE') {
-      Object.assign(payload, { seed: Math.floor(Math.random() * 1_000_000), level: Math.floor(Math.random() * 50) }); prompt = 'Sortez du labyrinthe';
+      Object.assign(payload, { mazeIndex: Math.floor(Math.random() * MAZE_BANK_SIZE) }); prompt = 'Sortez du labyrinthe';
     } else if (picked === 'CLICKER') prompt = 'Cliquez le plus vite possible';
     else if (picked === 'ORDER') {
       Object.assign(payload, { values: Array.from({ length: 16 }, (_, index) => index + 1).sort(() => Math.random() - .5) }); prompt = '1 → 16';

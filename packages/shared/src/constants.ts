@@ -50,5 +50,5 @@ export const RACE_EVENT_ODDS = {
 export const RACE_SPEED_BONUSES = {
   JOCKEY_FALLEN: 0.05,
   MOTORCYCLE: 0.05,
-  ADRIEN: 0.15,
+  ADRIEN: 0.08,
 } as const

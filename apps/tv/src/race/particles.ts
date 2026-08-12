@@ -58,7 +58,7 @@ export class DustPool {
     }
   }
 
-  /** Low, soft smoke for golden/diamond runners; kept in world space so the
+  /** Low, soft smoke for golden, diamond and black-knight runners; kept in world space so the
    * runner naturally pulls away from each wisp instead of dragging circles. */
   spawnTrail(
     x: number,
