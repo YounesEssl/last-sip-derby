@@ -15,7 +15,7 @@ export function ResultsScreen({ state }: { state: GameState }) {
   }, [state.horses])
 
   const winner = ranking[0]
-  const winnerBettors = state.players.filter((p) => p.currentBet?.horseId === winner?.id)
+  const winnerBettors = state.players.filter((p) => p.currentBet?.horseId === winner?.id && !p.miniGameEliminated)
   const losers = state.roundDrinks
     .map((drink) => {
       const player = state.players.find((p) => p.pseudo === drink.pseudo)
@@ -40,15 +40,15 @@ export function ResultsScreen({ state }: { state: GameState }) {
 
       <div className="relative z-10 flex flex-1 items-stretch gap-[2vw] px-[3.6vw] pb-[6.5vh] pt-[1vh]">
         {/* winners' circle */}
-        <div className="relative flex-1 animate-rise" style={{ animationDelay: '0.15s' }}>
+        <div className="relative w-[30vw] shrink-0 animate-rise" style={{ animationDelay: '0.15s' }}>
           <PodiumCanvas top3={ranking.slice(0, 3)} />
         </div>
 
         {/* the bill */}
-        <div className="flex w-[44vw] flex-col justify-center gap-[1.5vh]">
-          <div className="paper ticket-edge rotate-1 animate-rise rounded-lg border-4 border-derby-red/70 px-9 py-6 shadow-deep" style={{ animationDelay: '0.3s' }}>
+        <div className="flex flex-1 flex-col justify-center gap-[1vh]">
+          <div className="paper ticket-edge rotate-1 animate-rise rounded-lg border-4 border-derby-red/70 px-9 py-5 shadow-deep" style={{ animationDelay: '0.3s' }}>
             <div className="border-b-2 border-dashed border-derby-coal/40 pb-2 text-center">
-              <div className="font-headline text-[4.5vh] font-medium tracking-[0.2em] text-derby-red">QUI BOIT QUOI ?</div>
+              <div className="font-headline text-[5.5vh] font-medium tracking-[0.2em] text-derby-red">QUI BOIT QUOI ?</div>
               <div className="font-hand text-[2.5vh] font-bold text-derby-coal/70">la tournée — affichage public et sans appel</div>
             </div>
 
@@ -63,7 +63,7 @@ export function ResultsScreen({ state }: { state: GameState }) {
                 <div key={p.pseudo} className="flex items-baseline justify-between">
                   <span className="font-hand text-[3vh] font-bold text-derby-coal">{p.pseudo}</span>
                   <span className="font-body text-[2vh] font-bold text-derby-green">
-                    distribue {(winner?.odds ?? 1) * (winner?.isGolden ? 3 : 2)} gorgées{winner?.isGolden ? ' ✨ ×3' : ''}
+                    distribue {(winner?.odds ?? 1) * (winner?.isDiamond ? 5 : winner?.isGolden ? 3 : 2)} gorgées{winner?.isDiamond ? ' 💎 ×5' : winner?.isGolden ? ' ✨ ×3' : ''}
                   </span>
                 </div>
               ))}
@@ -89,6 +89,18 @@ export function ResultsScreen({ state }: { state: GameState }) {
 
             <div className="mt-3 border-t-2 border-dashed border-derby-coal/40 pt-2 text-center font-body text-[1.4vh] text-derby-coal/60">
               L&apos;hippodrome décline toute responsabilité en cas de lendemain difficile.
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-derby-gold/35 bg-derby-night/70 px-5 py-2">
+            <div className="font-headline text-[1.5vh] tracking-[.3em] text-derby-gold/80">CLASSEMENT GLOBAL DE LA SOIRÉE</div>
+            <div className="mt-1 grid grid-flow-col grid-rows-3 auto-cols-fr gap-x-4 gap-y-1">
+              {state.eveningLeaderboard.map((player, index) => (
+                <span key={player.pseudo} className="flex min-w-0 items-baseline justify-between gap-1 font-body text-[1.45vh] text-derby-parch/70">
+                  <span className="truncate">{index + 1}. {player.pseudo}</span>
+                  <b className="shrink-0 text-derby-gold">{player.totalSipsDrunk}G</b>
+                </span>
+              ))}
             </div>
           </div>
 

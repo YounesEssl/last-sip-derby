@@ -62,6 +62,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       onRaceFinished: () => {
         // Handled by game loop internally
       },
+      onPlayersEliminated: (playerIds, reason) => {
+        for (const playerId of playerIds) this.server.to(playerId).emit('player:eliminated', { reason })
+      },
+      onPlayersKicked: (playerIds) => {
+        for (const playerId of playerIds) this.server.to(playerId).emit('player:sessionReset')
+      },
     })
 
     // Set up periodic state dump
@@ -107,7 +113,30 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const bet = this.gameService.placeBet(client.id, data.horseId, data.amount)
     if (bet) {
       this.broadcastState()
+      this.gameLoop.onBetPlaced()
     }
+  }
+
+  @SubscribeMessage('minigame:action')
+  handleMiniGameAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { gameId: string; action: string; value?: number | string },
+  ) {
+    if (!data?.gameId || !data?.action) return
+    if (this.gameService.handleMiniGameAction(client.id, data.gameId, data.action, data.value)) {
+      this.gameLoop.handleMiniGameAction()
+    }
+  }
+
+  @SubscribeMessage('blackKnight:kill')
+  handleBlackKnightKill(@ConnectedSocket() client: Socket, @MessageBody() data: { horseId: string }) {
+    if (!data?.horseId) return
+    const execution = this.gameService.useBlackKnightPower(client.id, data.horseId)
+    if (!execution) return
+    for (const playerId of execution.affectedPlayerIds) {
+      this.server.to(playerId).emit('player:eliminated', { reason: 'Ton cheval a été exécuté par le Cavalier Noir.' })
+    }
+    this.gameLoop.handleBlackKnightKill()
   }
 
   @SubscribeMessage('player:confirmDrink')
@@ -156,6 +185,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   @SubscribeMessage('dev:resetRace')
   handleDevResetRace() {
     this.gameLoop.forceResetRace()
+  }
+
+  @SubscribeMessage('master:resetSession')
+  handleMasterResetSession() {
+    this.server.emit('player:sessionReset')
+    this.gameLoop.forceResetRace()
+    this.gameService.resetSession()
+    this.broadcastState()
   }
 
   private broadcastState() {

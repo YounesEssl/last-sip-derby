@@ -4,10 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { GameState } from '@last-sip-derby/shared'
 import { RaceAudioDirector, type RaceAudioState } from '@/audio/raceAudio'
 
-export function ExperienceControls({ state, activeEventId }: { state: GameState; activeEventId: string | null }) {
+export function ExperienceControls({ state, activeEventId, showReset, onResetSession }: { state: GameState; activeEventId: string | null; showReset: boolean; onResetSession: () => void }) {
   const [soundOn, setSoundOn] = useState(true)
   const [fullscreen, setFullscreen] = useState(false)
   const [trackTitle, setTrackTitle] = useState<string | null>(null)
+  const [confirmReset, setConfirmReset] = useState(false)
   const audioRef = useRef<RaceAudioDirector | null>(null)
   const soundOnRef = useRef(true)
   const startingRef = useRef(false)
@@ -134,6 +135,10 @@ export function ExperienceControls({ state, activeEventId }: { state: GameState;
     if (soundOn) audioRef.current?.update(audioState)
   }, [audioState, soundOn])
 
+  useEffect(() => {
+    if (!showReset) setConfirmReset(false)
+  }, [showReset])
+
   useEffect(
     () => () => {
       audioRef.current?.stop()
@@ -143,22 +148,44 @@ export function ExperienceControls({ state, activeEventId }: { state: GameState;
   )
 
   return (
-    <div className="absolute bottom-[6.5vh] right-5 z-50 flex gap-2">
+    <div className="absolute bottom-1 right-1 z-50 flex gap-1 opacity-25 transition-opacity duration-200 hover:opacity-90 focus-within:opacity-90">
       <button
         type="button"
         onClick={toggleSound}
         aria-pressed={soundOn}
-        title="Musique : touche M"
-        className="rounded-lg border border-derby-gold/60 bg-derby-night/85 px-3 py-2 font-headline text-sm tracking-[0.14em] text-derby-cream backdrop-blur-sm"
+        aria-label={soundOn ? 'Couper l’ambiance sonore' : 'Activer l’ambiance sonore'}
+        title={`${soundOn ? trackTitle ?? 'Ambiance activée' : 'Ambiance coupée'} · touche M`}
+        className="h-7 rounded border border-derby-gold/45 bg-derby-night/45 px-2 font-headline text-[9px] tracking-[0.08em] text-derby-cream backdrop-blur-[1px]"
       >
-        {soundOn ? `🔊 ${trackTitle ?? 'AMBIANCE ON'} · M` : '🔇 SON OFF · M'}
+        {soundOn ? '🔊 M' : '🔇 M'}
       </button>
+      {showReset && (
+        <button
+          type="button"
+          aria-label={confirmReset ? 'Confirmer le reset de la soirée' : 'Reset de la soirée'}
+          title={confirmReset ? 'Cliquer à nouveau pour confirmer' : 'Reset soirée'}
+          onClick={() => {
+            if (confirmReset) {
+              onResetSession()
+              setConfirmReset(false)
+            } else {
+              setConfirmReset(true)
+              setTimeout(() => setConfirmReset(false), 4_000)
+            }
+          }}
+          className={`h-7 rounded border px-2 font-headline text-[9px] tracking-[0.08em] backdrop-blur-[1px] ${confirmReset ? 'border-red-500 bg-red-800/85 text-white' : 'border-derby-gold/45 bg-derby-night/45 text-derby-cream'}`}
+        >
+          {confirmReset ? 'CONFIRMER' : '↻ RESET'}
+        </button>
+      )}
       <button
         type="button"
         onClick={() => void toggleFullscreen()}
-        className="rounded-lg border border-derby-gold/60 bg-derby-night/85 px-3 py-2 font-headline text-sm tracking-[0.14em] text-derby-cream backdrop-blur-sm"
+        aria-label={fullscreen ? 'Quitter le plein écran' : 'Passer en plein écran'}
+        title={`${fullscreen ? 'Quitter le plein écran' : 'Plein écran'} · touche F`}
+        className="h-7 rounded border border-derby-gold/45 bg-derby-night/45 px-2 font-headline text-[9px] tracking-[0.08em] text-derby-cream backdrop-blur-[1px]"
       >
-        {fullscreen ? '↙ QUITTER' : '⛶ PLEIN ÉCRAN'}
+        {fullscreen ? '↙ F' : '⛶ F'}
       </button>
     </div>
   )

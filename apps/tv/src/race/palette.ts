@@ -89,11 +89,11 @@ export const SPONSORS = [
   'Despé le soir, regrets le matin',
   '8 morts, 6 blessés',
   'Tkt frère, bois',
-  "Bois ou t'es une victime",
   'Sah quel plaisir de te voir boire',
   'Zidane coup de boule',
   'VAR : Verre À Reboire',
   'Ta gorgée elle est où ?',
+  'KGB PRIME','Elle veut les gars','@sauteur2péage92','HOMERRR','SAMMMYYYY','DRACARYS !','Trace dans le caleçon','ACHEUM PELO','Espèce de sale grosse pute','Fantouille prime','Thierry prime','MUGIWARAAA','Arrête un peu Naruto','Kakashi Senseï','OMERTA 47','Antilope à la gare !!','Luxan prime',"P'tit flash ?",'@minou78',"Burger'Kar à l’arrivée",'22 Tower',"Rémi l’audace",'Envoie ton jaune','Tondeuse sabot 1','Ah vraiment !','Pas 2 selem','Tempêêêêêteeee','Mayonnaise saccoche','Dohaeris Vhagar !!','Bozo le clown',"J’ai pas 2 tales",'M.A.C.A.B.R.E 93 BONDY NORD','Kira Kiffeur','LE BUFFLE','Jason la fusée','C1 fusée prime','Casque Araï ou rien','Pas content ?','Vous pensez ?',"T’as une copine ?",'Dans mon HLM','Au rez de chaussez ?','Un jeune cadre dynamique','Toute façon y peut pooo','RS3 vert pomme',"Tu sais c’est pas si facile",'Hourmand sous Oxelo en Légende',"P’tit shot de meuss",
 ]
 
 // Deterministic pseudo-random, so scenery doesn't shimmer between frames

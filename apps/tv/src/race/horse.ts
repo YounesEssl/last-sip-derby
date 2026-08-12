@@ -806,13 +806,15 @@ export interface AlternateRunnerOpts {
   fall: number
   jockeyFall: number
   golden: boolean
+  diamond: boolean
+  blackKnight: boolean
 }
 
-/** A deliberately readable, side-view racing camel for the rare 1/25 roll. */
+/** A deliberately readable, side-view racing camel for the rare 1/30 roll. */
 export function drawCamel(ctx: CanvasRenderingContext2D, o: AlternateRunnerOpts) {
   const cycle = o.phase * TWO_PI
-  const body = o.golden ? '#D9A943' : '#B9854D'
-  const dark = o.golden ? '#8C651D' : '#76502F'
+  const body = o.blackKnight ? '#15171A' : o.diamond ? '#52B9E8' : o.golden ? '#D9A943' : '#B9854D'
+  const dark = o.blackKnight ? '#030405' : o.diamond ? '#175B8D' : o.golden ? '#8C651D' : '#76502F'
   const bob = Math.sin(cycle * 2) * 2.5 * o.speedNorm
 
   ctx.save()
@@ -861,72 +863,481 @@ export function drawCamel(ctx: CanvasRenderingContext2D, o: AlternateRunnerOpts)
   ctx.arc(76, -121, 2, 0, TWO_PI)
   ctx.fill()
 
-  ctx.fillStyle = o.silk
+  ctx.fillStyle = o.blackKnight ? '#090A0C' : o.silk
+  ctx.strokeStyle = o.blackKnight ? '#8E1118' : dark
+  ctx.lineWidth = 2
   ctx.beginPath()
   ctx.roundRect(-24, -70, 43, 25, 4)
   ctx.fill()
+  ctx.stroke()
   ctx.fillStyle = '#fff'
   ctx.font = 'bold 18px sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText(String(o.number), -3, -57)
-  drawAlternateRider(ctx, o, -4, -79)
+  if (o.blackKnight) drawBlackKnightRider(ctx, -4, -79, o.time)
+  else drawAlternateRider(ctx, o, -4, -79)
   ctx.restore()
 }
 
-/** Motocross replacement for the 1/30 roll, including spinning wheels. */
+/** Readable competition motocross: knobby tyres, high fenders and long suspension. */
 export function drawMotorcycle(ctx: CanvasRenderingContext2D, o: AlternateRunnerOpts) {
-  const body = o.golden ? '#D9A943' : o.silk
+  const body = o.blackKnight ? '#111318' : o.diamond ? '#42B7EF' : o.golden ? '#D9A943' : o.silk
+  const bodyDark = o.blackKnight ? '#020304' : o.diamond ? '#165D8D' : o.golden ? '#77551A' : '#311A13'
+  const metal = o.blackKnight ? '#50545C' : '#C5C8C7'
+  const wheelSpin = o.phase * TWO_PI * 2
+
   ctx.save()
   ctx.translate(0, o.fall * 15)
   ctx.rotate(-o.fall * 0.62)
-  const wheelSpin = o.phase * TWO_PI * 2
-  for (const x of [-45, 45]) {
-    ctx.fillStyle = '#171717'
+
+  // Thick tread blocks and exposed spokes make the bike read as off-road at
+  // TV distance instead of looking like a bicycle.
+  for (const x of [-49, 51]) {
+    ctx.save()
+    ctx.translate(x, -22)
+    ctx.rotate(wheelSpin)
+    ctx.fillStyle = '#101113'
     ctx.beginPath()
-    ctx.arc(x, -18, 22, 0, TWO_PI)
+    ctx.arc(0, 0, 25, 0, TWO_PI)
     ctx.fill()
-    ctx.strokeStyle = '#B9B7AE'
-    ctx.lineWidth = 3
+    ctx.strokeStyle = '#050505'
+    ctx.lineWidth = 3.2
     ctx.beginPath()
-    ctx.arc(x, -18, 14, 0, TWO_PI)
+    ctx.arc(0, 0, 24, 0, TWO_PI)
     ctx.stroke()
-    for (let i = 0; i < 5; i++) {
-      const angle = wheelSpin + (i * TWO_PI) / 5
+    ctx.fillStyle = '#242629'
+    for (let i = 0; i < 12; i++) {
+      ctx.save()
+      ctx.rotate((i * TWO_PI) / 12)
+      ctx.fillRect(20, -3.2, 8, 6.4)
+      ctx.restore()
+    }
+    ctx.strokeStyle = metal
+    ctx.lineWidth = 1.8
+    for (let i = 0; i < 9; i++) {
+      const angle = (i * TWO_PI) / 9
       ctx.beginPath()
-      ctx.moveTo(x, -18)
-      ctx.lineTo(x + Math.cos(angle) * 12, -18 + Math.sin(angle) * 12)
+      ctx.moveTo(0, 0)
+      ctx.lineTo(Math.cos(angle) * 17, Math.sin(angle) * 17)
       ctx.stroke()
     }
+    ctx.fillStyle = '#686D72'
+    ctx.beginPath()
+    ctx.arc(0, 0, 5.5, 0, TWO_PI)
+    ctx.fill()
+    ctx.restore()
   }
-  ctx.strokeStyle = body
-  ctx.lineWidth = 9
+
+  // Long-travel front fork, rear swingarm and visible shock absorber.
+  ctx.strokeStyle = metal
   ctx.lineCap = 'round'
+  ctx.lineWidth = 5.5
   ctx.beginPath()
-  ctx.moveTo(-45, -18)
-  ctx.lineTo(-10, -48)
-  ctx.lineTo(29, -24)
-  ctx.lineTo(45, -18)
-  ctx.moveTo(-10, -48)
-  ctx.lineTo(12, -18)
+  ctx.moveTo(51, -22)
+  ctx.lineTo(37, -70)
+  ctx.moveTo(45, -23)
+  ctx.lineTo(31, -68)
+  ctx.moveTo(-49, -22)
+  ctx.lineTo(-13, -43)
+  ctx.stroke()
+  ctx.strokeStyle = '#E1B64A'
+  ctx.lineWidth = 4
+  ctx.beginPath()
+  ctx.moveTo(-8, -44)
+  ctx.lineTo(-22, -23)
+  ctx.stroke()
+
+  // High, separate mudguards — the defining motocross profile.
+  ctx.strokeStyle = body
+  ctx.lineWidth = 7
+  ctx.beginPath()
+  ctx.arc(51, -22, 31, Math.PI * 1.12, Math.PI * 1.82)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.arc(-49, -22, 30, Math.PI * 1.17, Math.PI * 1.78)
+  ctx.stroke()
+
+  // Reinforced frame triangle and finned engine block.
+  ctx.strokeStyle = bodyDark
+  ctx.lineWidth = 8
+  ctx.beginPath()
+  ctx.moveTo(-46, -23)
+  ctx.lineTo(-11, -55)
+  ctx.lineTo(27, -29)
+  ctx.lineTo(-2, -25)
+  ctx.closePath()
+  ctx.stroke()
+  ctx.fillStyle = '#3E4144'
+  ctx.strokeStyle = '#171819'
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  ctx.roundRect(-12, -42, 31, 25, 5)
+  ctx.fill()
+  ctx.stroke()
+  ctx.strokeStyle = '#777B7E'
+  ctx.lineWidth = 2
+  for (let y = -37; y <= -23; y += 5) {
+    ctx.beginPath()
+    ctx.moveTo(-8, y)
+    ctx.lineTo(14, y)
+    ctx.stroke()
+  }
+
+  // Sculpted tank, saddle and forward racing number plate.
+  ctx.fillStyle = body
+  ctx.strokeStyle = bodyDark
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  ctx.moveTo(-22, -57)
+  ctx.quadraticCurveTo(-4, -72, 25, -59)
+  ctx.lineTo(17, -39)
+  ctx.lineTo(-19, -41)
+  ctx.closePath()
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = 'rgba(255,255,255,.23)'
+  ctx.beginPath()
+  ctx.ellipse(2, -59, 16, 4, -0.08, 0, TWO_PI)
+  ctx.fill()
+  ctx.fillStyle = '#171719'
+  ctx.beginPath()
+  ctx.roundRect(-42, -61, 31, 10, 4)
+  ctx.fill()
+  ctx.fillStyle = o.blackKnight ? '#780B12' : '#F4E8CE'
+  ctx.strokeStyle = bodyDark
+  ctx.beginPath()
+  ctx.roundRect(18, -66, 23, 23, 4)
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = o.blackKnight ? '#F4E8CE' : bodyDark
+  ctx.font = 'bold 15px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(String(o.number), 29.5, -54)
+
+  // Expansion-chamber exhaust and thin smoke ribbons (no bubble-like discs).
+  ctx.fillStyle = '#4F5255'
+  ctx.strokeStyle = '#171819'
+  ctx.beginPath()
+  ctx.roundRect(-57, -53, 31, 10, 4)
+  ctx.fill()
+  ctx.stroke()
+  ctx.strokeStyle = 'rgba(214,220,214,.32)'
+  ctx.lineWidth = 3
+  for (let i = 0; i < 3; i++) {
+    const drift = (o.time * 24 + i * 17) % 42
+    ctx.beginPath()
+    ctx.moveTo(-58 - drift * 0.3, -49)
+    ctx.bezierCurveTo(-66 - drift, -55 - i * 3, -75 - drift, -40 - i * 6, -86 - drift, -49 - i * 7)
+    ctx.stroke()
+  }
+
+  // Wide handlebar and padded crossbar.
+  ctx.strokeStyle = metal
+  ctx.lineWidth = 4.5
+  ctx.beginPath()
+  ctx.moveTo(34, -68)
+  ctx.lineTo(47, -82)
+  ctx.lineTo(59, -80)
+  ctx.moveTo(42, -79)
+  ctx.lineTo(30, -84)
   ctx.stroke()
   ctx.fillStyle = body
   ctx.beginPath()
-  ctx.roundRect(-20, -58, 45, 22, 7)
+  ctx.roundRect(35, -84, 17, 8, 3)
   ctx.fill()
+
+  if (o.blackKnight) drawBlackKnightRider(ctx, -4, -73, o.time)
+  else drawAlternateRider(ctx, o, -5, -72)
+  ctx.restore()
+}
+
+/** Orange-clad heavyweight rider on an Oxelo-style kick scooter (1/50). */
+export function drawScooter(ctx: CanvasRenderingContext2D, o: AlternateRunnerOpts) {
+  const cycle = o.phase * TWO_PI
+  const scooter = o.blackKnight ? '#0B0D10' : o.diamond ? '#3CAFE5' : o.golden ? '#D9A943' : '#5D6268'
+  const fleece = o.blackKnight ? '#111318' : '#D9651D'
+  const fleeceDark = o.blackKnight ? '#030405' : '#8D3514'
+  const kick = Math.sin(cycle) * 11 * o.speedNorm
+
+  ctx.save()
+  ctx.translate(0, o.fall * 16)
+  ctx.rotate(-o.fall * 0.55)
+
+  // Oxelo-style scooter: broad deck, tiny hard wheels and a tall folding stem.
+  ctx.fillStyle = scooter
+  ctx.strokeStyle = '#111214'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.roundRect(-50, -15, 79, 10, 5)
+  ctx.fill()
+  ctx.stroke()
+  ctx.strokeStyle = scooter
+  ctx.lineWidth = 7
+  ctx.beginPath()
+  ctx.moveTo(27, -10)
+  ctx.lineTo(43, -82)
+  ctx.lineTo(57, -84)
+  ctx.stroke()
+  ctx.strokeStyle = '#B8BDC0'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(34, -15)
+  ctx.lineTo(47, -78)
+  ctx.stroke()
+  ctx.fillStyle = '#1B1D20'
+  for (const x of [-42, 34]) {
+    ctx.beginPath()
+    ctx.arc(x, -8, 11, 0, TWO_PI)
+    ctx.fill()
+    ctx.strokeStyle = '#A9ADB0'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.arc(x, -8, 5, 0, TWO_PI)
+    ctx.stroke()
+  }
   ctx.fillStyle = '#F4E8CE'
-  ctx.font = 'bold 17px sans-serif'
+  ctx.font = 'bold 6px sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(String(o.number), 2, -47)
-  ctx.strokeStyle = '#E8E0CC'
-  ctx.lineWidth = 5
+  ctx.fillText('OXELO', -9, -9)
+
+  // Legs planted on the deck / kicking the ground.
+  ctx.strokeStyle = '#232426'
+  ctx.lineWidth = 13
+  ctx.lineCap = 'round'
   ctx.beginPath()
-  ctx.moveTo(30, -27)
-  ctx.lineTo(37, -68)
-  ctx.lineTo(50, -72)
+  ctx.moveTo(-18, -48)
+  ctx.lineTo(-35, -15)
+  ctx.moveTo(3, -46)
+  ctx.lineTo(17 + kick, -12 + Math.abs(kick) * 0.15)
   ctx.stroke()
-  drawAlternateRider(ctx, o, -4, -69)
+  ctx.fillStyle = '#0B0B0C'
+  ctx.beginPath()
+  ctx.ellipse(-39, -11, 14, 5, -0.08, 0, TWO_PI)
+  ctx.ellipse(22 + kick, -9 + Math.abs(kick) * 0.15, 14, 5, 0.08, 0, TWO_PI)
+  ctx.fill()
+
+  // Heavyweight silhouette: belly, shoulders, fleece volume and shaded relief.
+  ctx.fillStyle = fleeceDark
+  ctx.strokeStyle = '#21130E'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.ellipse(-5, -75, 41, 46, -0.13, 0, TWO_PI)
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = fleece
+  ctx.beginPath()
+  ctx.ellipse(-1, -76, 36, 42, -0.13, 0, TWO_PI)
+  ctx.fill()
+  ctx.fillStyle = o.blackKnight ? 'rgba(125,18,24,.35)' : 'rgba(255,180,80,.28)'
+  ctx.beginPath()
+  ctx.ellipse(10, -79, 15, 31, -0.2, 0, TWO_PI)
+  ctx.fill()
+  ctx.strokeStyle = o.blackKnight ? '#7E1117' : '#763012'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(4, -112)
+  ctx.lineTo(1, -43)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.roundRect(-22, -66, 18, 12, 4)
+  ctx.stroke()
+
+  // Head, double chin and fleece collar.
+  ctx.fillStyle = '#E2AB7D'
+  ctx.strokeStyle = '#59341F'
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  ctx.ellipse(8, -121, 19, 21, 0.04, 0, TWO_PI)
+  ctx.fill()
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.arc(7, -106, 12, 0.15, Math.PI - 0.15)
+  ctx.stroke()
+  ctx.fillStyle = o.blackKnight ? '#08090B' : '#D9651D'
+  ctx.beginPath()
+  ctx.roundRect(-18, -112, 42, 20, 8)
+  ctx.fill()
+  if (o.blackKnight) {
+    ctx.strokeStyle = '#050505'
+    ctx.lineWidth = 10
+    ctx.beginPath()
+    ctx.arc(8, -121, 22, Math.PI, TWO_PI)
+    ctx.stroke()
+    ctx.fillStyle = '#C51C23'
+  } else {
+    ctx.fillStyle = '#2B2118'
+  }
+  ctx.beginPath()
+  ctx.arc(14, -124, 2.2, 0, TWO_PI)
+  ctx.fill()
+  ctx.strokeStyle = '#7B4328'
+  ctx.lineWidth = 1.8
+  ctx.beginPath()
+  ctx.moveTo(24, -120)
+  ctx.quadraticCurveTo(30, -116, 23, -113)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.arc(14, -116, 7, 0.15, 1.45)
+  ctx.stroke()
+  if (!o.blackKnight) {
+    ctx.fillStyle = '#4A2B1D'
+    ctx.beginPath()
+    ctx.arc(5, -139, 13, Math.PI * 1.08, Math.PI * 1.92)
+    ctx.fill()
+  }
+
+  // Arms grip the high bar; the near sleeve has a bright edge for volume.
+  ctx.strokeStyle = fleeceDark
+  ctx.lineWidth = 15
+  ctx.beginPath()
+  ctx.moveTo(14, -91)
+  ctx.lineTo(48, -80)
+  ctx.stroke()
+  ctx.strokeStyle = fleece
+  ctx.lineWidth = 10
+  ctx.beginPath()
+  ctx.moveTo(12, -94)
+  ctx.lineTo(48, -82)
+  ctx.stroke()
+  ctx.fillStyle = '#E2AB7D'
+  ctx.beginPath()
+  ctx.arc(51, -82, 6, 0, TWO_PI)
+  ctx.fill()
+
+  ctx.fillStyle = '#F4E8CE'
+  ctx.font = 'bold 14px sans-serif'
+  ctx.fillText(String(o.number), -9, -77)
+
+  // The combined skin keeps Adrien's body shape but turns his clothes and
+  // scooter black, then gives him the executioner's oversized double axe.
+  if (o.blackKnight) drawRaisedDoubleAxe(ctx, -16, -91, -42, -164, 1.05)
+  ctx.restore()
+}
+
+function drawRaisedDoubleAxe(
+  ctx: CanvasRenderingContext2D,
+  handX: number,
+  handY: number,
+  headX: number,
+  headY: number,
+  scale = 1,
+) {
+  ctx.save()
+  ctx.strokeStyle = '#5B3520'
+  ctx.lineWidth = 6 * scale
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(handX, handY)
+  ctx.lineTo(headX, headY)
+  ctx.stroke()
+  ctx.translate(headX, headY)
+  ctx.fillStyle = '#8F949B'
+  ctx.strokeStyle = '#24272B'
+  ctx.lineWidth = 2.2 * scale
+  ctx.beginPath()
+  ctx.moveTo(-5 * scale, -7 * scale)
+  ctx.bezierCurveTo(-18 * scale, -18 * scale, -31 * scale, -15 * scale, -42 * scale, -22 * scale)
+  ctx.quadraticCurveTo(-52 * scale, 0, -42 * scale, 22 * scale)
+  ctx.bezierCurveTo(-31 * scale, 15 * scale, -18 * scale, 18 * scale, -5 * scale, 7 * scale)
+  ctx.lineTo(5 * scale, 7 * scale)
+  ctx.bezierCurveTo(18 * scale, 18 * scale, 31 * scale, 15 * scale, 42 * scale, 22 * scale)
+  ctx.quadraticCurveTo(52 * scale, 0, 42 * scale, -22 * scale)
+  ctx.bezierCurveTo(31 * scale, -15 * scale, 18 * scale, -18 * scale, 5 * scale, -7 * scale)
+  ctx.closePath()
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = '#4A4E54'
+  ctx.beginPath()
+  ctx.roundRect(-7 * scale, -12 * scale, 14 * scale, 24 * scale, 3 * scale)
+  ctx.fill()
+  ctx.fillStyle = 'rgba(255,255,255,.28)'
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'
+  ctx.lineWidth = 1.8 * scale
+  ctx.beginPath()
+  ctx.moveTo(-42 * scale, -22 * scale)
+  ctx.quadraticCurveTo(-52 * scale, 0, -42 * scale, 22 * scale)
+  ctx.moveTo(42 * scale, -22 * scale)
+  ctx.quadraticCurveTo(52 * scale, 0, 42 * scale, 22 * scale)
+  ctx.stroke()
+  ctx.restore()
+}
+
+/** Hooded executioner shared by horse, camel and motocross combinations. */
+export function drawBlackKnightRider(ctx: CanvasRenderingContext2D, x: number, y: number, time: number) {
+  const bob = Math.sin(time * 5.2) * 1.5
+  ctx.save()
+  ctx.translate(x, y + bob)
+  drawRaisedDoubleAxe(ctx, -7, -7, -34, -75, 1.08)
+
+  // Heavy cloak and broad executioner shoulders.
+  ctx.fillStyle = '#08090B'
+  ctx.strokeStyle = '#010101'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(-25, 17)
+  ctx.quadraticCurveTo(-20, -25, 5, -30)
+  ctx.quadraticCurveTo(28, -19, 25, 19)
+  ctx.lineTo(8, 10)
+  ctx.lineTo(-8, 19)
+  ctx.closePath()
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = '#1C1E22'
+  ctx.beginPath()
+  ctx.moveTo(-16, 9)
+  ctx.quadraticCurveTo(-10, -16, 10, -20)
+  ctx.lineTo(4, 13)
+  ctx.closePath()
+  ctx.fill()
+  ctx.strokeStyle = '#761017'
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  ctx.moveTo(-20, 13)
+  ctx.quadraticCurveTo(0, 2, 22, 14)
+  ctx.stroke()
+
+  // Pointed hood with a deep face opening and hostile red eyes.
+  ctx.fillStyle = '#111318'
+  ctx.strokeStyle = '#010101'
+  ctx.beginPath()
+  ctx.moveTo(-10, -31)
+  ctx.quadraticCurveTo(2, -59, 20, -34)
+  ctx.lineTo(16, -12)
+  ctx.lineTo(-13, -13)
+  ctx.closePath()
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = '#010101'
+  ctx.beginPath()
+  ctx.ellipse(5, -29, 12, 14, 0.08, 0, TWO_PI)
+  ctx.fill()
+  ctx.fillStyle = '#E3262E'
+  ctx.shadowColor = '#E3262E'
+  ctx.shadowBlur = 7
+  ctx.beginPath()
+  ctx.ellipse(1, -31, 2.7, 1.4, -0.2, 0, TWO_PI)
+  ctx.ellipse(10, -31, 2.7, 1.4, 0.2, 0, TWO_PI)
+  ctx.fill()
+  ctx.shadowBlur = 0
+
+  // Both hands visibly brace the axe shaft.
+  ctx.strokeStyle = '#16181C'
+  ctx.lineWidth = 9
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(-11, -10)
+  ctx.lineTo(-17, -31)
+  ctx.moveTo(10, -8)
+  ctx.lineTo(-8, -20)
+  ctx.stroke()
+  ctx.fillStyle = '#454950'
+  ctx.beginPath()
+  ctx.arc(-17, -31, 5, 0, TWO_PI)
+  ctx.arc(-8, -20, 5, 0, TWO_PI)
+  ctx.fill()
   ctx.restore()
 }
 
@@ -935,27 +1346,76 @@ function drawAlternateRider(ctx: CanvasRenderingContext2D, o: AlternateRunnerOpt
   ctx.save()
   ctx.globalAlpha = 1 - o.jockeyFall
   ctx.translate(x - o.jockeyFall * 68, y + o.jockeyFall * 60)
-  ctx.rotate(-0.45 - o.jockeyFall * 1.5)
+  ctx.rotate(-0.18 - o.jockeyFall * 1.5)
+
+  // Bent legs clamp the saddle/seat instead of reading as a single stick.
+  ctx.strokeStyle = '#2B2118'
+  ctx.lineWidth = 7
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.beginPath()
+  ctx.moveTo(-4, 3)
+  ctx.lineTo(13, 16)
+  ctx.lineTo(28, 10)
+  ctx.stroke()
+
+  // Padded racing jersey in a low, forward motocross/jockey stance.
+  ctx.fillStyle = o.silk
+  ctx.strokeStyle = '#2B2118'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(-12, 4)
+  ctx.quadraticCurveTo(-9, -20, 7, -25)
+  ctx.quadraticCurveTo(24, -20, 29, -5)
+  ctx.lineTo(14, 5)
+  ctx.closePath()
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = 'rgba(255,255,255,.25)'
+  ctx.beginPath()
+  ctx.moveTo(-4, -16)
+  ctx.lineTo(8, -20)
+  ctx.lineTo(15, 0)
+  ctx.lineTo(7, 3)
+  ctx.closePath()
+  ctx.fill()
+
+  // Both arms visibly reach the reins/handlebar.
   ctx.strokeStyle = o.silk
-  ctx.lineWidth = 11
+  ctx.lineWidth = 8
   ctx.lineCap = 'round'
   ctx.beginPath()
-  ctx.moveTo(0, 0)
-  ctx.lineTo(24, -20)
-  ctx.stroke()
-  ctx.strokeStyle = '#2B2118'
-  ctx.lineWidth = 6
-  ctx.beginPath()
-  ctx.moveTo(1, 2)
-  ctx.lineTo(17, 17)
+  ctx.moveTo(11, -18)
+  ctx.lineTo(30, -8)
+  ctx.lineTo(43, -2)
   ctx.stroke()
   ctx.fillStyle = '#E8C49A'
   ctx.beginPath()
-  ctx.arc(29, -25, 7, 0, TWO_PI)
+  ctx.arc(43, -2, 4, 0, TWO_PI)
+  ctx.fill()
+
+  // Large helmet, visor and goggles remain readable when scaled down.
+  ctx.fillStyle = '#E8C49A'
+  ctx.strokeStyle = '#2B2118'
+  ctx.lineWidth = 1.8
+  ctx.beginPath()
+  ctx.arc(13, -32, 9, 0, TWO_PI)
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = o.silk
+  ctx.beginPath()
+  ctx.arc(12, -35, 10, Math.PI, TWO_PI)
+  ctx.fill()
+  ctx.fillStyle = '#25282B'
+  ctx.beginPath()
+  ctx.roundRect(13, -35, 11, 4, 2)
   ctx.fill()
   ctx.fillStyle = o.silk
   ctx.beginPath()
-  ctx.arc(29, -28, 7.4, Math.PI, TWO_PI)
+  ctx.moveTo(19, -34)
+  ctx.lineTo(30, -31)
+  ctx.lineTo(19, -29)
+  ctx.closePath()
   ctx.fill()
   ctx.restore()
 }

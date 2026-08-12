@@ -7,6 +7,7 @@ import {
   EVENT_MIN_TICK_GAP,
   EVENT_VOTE_TIMEOUT_MS,
   EVENT_RESOLVE_DISPLAY_MS,
+  RACE_EVENT_ODDS,
 } from '@last-sip-derby/shared'
 import { GameService } from './game.service'
 import { GameEvents } from './game.events'
@@ -23,12 +24,19 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
   private lobbyCountdown: NodeJS.Timeout | null = null
   private lightningScheduledTick: number | null = null
   private lightningTimers: NodeJS.Timeout[] = []
+  private miniGameScheduledTick: number | null = null
+  private miniGameTimeout: NodeJS.Timeout | null = null
+  private executionTimer: NodeJS.Timeout | null = null
+  private bettingDeadline = 0
+  private bettingShortened = false
 
   private onStateUpdate: (() => void) | null = null
   private onPhaseChange: ((phase: string) => void) | null = null
   private onEventTriggered: ((event: GameEvent) => void) | null = null
   private onEventResolved: ((data: { eventId: string; horseEliminated: boolean; horseName: string }) => void) | null = null
   private onRaceFinished: ((winnerId: string) => void) | null = null
+  private onPlayersEliminated: ((playerIds: string[], reason: string) => void) | null = null
+  private onPlayersKicked: ((playerIds: string[]) => void) | null = null
 
   constructor(
     private gameService: GameService,
@@ -49,12 +57,16 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
     onEventTriggered: (event: GameEvent) => void
     onEventResolved: (data: { eventId: string; horseEliminated: boolean; horseName: string }) => void
     onRaceFinished: (winnerId: string) => void
+    onPlayersEliminated: (playerIds: string[], reason: string) => void
+    onPlayersKicked: (playerIds: string[]) => void
   }) {
     this.onStateUpdate = callbacks.onStateUpdate
     this.onPhaseChange = callbacks.onPhaseChange
     this.onEventTriggered = callbacks.onEventTriggered
     this.onEventResolved = callbacks.onEventResolved
     this.onRaceFinished = callbacks.onRaceFinished
+    this.onPlayersEliminated = callbacks.onPlayersEliminated
+    this.onPlayersKicked = callbacks.onPlayersKicked
   }
 
   onPlayerJoined() {
@@ -77,6 +89,7 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
   forceStartRace() {
     this.clearTimers()
     this.gameService.startBetting()
+    this.onPlayersKicked?.(this.gameService.consumeKickedSocketIds())
     this.gameService.startRacing()
     this.onPhaseChange?.('RACING')
     this.onStateUpdate?.()
@@ -87,6 +100,30 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
     // Proper reset: back to IDLE with the normal lobby flow (the previous
     // version parked the game in BETTING with no scheduled transition).
     this.transitionToIdle()
+  }
+
+  onBetPlaced() {
+    if (this.gameService.getPhase() !== 'BETTING' || this.bettingShortened) return
+    const players = this.gameService.getConnectedPlayers()
+    if (!players.length || players.some((player) => !player.currentBet)) return
+    if (this.bettingDeadline - Date.now() <= 5_000) return
+    if (this.phaseTimeout) clearTimeout(this.phaseTimeout)
+    this.bettingShortened = true
+    this.gameService.setPhaseCountdown(5_000)
+    this.bettingDeadline = Date.now() + 5_000
+    this.phaseTimeout = setTimeout(() => this.startRacing(), 5_000)
+    this.onStateUpdate?.()
+  }
+
+  handleMiniGameAction() {
+    this.onStateUpdate?.()
+    if (this.gameService.shouldEndMiniGameEarly()) this.resolveMiniGame()
+  }
+
+  handleBlackKnightKill() {
+    this.onStateUpdate?.()
+    if (this.executionTimer) clearTimeout(this.executionTimer)
+    this.executionTimer = setTimeout(() => { this.gameService.clearExecution(); this.onStateUpdate?.() }, 3_000)
   }
 
   // Called from gateway when a player votes
@@ -108,6 +145,8 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
     if (this.voteTimeout) clearTimeout(this.voteTimeout)
     if (this.resolveDisplayTimeout) clearTimeout(this.resolveDisplayTimeout)
     if (this.lobbyCountdown) clearTimeout(this.lobbyCountdown)
+    if (this.miniGameTimeout) clearTimeout(this.miniGameTimeout)
+    if (this.executionTimer) clearTimeout(this.executionTimer)
     for (const timer of this.lightningTimers) clearTimeout(timer)
     this.raceInterval = null
     this.phaseTimeout = null
@@ -116,6 +155,9 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
     this.lobbyCountdown = null
     this.lightningTimers = []
     this.lightningScheduledTick = null
+    this.miniGameScheduledTick = null
+    this.miniGameTimeout = null
+    this.executionTimer = null
   }
 
   private transitionToIdle() {
@@ -133,10 +175,13 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
   private transitionToBetting() {
     this.clearTimers()
     this.gameService.startBetting()
+    this.onPlayersKicked?.(this.gameService.consumeKickedSocketIds())
     this.onPhaseChange?.('BETTING')
     this.onStateUpdate?.()
 
     const duration = this.gameService.getState().phaseDuration
+    this.bettingDeadline = Date.now() + duration
+    this.bettingShortened = false
     this.phaseTimeout = setTimeout(() => {
       this.startRacing()
     }, duration)
@@ -155,6 +200,7 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
     this.eventsTriggered = 0
     this.scheduleEvents()
     this.scheduleLightning()
+    this.scheduleMiniGame()
 
     this.raceInterval = setInterval(() => {
       // Skip ticks when race is paused (event in progress)
@@ -168,6 +214,19 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
 
       if (this.lightningScheduledTick === this.localTick) {
         this.triggerLightning()
+      }
+
+      if (this.miniGameScheduledTick === this.localTick) {
+        if (!this.gameService.getState().lightningEvent && !this.gameService.getActiveEvent()) this.triggerMiniGame()
+        else this.miniGameScheduledTick = Math.min(540, this.localTick + 60)
+      }
+
+      if (this.localTick === 210 || this.localTick === 390) {
+        const execution = this.gameService.autoBlackKnightKill()
+        if (execution) {
+          this.onPlayersEliminated?.(execution.affectedPlayerIds, 'Ton cheval a été exécuté par le Cavalier Noir.')
+          this.handleBlackKnightKill()
+        }
       }
 
       // Vote incidents never interrupt the lightning sequence: the horses
@@ -225,12 +284,38 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
   private scheduleLightning() {
     // One global roll per race. The strike is kept away from the gate and the
     // photo finish so its full blackout/flash/clearing sequence can play.
-    this.lightningScheduledTick = Math.random() < 1 / 8
+    this.lightningScheduledTick = Math.random() < 1 / RACE_EVENT_ODDS.LIGHTNING
       ? 140 + Math.floor(Math.random() * 260)
       : null
     if (this.lightningScheduledTick) {
       console.log(`⛈️ Lightning scheduled at tick ${this.lightningScheduledTick}`)
     }
+  }
+
+  private scheduleMiniGame() {
+    this.miniGameScheduledTick = Math.random() < 1 / RACE_EVENT_ODDS.CUTE_CHALLENGE
+      ? 100 + Math.floor(Math.random() * 360)
+      : null
+  }
+
+  private triggerMiniGame() {
+    this.miniGameScheduledTick = null
+    const game = this.gameService.startMiniGame()
+    if (!game) return
+    this.onStateUpdate?.()
+    this.miniGameTimeout = setTimeout(() => this.resolveMiniGame(), Math.max(0, game.endsAt - Date.now()))
+  }
+
+  private resolveMiniGame() {
+    if (this.miniGameTimeout) clearTimeout(this.miniGameTimeout)
+    this.miniGameTimeout = null
+    const losers = this.gameService.resolveMiniGame()
+    this.onPlayersEliminated?.(losers, 'Défi mignon perdu')
+    this.onStateUpdate?.()
+    this.resolveDisplayTimeout = setTimeout(() => {
+      this.gameService.clearMiniGame()
+      this.onStateUpdate?.()
+    }, 5_000)
   }
 
   private triggerLightning() {
@@ -329,8 +414,9 @@ export class GameLoop implements OnModuleInit, OnModuleDestroy {
 
     const resultsDuration = this.gameService.getState().phaseDuration
     this.phaseTimeout = setTimeout(() => {
-      // Always go back to IDLE — players must re-join for the next race
-      this.transitionToIdle()
+      // Enchaînement sans écran d'accueil : podium → paris.
+      if (this.gameService.hasConnectedPlayers()) this.transitionToBetting()
+      else this.transitionToIdle()
     }, resultsDuration)
   }
 }

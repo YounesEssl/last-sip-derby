@@ -159,20 +159,22 @@ export function PodiumCanvas({ top3 }: Props) {
         }
         ctx.restore()
 
-        // nameplate
+        // Name above the jockey: long names can no longer collide below the podium.
         ctx.fillStyle = 'rgba(14,10,6,0.82)'
         const name = horse.name
-        ctx.font = `bold ${Math.round(17 * S)}px ${monoFont}`
-        const tw = ctx.measureText(name).width
+        ctx.font = `bold ${Math.round(14 * S)}px ${monoFont}`
+        const fittedName = name.length > 20 ? `${name.slice(0, 19)}…` : name
+        const tw = Math.min(bw - 10 * S, ctx.measureText(fittedName).width)
         ctx.beginPath()
-        ctx.roundRect(bx - tw / 2 - 14 * S, floorY + 4 * S, tw + 28 * S, 26 * S, 6 * S)
+        const labelY = topY - 145 * slot.s * S
+        ctx.roundRect(bx - tw / 2 - 10 * S, labelY, tw + 20 * S, 25 * S, 6 * S)
         ctx.fill()
         ctx.strokeStyle = 'rgba(217,169,63,0.5)'
         ctx.lineWidth = 1.5 * S
         ctx.stroke()
         ctx.fillStyle = '#F4E8CE'
         ctx.textBaseline = 'middle'
-        ctx.fillText(name, bx, floorY + 17 * S)
+        ctx.fillText(fittedName, bx, labelY + 13 * S, tw)
       }
 
       confetti.update(dt, W, H)
