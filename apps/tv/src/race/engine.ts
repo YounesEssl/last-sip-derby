@@ -302,7 +302,7 @@ export class RaceEngine {
       const contact = hoof.strength * m.speedNorm
       if (contact > 0.35 && Math.random() < contact * 1.1) {
         const k = laneScale(m.lane) * S
-        this.dust.spawn(m.visX + hoof.x * k, laneGroundY(m.lane, H) - 2, k, Math.min(1.2, m.speedNorm * 1.25))
+        this.dust.spawn(m.visX + hoof.x * k, laneGroundY(m.lane, H) - 2, k, Math.min(1.2, m.speedNorm * 1.25), m.lane)
       }
       if (
         (m.golden || m.diamond || m.blackKnight) &&
@@ -321,11 +321,12 @@ export class RaceEngine {
           color,
           direction,
           Math.min(1.15, m.speedNorm),
+          m.lane,
         )
       }
       // Fall impact burst
       if (m.fallStart && t - m.fallStart < 60) {
-        this.dust.burst(m.visX, laneGroundY(m.lane, H) - 4, laneScale(m.lane) * S)
+        this.dust.burst(m.visX, laneGroundY(m.lane, H) - 4, laneScale(m.lane) * S, m.lane)
       }
     }
     if (alive > 0) {
@@ -450,9 +451,13 @@ export class RaceEngine {
     this.track.drawStartGate(ctx, W, H, cam)
     this.track.drawFinish(ctx, W, H, cam, this.simTime)
 
-    // Horses, far lane first
+    this.dust.update(dt)
+
+    // Horses, far lane first. Each lane's particles are drawn immediately
+    // before its runner, so nearer lanes naturally occlude distant trails.
     for (const id of this.order) {
       const m = this.horses.get(id)!
+      this.dust.drawLane(ctx, cam, W, m.lane)
       const sx = m.visX - cam + W / 2
       if (sx < -260 || sx > W + 260) continue
       const groundY = laneGroundY(m.lane, H)
@@ -527,8 +532,6 @@ export class RaceEngine {
       ctx.restore()
     }
 
-    this.dust.update(dt)
-    this.dust.draw(ctx, cam, W)
     this.scenery.drawNearRail(ctx, W, H, nearRailCam)
     ctx.restore() // end zoom
 

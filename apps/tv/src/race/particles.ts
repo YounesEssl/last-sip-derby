@@ -13,12 +13,13 @@ interface Dust {
   stretchX: number
   stretchY: number
   rotation: number
+  lane: number
 }
 
 export class DustPool {
   private pool: Dust[] = []
 
-  spawn(x: number, y: number, scale: number, intensity: number) {
+  spawn(x: number, y: number, scale: number, intensity: number, lane = 0) {
     const n = Math.round(1 + intensity * 2)
     for (let i = 0; i < n; i++) {
       if (this.pool.length > 260) this.pool.shift()
@@ -35,11 +36,12 @@ export class DustPool {
         stretchX: 1.25 + Math.random() * 0.65,
         stretchY: 0.62 + Math.random() * 0.25,
         rotation: (Math.random() - 0.5) * 0.18,
+        lane,
       })
     }
   }
 
-  burst(x: number, y: number, scale: number) {
+  burst(x: number, y: number, scale: number, lane = 0) {
     for (let i = 0; i < 16; i++) {
       this.pool.push({
         x: x + (Math.random() - 0.5) * 40 * scale,
@@ -54,6 +56,7 @@ export class DustPool {
         stretchX: 1.2 + Math.random() * 0.8,
         stretchY: 0.65 + Math.random() * 0.3,
         rotation: (Math.random() - 0.5) * 0.3,
+        lane,
       })
     }
   }
@@ -67,6 +70,7 @@ export class DustPool {
     color: readonly [number, number, number],
     direction: -1 | 1,
     intensity: number,
+    lane = 0,
   ) {
     if (this.pool.length > 360) this.pool.shift()
     this.pool.push({
@@ -82,6 +86,7 @@ export class DustPool {
       stretchX: 1.7 + Math.random() * 1.15,
       stretchY: 0.48 + Math.random() * 0.22,
       rotation: (Math.random() - 0.5) * 0.16,
+      lane,
     })
   }
 
@@ -105,7 +110,22 @@ export class DustPool {
 
   /** Draw in world space: caller passes the camera offset. */
   draw(ctx: CanvasRenderingContext2D, camX: number, W: number) {
+    this.drawMatching(ctx, camX, W, () => true)
+  }
+
+  /** Draw one track layer so its particles sit behind that track's runner. */
+  drawLane(ctx: CanvasRenderingContext2D, camX: number, W: number, lane: number) {
+    this.drawMatching(ctx, camX, W, (dust) => dust.lane === lane)
+  }
+
+  private drawMatching(
+    ctx: CanvasRenderingContext2D,
+    camX: number,
+    W: number,
+    matches: (dust: Dust) => boolean,
+  ) {
     for (const d of this.pool) {
+      if (!matches(d)) continue
       const t = d.life / d.maxLife
       const alpha = d.opacity * Math.pow(1 - t, 1.65)
       const [red, green, blue] = d.color
