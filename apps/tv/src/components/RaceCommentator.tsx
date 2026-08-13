@@ -27,6 +27,15 @@ interface HorseSnapshot {
   jockeyFallen: boolean
 }
 
+// The minimap occupies 9vh → 13.4vh. The former text gap was 0.6vh;
+// tripling it places both text blocks at 15.2vh while the avatar stays at 14vh.
+const TIMELINE_BOTTOM_VH = 13.4
+const PREVIOUS_COMMENT_GAP_VH = 0.6
+const COMMENT_GAP_MULTIPLIER = 3
+const COMMENT_TEXT_TOP_VH = TIMELINE_BOTTOM_VH + PREVIOUS_COMMENT_GAP_VH * COMMENT_GAP_MULTIPLIER
+const COMMENT_AVATAR_TOP_VH = 14
+const VILLAIN_BUBBLE_OFFSET_VH = COMMENT_TEXT_TOP_VH - COMMENT_AVATAR_TOP_VH
+
 const LEAD_LINES = [
   '{horse} prend les commandes de la course !',
   'Nouveau leader : {horse} passe devant tout le monde !',
@@ -553,8 +562,8 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: .98 }}
             transition={{ duration: .25, ease: 'easeOut' }}
-            className="absolute top-[14vh] inline-flex w-fit min-w-[12vw] max-w-[30vw] items-center justify-center rounded-xl border border-[#7db8c7]/70 bg-[#09161c]/92 px-[1.1vw] py-[.75vh] text-center shadow-[0_12px_30px_rgba(0,0,0,.55)] backdrop-blur-md"
-            style={{ left: 'max(23vw, calc(19vw + 3rem))' }}
+            className="absolute inline-flex w-fit min-w-[12vw] max-w-[30vw] items-center justify-center rounded-xl border border-[#7db8c7]/70 bg-[#09161c]/92 px-[1.1vw] py-[.75vh] text-center shadow-[0_12px_30px_rgba(0,0,0,.55)] backdrop-blur-md"
+            style={{ left: 'max(23vw, calc(19vw + 3rem))', top: `${COMMENT_TEXT_TOP_VH}vh` }}
           >
             <div className="min-w-0 break-words font-headline text-[3.4vh] font-medium leading-[1.15] tracking-[.015em] text-derby-cream">
               {mainComment.text}
@@ -563,7 +572,10 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
         )}
       </AnimatePresence>
 
-      <div className="absolute right-[1.4vw] top-[14vh] flex w-[42vw] items-start justify-end gap-[.9vw]">
+      <div
+        className="absolute right-[1.4vw] flex w-[42vw] items-start justify-end gap-[.9vw]"
+        style={{ top: `${COMMENT_AVATAR_TOP_VH}vh` }}
+      >
         <AnimatePresence mode="wait">
           {villainComment && (
             <motion.div
@@ -574,6 +586,7 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
               exit={{ opacity: 0, x: 16, scale: .9 }}
               transition={{ type: 'spring', stiffness: 380, damping: 24 }}
               className="relative inline-flex w-fit min-w-[10vw] max-w-[27.5vw] items-center justify-center rounded-[1.1rem] border-[.22vh] border-derby-red bg-[#190a0c]/95 px-[1.1vw] py-[.75vh] text-center shadow-[0_12px_28px_rgba(0,0,0,.6)]"
+              style={{ marginTop: `${VILLAIN_BUBBLE_OFFSET_VH}vh` }}
             >
               <span className="absolute -right-[.65vw] top-1/2 h-[1.2vw] w-[1.2vw] -translate-y-1/2 rotate-45 border-r-[.22vh] border-t-[.22vh] border-derby-red bg-[#190a0c]" />
               <div className="min-w-0 break-words font-headline text-[3.4vh] font-medium leading-[1.15] tracking-[.015em] text-derby-cream">
