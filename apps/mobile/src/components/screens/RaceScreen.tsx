@@ -77,7 +77,7 @@ export function RaceScreen({ state, player, onBlackKnightKill }: { state: GameSt
             ))}
           </span>
         </div>
-        <MiniRace horses={state.horses} myHorseId={myHorse?.id ?? null} paused={state.racePaused} />
+        <MiniRace horses={state.horses} myHorseId={myHorse?.id ?? null} paused={state.racePaused || state.isGamePaused} />
       </div>
 
       {/* my horse status */}

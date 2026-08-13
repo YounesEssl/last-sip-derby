@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function BetScreen({ state, player, onBet }: Props) {
-  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow)
+  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow, state.isGamePaused)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const betHorse = player?.currentBet ? state.horses.find((h) => h.id === player.currentBet!.horseId) : null
   const selected = selectedId ? state.horses.find((h) => h.id === selectedId) : null

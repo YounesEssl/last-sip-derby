@@ -13,7 +13,7 @@ export function ResultScreen({
   player: Player | null
   onDistribute: (allocations: { pseudo: string; sips: number }[]) => void
 }) {
-  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow)
+  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow, state.isGamePaused)
 
   const winner = useMemo(() => {
     const alive = state.horses.filter((h) => !h.isEliminated)
@@ -144,6 +144,8 @@ function WinnerPanel({
   const [display, setDisplay] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pausedRef = useRef(state.isGamePaused)
+  pausedRef.current = state.isGamePaused
 
   const assigned = Object.values(assignments).reduce((a, b) => a + b, 0)
   const remaining = totalSips - assigned
@@ -153,13 +155,13 @@ function WinnerPanel({
   }, [])
 
   const addTo = (pseudo: string) => {
-    if (sent || remaining <= 0) return
+    if (pausedRef.current || sent || remaining <= 0) return
     setAssignments((a) => ({ ...a, [pseudo]: (a[pseudo] ?? 0) + 1 }))
     if (navigator.vibrate) navigator.vibrate(40)
   }
 
   const removeFrom = (pseudo: string) => {
-    if (sent) return
+    if (pausedRef.current || sent) return
     setAssignments((a) => {
       const n = (a[pseudo] ?? 0) - 1
       const next = { ...a }
@@ -170,11 +172,12 @@ function WinnerPanel({
   }
 
   const spin = () => {
-    if (spinning || sent || remaining <= 0 || victims.length === 0) return
+    if (pausedRef.current || spinning || sent || remaining <= 0 || victims.length === 0) return
     setSpinning(true)
     let ticks = 0
     const total = 12 + Math.floor(Math.random() * 6)
     timerRef.current = setInterval(() => {
+      if (pausedRef.current) return
       ticks++
       setDisplay(victims[ticks % victims.length])
       if (ticks >= total) {
@@ -188,7 +191,7 @@ function WinnerPanel({
   }
 
   const send = () => {
-    if (sent || assigned === 0) return
+    if (pausedRef.current || sent || assigned === 0) return
     onDistribute(Object.entries(assignments).map(([pseudo, sips]) => ({ pseudo, sips })))
     setSent(true)
     if (navigator.vibrate) navigator.vibrate([120, 60, 200])

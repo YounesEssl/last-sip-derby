@@ -73,6 +73,19 @@ interface HorseRaceState {
   boostBonus: number;
 }
 
+interface PausableDrinkTimer {
+  timeout: NodeJS.Timeout | null;
+  dueAt: number;
+  remainingMs: number;
+  onPenalty: () => void;
+}
+
+interface PendingDrinkNotice {
+  sips: number;
+  reason: string;
+  deadline: number;
+}
+
 function smooth01(x: number): number {
   const t = Math.max(0, Math.min(1, x));
   return t * t * (3 - 2 * t);
@@ -94,6 +107,10 @@ const CAPITALS = [
 export class GameService implements OnModuleInit {
   private state: GameState = {
     serverNow: Date.now(),
+    isRulesOpen: false,
+    isGamePaused: false,
+    pausedAt: null,
+    pauseReason: null,
     phase: "IDLE",
     raceNumber: 0,
     horses: [],
@@ -114,7 +131,8 @@ export class GameService implements OnModuleInit {
 
   private playersByPseudo: Map<string, Player> = new Map();
   private socketToPlayer: Map<string, string> = new Map(); // socketId -> pseudo
-  private drinkTimers: Map<string, NodeJS.Timeout> = new Map();
+  private drinkTimers: Map<string, PausableDrinkTimer> = new Map();
+  private pendingDrinkNotices: Map<string, PendingDrinkNotice> = new Map();
   private kickedSocketIds: string[] = [];
 
   // Race simulation state (reset each race)
@@ -149,7 +167,9 @@ export class GameService implements OnModuleInit {
   }
 
   getState(): GameState {
-    this.state.serverNow = Date.now();
+    this.state.serverNow = this.state.isGamePaused && this.state.pausedAt !== null
+      ? this.state.pausedAt
+      : Date.now();
     this.state.players = this.getConnectedPlayers();
     this.state.eveningLeaderboard = Array.from(this.playersByPseudo.values())
       .sort((a, b) => b.totalSipsDrunk - a.totalSipsDrunk)
@@ -159,6 +179,10 @@ export class GameService implements OnModuleInit {
 
   getPhase(): GamePhase {
     return this.state.phase;
+  }
+
+  isGamePaused(): boolean {
+    return this.state.isGamePaused;
   }
 
   getRaceNumber(): number {
@@ -189,8 +213,121 @@ export class GameService implements OnModuleInit {
     return this.playersByPseudo.get(pseudo);
   }
 
+  setPendingDrinkNotice(pseudo: string, notice: PendingDrinkNotice): void {
+    this.pendingDrinkNotices.set(pseudo, { ...notice });
+  }
+
+  getPendingDrinkNotice(pseudo: string): PendingDrinkNotice | null {
+    const notice = this.pendingDrinkNotices.get(pseudo);
+    if (!notice) return null;
+    const now = this.state.isGamePaused && this.state.pausedAt !== null ? this.state.pausedAt : Date.now();
+    if (notice.deadline <= now) {
+      this.pendingDrinkNotices.delete(pseudo);
+      return null;
+    }
+    return { ...notice };
+  }
+
+  clearPendingDrinkNotice(pseudo: string): void {
+    this.pendingDrinkNotices.delete(pseudo);
+  }
+
   hasConnectedPlayers(): boolean {
     return Array.from(this.playersByPseudo.values()).some((p) => p.isConnected);
+  }
+
+  /**
+   * Freeze the shared game clock for the rulebook. Race-specific pauses
+   * (incident/mini-game) remain untouched so their exact state can resume.
+   */
+  pauseForRules(pausedAt = Date.now()): boolean {
+    if (this.state.isGamePaused) return false;
+
+    this.state.isRulesOpen = true;
+    this.state.isGamePaused = true;
+    this.state.pausedAt = pausedAt;
+    this.state.pauseReason = "RULEBOOK";
+    this.state.serverNow = pausedAt;
+
+    for (const timer of this.drinkTimers.values()) {
+      if (timer.timeout) clearTimeout(timer.timeout);
+      timer.timeout = null;
+      timer.remainingMs = Math.max(0, timer.dueAt - pausedAt);
+    }
+    return true;
+  }
+
+  /** Resume every absolute deadline from the exact remaining duration. */
+  resumeFromRules(resumedAt = Date.now()): number | null {
+    if (!this.state.isGamePaused || this.state.pauseReason !== "RULEBOOK" || this.state.pausedAt === null) {
+      return null;
+    }
+
+    const pauseDuration = Math.max(0, resumedAt - this.state.pausedAt);
+    this.shiftGameTimestamps(pauseDuration);
+    this.state.isRulesOpen = false;
+    this.state.isGamePaused = false;
+    this.state.pausedAt = null;
+    this.state.pauseReason = null;
+    this.state.serverNow = resumedAt;
+
+    for (const [pseudo, timer] of this.drinkTimers) {
+      this.armDrinkTimer(pseudo, timer, resumedAt);
+    }
+    return pauseDuration;
+  }
+
+  private shiftGameTimestamps(durationMs: number): void {
+    if (durationMs <= 0) return;
+    const pauseStart = this.state.pausedAt ?? Date.now() - durationMs;
+    const resumedAt = pauseStart + durationMs;
+    this.state.phaseStartedAt += durationMs;
+
+    if (this.state.activeEvent) this.state.activeEvent.votingDeadline += durationMs;
+    if (this.state.lightningEvent) {
+      this.state.lightningEvent.startedAt += durationMs;
+      this.state.lightningEvent.strikeAt += durationMs;
+      this.state.lightningEvent.clearAt += durationMs;
+      this.state.lightningEvent.endsAt += durationMs;
+    }
+    if (this.state.miniGame) {
+      this.state.miniGame.startedAt += durationMs;
+      this.state.miniGame.endsAt += durationMs;
+      if (this.state.miniGame.resultsEndAt !== null) this.state.miniGame.resultsEndAt += durationMs;
+      for (const row of this.state.miniGame.players) {
+        if (row.finishedAt !== null) row.finishedAt += durationMs;
+      }
+    }
+    if (this.state.executionEvent) {
+      this.state.executionEvent.startedAt += durationMs;
+      this.state.executionEvent.endsAt += durationMs;
+    }
+    for (const notice of this.pendingDrinkNotices.values()) notice.deadline += durationMs;
+
+    for (const player of this.playersByPseudo.values()) {
+      player.lastSeen = player.lastSeen <= pauseStart ? player.lastSeen + durationMs : resumedAt;
+      player.lastBetAt = player.lastBetAt <= pauseStart ? player.lastBetAt + durationMs : resumedAt;
+      if (player.blackKnightLastKillAt > 0) {
+        player.blackKnightLastKillAt = player.blackKnightLastKillAt <= pauseStart
+          ? player.blackKnightLastKillAt + durationMs
+          : resumedAt;
+      }
+    }
+  }
+
+  private armDrinkTimer(pseudo: string, timer: PausableDrinkTimer, now = Date.now()): void {
+    if (this.state.isGamePaused) return;
+    timer.dueAt = now + timer.remainingMs;
+    timer.timeout = setTimeout(() => {
+      const current = this.drinkTimers.get(pseudo);
+      if (current !== timer) return;
+      const player = this.playersByPseudo.get(pseudo);
+      if (player && player.debt > 0) {
+        player.debt += DRINK_PENALTY_SIPS;
+        timer.onPenalty();
+      }
+      this.drinkTimers.delete(pseudo);
+    }, timer.remainingMs);
   }
 
   // Player management
@@ -198,6 +335,24 @@ export class GameService implements OnModuleInit {
     const existing = this.playersByPseudo.get(pseudo);
     if (existing) {
       // Reconnection
+      const previousSocketId = existing.id;
+      if (previousSocketId && previousSocketId !== socketId) {
+        this.socketToPlayer.delete(previousSocketId);
+        if (existing.currentBet) existing.currentBet.playerId = socketId;
+
+        const event = this.state.activeEvent;
+        if (event) {
+          event.affectedPlayerIds = event.affectedPlayerIds.map((id) => id === previousSocketId ? socketId : id);
+          event.nonAffectedPlayerIds = event.nonAffectedPlayerIds.map((id) => id === previousSocketId ? socketId : id);
+          if (Object.prototype.hasOwnProperty.call(event.votes, previousSocketId)) {
+            event.votes[socketId] = event.votes[previousSocketId];
+            delete event.votes[previousSocketId];
+          }
+        }
+
+        const miniGamePlayer = this.state.miniGame?.players.find((row) => row.playerId === previousSocketId);
+        if (miniGamePlayer) miniGamePlayer.playerId = socketId;
+      }
       existing.id = socketId;
       existing.isConnected = true;
       existing.lastSeen = Date.now();
@@ -248,7 +403,7 @@ export class GameService implements OnModuleInit {
 
   // Betting
   placeBet(socketId: string, horseId: string, amount: number): Bet | null {
-    if (this.state.phase !== "BETTING") return null;
+    if (this.state.isGamePaused || this.state.phase !== "BETTING") return null;
 
     const player = this.getPlayerBySocket(socketId);
     if (!player) return null;
@@ -283,6 +438,7 @@ export class GameService implements OnModuleInit {
     this.state.lastRaceWinner = null;
     this.state.roundDrinks = [];
     this.state.raceProgress = 0;
+    this.pendingDrinkNotices.clear();
 
     // Pick one random name per sip tier [1, 2, 3, 5, 7]
     const names = horseNamesBySips as Record<string, string[]>;
@@ -461,7 +617,7 @@ export class GameService implements OnModuleInit {
   }
 
   tickRace(): Horse | null {
-    if (this.state.racePaused) return null;
+    if (this.state.isGamePaused || this.state.racePaused) return null;
 
     this.raceTick++;
     const p = Math.min(1, this.raceTick / RACE_TICKS);
@@ -658,6 +814,10 @@ export class GameService implements OnModuleInit {
     this.state.miniGame = null;
     this.state.executionEvent = null;
     this.state.racePaused = false;
+    this.state.isRulesOpen = false;
+    this.state.isGamePaused = false;
+    this.state.pausedAt = null;
+    this.state.pauseReason = null;
 
     // Mark all players as disconnected — they must re-join for the next race
     for (const player of this.playersByPseudo.values()) {
@@ -712,6 +872,7 @@ export class GameService implements OnModuleInit {
   }
 
   startLightning(): boolean {
+    if (this.state.isGamePaused) return false;
     const candidates = this.finishOrder
       .map((id) => this.state.horses.find((horse) => horse.id === id))
       .filter((horse): horse is Horse => !!horse && !horse.isEliminated && !horse.isReversed);
@@ -796,6 +957,7 @@ export class GameService implements OnModuleInit {
     playerId: string,
     valid: boolean,
   ): { majority: 'valid' | 'not_valid' | null; votes: Record<string, boolean> } | null {
+    if (this.state.isGamePaused) return null;
     const event = this.state.activeEvent;
     if (!event || event.id !== eventId || event.resolved) return null;
 
@@ -830,6 +992,7 @@ export class GameService implements OnModuleInit {
     socketId: string,
     allocations: Array<{ pseudo: string; sips: number }>,
   ): Array<{ id: string; pseudo: string; sips: number }> | null {
+    if (this.state.isGamePaused) return null;
     // Valid from the results screen until the next race's betting opens
     // (lastRaceWinner is cleared by startBetting) — no time pressure.
     if (this.state.phase !== "RESULTS" && this.state.phase !== "IDLE") return null;
@@ -872,16 +1035,18 @@ export class GameService implements OnModuleInit {
 
   // Drink management
   confirmDrink(socketId: string): number {
+    if (this.state.isGamePaused) return 0;
     const player = this.getPlayerBySocket(socketId);
     if (!player || player.debt <= 0) return 0;
 
     const confirmed = player.debt;
     player.debt = 0;
+    this.pendingDrinkNotices.delete(player.pseudo);
 
     const timerKey = player.pseudo;
     const timer = this.drinkTimers.get(timerKey);
     if (timer) {
-      clearTimeout(timer);
+      if (timer.timeout) clearTimeout(timer.timeout);
       this.drinkTimers.delete(timerKey);
     }
 
@@ -890,18 +1055,17 @@ export class GameService implements OnModuleInit {
 
   startDrinkTimer(pseudo: string, onPenalty: () => void): void {
     const existing = this.drinkTimers.get(pseudo);
-    if (existing) clearTimeout(existing);
+    if (existing?.timeout) clearTimeout(existing.timeout);
 
-    const timer = setTimeout(() => {
-      const player = this.playersByPseudo.get(pseudo);
-      if (player && player.debt > 0) {
-        player.debt += DRINK_PENALTY_SIPS;
-        onPenalty();
-      }
-      this.drinkTimers.delete(pseudo);
-    }, DRINK_CONFIRM_TIMEOUT_MS);
-
+    const now = Date.now();
+    const timer: PausableDrinkTimer = {
+      timeout: null,
+      dueAt: now + DRINK_CONFIRM_TIMEOUT_MS,
+      remainingMs: DRINK_CONFIRM_TIMEOUT_MS,
+      onPenalty,
+    };
     this.drinkTimers.set(pseudo, timer);
+    this.armDrinkTimer(pseudo, timer, now);
   }
 
   // Queue management
@@ -920,7 +1084,7 @@ export class GameService implements OnModuleInit {
 
   // ── Défi mignon ──────────────────────────────────────────────────────────
   startMiniGame(type?: MiniGameType): MiniGameState | null {
-    if (this.state.phase !== 'RACING' || this.state.miniGame) return null;
+    if (this.state.isGamePaused || this.state.phase !== 'RACING' || this.state.miniGame) return null;
     const participants = this.getConnectedPlayers().filter((player) => !!player.currentBet && !player.miniGameEliminated);
     if (participants.length < 2) return null;
     const picked = type ?? MINI_GAME_TYPES[Math.floor(Math.random() * MINI_GAME_TYPES.length)];
@@ -958,6 +1122,7 @@ export class GameService implements OnModuleInit {
   }
 
   handleMiniGameAction(socketId: string, gameId: string, action: string, value?: number | string): boolean {
+    if (this.state.isGamePaused) return false;
     return applyMiniGameAction(this.state.miniGame, socketId, gameId, action, value).accepted;
   }
 
@@ -986,7 +1151,7 @@ export class GameService implements OnModuleInit {
   clearMiniGame(): void { this.state.miniGame = null; this.resumeRace(); }
 
   useBlackKnightPower(socketId: string, targetHorseId: string): { targetIds: string[]; affectedPlayerIds: string[] } | null {
-    if (this.state.phase !== 'RACING' || this.state.racePaused) return null;
+    if (this.state.isGamePaused || this.state.phase !== 'RACING' || this.state.racePaused) return null;
     const player = this.getPlayerBySocket(socketId);
     const knight = player?.currentBet ? this.state.horses.find((horse) => horse.id === player.currentBet!.horseId) : undefined;
     const target = this.state.horses.find((horse) => horse.id === targetHorseId);
@@ -1034,8 +1199,8 @@ export class GameService implements OnModuleInit {
   consumeKickedSocketIds(): string[] { return this.kickedSocketIds.splice(0); }
 
   resetSession(): void {
-    for (const timer of this.drinkTimers.values()) clearTimeout(timer);
-    this.drinkTimers.clear(); this.playersByPseudo.clear(); this.socketToPlayer.clear();
+    for (const timer of this.drinkTimers.values()) if (timer.timeout) clearTimeout(timer.timeout);
+    this.drinkTimers.clear(); this.pendingDrinkNotices.clear(); this.playersByPseudo.clear(); this.socketToPlayer.clear();
     this.state.players = []; this.state.eveningLeaderboard = []; this.state.roundDrinks = []; this.state.queue = []; this.state.lastRaceWinner = null; this.state.raceNumber = 0;
     this.persistence.dump(this.getDumpData());
   }

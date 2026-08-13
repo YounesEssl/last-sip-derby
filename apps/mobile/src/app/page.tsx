@@ -10,6 +10,7 @@ import { RaceScreen } from '@/components/screens/RaceScreen'
 import { ResultScreen } from '@/components/screens/ResultScreen'
 import { DrinkOverlay, VoteOverlay } from '@/components/Overlays'
 import { MiniGameOverlay } from '@/components/MiniGameOverlay'
+import { setGameFeedbackPaused } from '@/components/mini-games/feedback'
 
 export default function MobilePage() {
   const {
@@ -28,7 +29,30 @@ export default function MobilePage() {
     miniGameAction,
     blackKnightKill,
   } = usePlayerSocket()
+  const gameLayerRef = useRef<HTMLDivElement>(null)
+  const pausedAnimationsRef = useRef<Animation[]>([])
   useNoSleep()
+
+  useEffect(() => {
+    setGameFeedbackPaused(gameState?.isGamePaused ?? false)
+    if (gameState?.isGamePaused && navigator.vibrate) navigator.vibrate(0)
+  }, [gameState?.isGamePaused])
+
+  useEffect(() => {
+    const layer = gameLayerRef.current
+    if (!layer) return
+    if (gameState?.isGamePaused) {
+      pausedAnimationsRef.current = layer
+        .getAnimations({ subtree: true })
+        .filter((animation) => animation.playState === 'running')
+      pausedAnimationsRef.current.forEach((animation) => animation.pause())
+      return
+    }
+    pausedAnimationsRef.current.forEach((animation) => {
+      if (animation.playState === 'paused') animation.play()
+    })
+    pausedAnimationsRef.current = []
+  }, [gameState?.isGamePaused])
 
   // The server drops everyone at the end of RESULTS — quietly re-enter with
   // the saved pseudo whenever we're missing from the roster (any phase:
@@ -37,7 +61,7 @@ export default function MobilePage() {
   useEffect(() => {
     if (!gameState || !pseudo) return
     const amIn = gameState.players.some((p) => p.pseudo === pseudo)
-    const key = `${gameState.phase}-${gameState.raceNumber}`
+    const key = `${gameState.phase}-${gameState.raceNumber}-${gameState.isGamePaused ? 'paused' : 'running'}`
     if (!amIn && lastRejoinKeyRef.current !== key) {
       lastRejoinKeyRef.current = key
       join(pseudo)
@@ -89,40 +113,80 @@ export default function MobilePage() {
 
   return (
     <div className="bg-hippodrome relative h-full overflow-hidden">
-      {screen}
+      <div
+        ref={gameLayerRef}
+        data-game-frozen={gameState?.isGamePaused ? 'true' : 'false'}
+        aria-hidden={gameState?.isGamePaused || undefined}
+        className={`h-full ${gameState?.isGamePaused ? 'pointer-events-none' : ''}`}
+      >
+        {screen}
 
-      {gameState?.miniGame && player && gameState.miniGame.players.some((row) => row.playerId === player.id) && (
-        <MiniGameOverlay game={gameState.miniGame} playerId={player.id} onAction={miniGameAction} />
-      )}
+        {gameState?.miniGame && player && gameState.miniGame.players.some((row) => row.playerId === player.id) && (
+          <MiniGameOverlay
+            game={gameState.miniGame}
+            playerId={player.id}
+            paused={gameState.isGamePaused}
+            serverNow={gameState.serverNow}
+            onAction={miniGameAction}
+          />
+        )}
 
-      {voteRequest && !voteRequest.resolved && (
-        <VoteOverlay
-          event={voteRequest}
-          players={gameState?.players ?? []}
-          onVote={(v) => vote(voteRequest.id, v)}
-        />
-      )}
-      {drinkNotification && (
-        <DrinkOverlay
-          sips={drinkNotification.sips}
-          reason={drinkNotification.reason}
-          deadline={drinkNotification.deadline}
-          onConfirm={confirmDrink}
-        />
-      )}
+        {voteRequest && !voteRequest.resolved && (
+          <VoteOverlay
+            event={voteRequest}
+            players={gameState?.players ?? []}
+            paused={gameState?.isGamePaused ?? false}
+            serverNow={gameState?.serverNow}
+            onVote={(v) => vote(voteRequest.id, v)}
+          />
+        )}
+        {drinkNotification && (
+          <DrinkOverlay
+            sips={drinkNotification.sips}
+            reason={drinkNotification.reason}
+            deadline={drinkNotification.deadline}
+            paused={gameState?.isGamePaused ?? false}
+            serverNow={gameState?.serverNow}
+            onConfirm={confirmDrink}
+          />
+        )}
 
-      {eliminationNotice && (
-        <div className="pointer-events-none fixed inset-x-4 top-20 z-[80] rounded-2xl border-4 border-derby-red bg-black/95 px-5 py-5 text-center shadow-2xl">
-          <div className="font-display text-4xl text-derby-red">ÉLIMINÉ(E)</div>
-          <div className="mt-2 font-body text-lg text-derby-cream">{eliminationNotice}</div>
-        </div>
-      )}
+        {eliminationNotice && (
+          <div className="pointer-events-none fixed inset-x-4 top-20 z-[80] rounded-2xl border-4 border-derby-red bg-black/95 px-5 py-5 text-center shadow-2xl">
+            <div className="font-display text-4xl text-derby-red">ÉLIMINÉ(E)</div>
+            <div className="mt-2 font-body text-lg text-derby-cream">{eliminationNotice}</div>
+          </div>
+        )}
 
-      {!connected && pseudo && (
-        <div className="absolute inset-x-0 top-0 z-[60] bg-derby-red py-1 text-center font-headline text-sm tracking-[0.25em] text-derby-cream">
-          RECONNEXION EN COURS...
-        </div>
-      )}
+        {!connected && pseudo && (
+          <div className="absolute inset-x-0 top-0 z-[60] bg-derby-red py-1 text-center font-headline text-sm tracking-[0.25em] text-derby-cream">
+            RECONNEXION EN COURS...
+          </div>
+        )}
+      </div>
+
+      {gameState?.isGamePaused && <GamePauseOverlay />}
+    </div>
+  )
+}
+
+function GamePauseOverlay() {
+  return (
+    <div
+      data-testid="game-pause-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Partie en pause"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-derby-night/95 px-7 text-center backdrop-blur-md"
+    >
+      <div className="w-full max-w-sm rounded-2xl border-2 border-derby-gold bg-derby-ink px-6 py-8 shadow-2xl">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border-2 border-derby-gold font-display text-4xl text-derby-gold">Ⅱ</div>
+        <h1 className="font-display text-4xl leading-none text-derby-cream">PARTIE EN PAUSE</h1>
+        <p className="mt-4 font-body text-lg leading-relaxed text-derby-cream/85">
+          Les règles du jeu sont en cours de consultation sur la TV.
+        </p>
+        <div className="mt-6 font-headline text-sm tracking-[0.24em] text-derby-gold">REPRISE AUTOMATIQUE</div>
+      </div>
     </div>
   )
 }

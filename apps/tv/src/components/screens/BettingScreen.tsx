@@ -13,7 +13,7 @@ const FLAVOR: Record<number, string> = {
 }
 
 export function BettingScreen({ state }: { state: GameState }) {
-  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow)
+  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow, state.isGamePaused)
   const urgent = seconds <= 10
 
   const bettorsByHorse = new Map<string, string[]>()
@@ -76,7 +76,7 @@ export function BettingScreen({ state }: { state: GameState }) {
                 style={{ animationDelay: `${0.1 + i * 0.09}s` }}
               >
                 <div className="flex items-center justify-center">
-                  <RowHorse lane={h.lane} silk={h.color} size={74} />
+                  <RowHorse lane={h.lane} silk={h.color} size={74} paused={state.isGamePaused} />
                 </div>
                 <div className="min-w-0">
                   <div className="truncate font-body text-[2.9vh] font-bold text-derby-cream">{h.name}</div>

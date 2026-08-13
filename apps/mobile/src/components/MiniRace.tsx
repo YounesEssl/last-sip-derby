@@ -52,6 +52,11 @@ export function MiniRace({ horses, myHorseId, paused }: Props) {
       last = t
       const { horses, myHorseId, paused } = propsRef.current
 
+      if (paused) {
+        raf = requestAnimationFrame(frame)
+        return
+      }
+
       const dpr = Math.min(2, window.devicePixelRatio || 1)
       const w = canvas.clientWidth
       const h = ROW_H * Math.max(1, horses.length) + 16

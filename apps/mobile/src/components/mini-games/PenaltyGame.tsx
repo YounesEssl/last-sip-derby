@@ -15,6 +15,13 @@ interface ShotVisual {
   goal: boolean
 }
 
+interface ShotTimer {
+  shot: ShotVisual
+  timer: number | null
+  dueAt: number
+  remainingMs: number
+}
+
 const BALL_MIN_X = 7
 const BALL_MAX_X = 93
 const DEPLOYED_ROUND_TRIP_MS = 700
@@ -32,36 +39,78 @@ export function PenaltyGame({
   shots,
   goals,
   active,
+  paused = false,
   onShot,
 }: {
   shots: number
   goals: number
   active: boolean
+  paused?: boolean
   onShot: (centerPercent: number) => void
 }) {
-  const startedAtRef = useRef(0)
+  const elapsedRef = useRef(0)
+  const previousFrameRef = useRef(0)
+  const pausedRef = useRef(paused)
   const localShotsRef = useRef(shots)
-  const timersRef = useRef<number[]>([])
+  const timersRef = useRef<Map<number, ShotTimer>>(new Map())
   const [x, setX] = useState(50)
   const [flights, setFlights] = useState<ShotVisual[]>([])
   const [impacts, setImpacts] = useState<ShotVisual[]>([])
+  pausedRef.current = paused
 
   useEffect(() => {
     localShotsRef.current = Math.max(localShotsRef.current, shots)
   }, [shots])
 
   useEffect(() => {
-    startedAtRef.current = performance.now()
     let frame = 0
     const tick = (time: number) => {
-      setX(getBallPosition(time - startedAtRef.current))
+      if (previousFrameRef.current === 0) previousFrameRef.current = time
+      const elapsed = Math.max(0, time - previousFrameRef.current)
+      previousFrameRef.current = time
+      if (!pausedRef.current) {
+        elapsedRef.current += elapsed
+        setX(getBallPosition(elapsedRef.current))
+      }
       frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
   }, [])
 
-  useEffect(() => () => timersRef.current.forEach((timer) => window.clearTimeout(timer)), [])
+  const completeFlight = (shot: ShotVisual) => {
+    timersRef.current.delete(shot.id)
+    setFlights((current) => current.filter((item) => item.id !== shot.id))
+    setImpacts((current) => [...current.slice(-15), shot])
+    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(shot.goal ? [18, 25, 18] : 45)
+  }
+
+  const armFlight = (shot: ShotVisual, durationMs: number) => {
+    const entry: ShotTimer = timersRef.current.get(shot.id) ?? { shot, timer: null, dueAt: 0, remainingMs: durationMs }
+    entry.remainingMs = Math.max(0, durationMs)
+    entry.dueAt = Date.now() + entry.remainingMs
+    entry.timer = window.setTimeout(() => completeFlight(shot), entry.remainingMs)
+    timersRef.current.set(shot.id, entry)
+  }
+
+  useEffect(() => {
+    for (const entry of timersRef.current.values()) {
+      if (paused) {
+        if (entry.timer !== null) window.clearTimeout(entry.timer)
+        entry.timer = null
+        entry.remainingMs = Math.max(0, entry.dueAt - Date.now())
+      } else if (entry.timer === null) {
+        armFlight(entry.shot, entry.remainingMs)
+      }
+    }
+  }, [paused])
+
+  useEffect(() => () => {
+    timersRef.current.forEach((entry) => {
+      if (entry.timer !== null) window.clearTimeout(entry.timer)
+    })
+    timersRef.current.clear()
+  }, [])
 
   const shoot = () => {
     if (!active || localShotsRef.current >= 10) return
@@ -75,12 +124,7 @@ export function PenaltyGame({
     playGameFeedback(shot.goal ? 'GOAL' : 'MISS')
     if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(24)
 
-    const timer = window.setTimeout(() => {
-      setFlights((current) => current.filter((item) => item.id !== shot.id))
-      setImpacts((current) => [...current.slice(-15), shot])
-      if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(shot.goal ? [18, 25, 18] : 45)
-    }, SHOT_FLIGHT_MS)
-    timersRef.current.push(timer)
+    armFlight(shot, SHOT_FLIGHT_MS)
   }
 
   const remaining = Math.max(0, 10 - Math.max(shots, localShotsRef.current))

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { GamePhase } from '@last-sip-derby/shared'
 import { useGameSocket } from '@/hooks/useGameSocket'
@@ -9,18 +9,48 @@ import { BettingScreen } from '@/components/screens/BettingScreen'
 import { RaceScreen } from '@/components/screens/RaceScreen'
 import { ResultsScreen } from '@/components/screens/ResultsScreen'
 import { ExperienceControls } from '@/components/ExperienceControls'
+import { RulebookViewer } from '@/components/RulebookViewer'
 
 // After the winner crosses the line, hold the race view for the photo-finish
 // celebration before cutting to the podium.
 const FINISH_HOLD_MS = 5200
 
 export default function TVPage() {
-  const { gameState, activeEvent, eventResolution, connected, startRace, resetRace, resetSession } = useGameSocket()
+  const { gameState, activeEvent, eventResolution, connected, startRace, resetRace, resetSession, setRulesOpen } = useGameSocket()
   const [displayPhase, setDisplayPhase] = useState<GamePhase | null>(null)
   const [finishHold, setFinishHold] = useState(false)
   const prevPhaseRef = useRef<GamePhase | null>(null)
+  const gameLayerRef = useRef<HTMLDivElement>(null)
+  const pausedAnimationsRef = useRef<Animation[]>([])
+  const finishTimerRef = useRef<number | null>(null)
+  const finishDeadlineRef = useRef(0)
+  const finishRemainingRef = useRef(FINISH_HOLD_MS)
+  const finishHoldRef = useRef(false)
+  const gamePausedRef = useRef(false)
 
   const phase = gameState?.phase ?? null
+  gamePausedRef.current = gameState?.isGamePaused ?? false
+
+  const completeFinishHold = useCallback(() => {
+    if (finishTimerRef.current !== null) window.clearTimeout(finishTimerRef.current)
+    finishTimerRef.current = null
+    finishHoldRef.current = false
+    setFinishHold(false)
+    setDisplayPhase('RESULTS')
+  }, [])
+
+  const armFinishHold = useCallback((durationMs: number) => {
+    finishRemainingRef.current = Math.max(0, durationMs)
+    if (finishTimerRef.current !== null) window.clearTimeout(finishTimerRef.current)
+    finishTimerRef.current = null
+    if (gamePausedRef.current) return
+    if (finishRemainingRef.current <= 0) {
+      completeFinishHold()
+      return
+    }
+    finishDeadlineRef.current = performance.now() + finishRemainingRef.current
+    finishTimerRef.current = window.setTimeout(completeFinishHold, finishRemainingRef.current)
+  }, [completeFinishHold])
 
   useEffect(() => {
     if (!phase) return
@@ -28,19 +58,55 @@ export default function TVPage() {
     prevPhaseRef.current = phase
 
     if (prev === 'RACING' && phase === 'RESULTS') {
+      finishHoldRef.current = true
       setFinishHold(true)
-      const t = setTimeout(() => {
-        setFinishHold(false)
-        setDisplayPhase('RESULTS')
-      }, FINISH_HOLD_MS)
-      return () => clearTimeout(t)
+      armFinishHold(FINISH_HOLD_MS)
+      return
     }
+    if (finishTimerRef.current !== null) window.clearTimeout(finishTimerRef.current)
+    finishTimerRef.current = null
+    finishHoldRef.current = false
+    setFinishHold(false)
     setDisplayPhase(phase)
-  }, [phase])
+  }, [armFinishHold, phase])
+
+  useEffect(() => {
+    if (!finishHoldRef.current) return
+    if (gameState?.isGamePaused) {
+      if (finishTimerRef.current !== null) {
+        finishRemainingRef.current = Math.max(0, finishDeadlineRef.current - performance.now())
+        window.clearTimeout(finishTimerRef.current)
+        finishTimerRef.current = null
+      }
+      return
+    }
+    if (finishTimerRef.current === null) armFinishHold(finishRemainingRef.current)
+  }, [armFinishHold, gameState?.isGamePaused])
+
+  useEffect(() => () => {
+    if (finishTimerRef.current !== null) window.clearTimeout(finishTimerRef.current)
+  }, [])
+
+  useEffect(() => {
+    const layer = gameLayerRef.current
+    if (!layer) return
+    if (gameState?.isGamePaused) {
+      pausedAnimationsRef.current = layer
+        .getAnimations({ subtree: true })
+        .filter((animation) => animation.playState === 'running')
+      pausedAnimationsRef.current.forEach((animation) => animation.pause())
+      return
+    }
+    pausedAnimationsRef.current.forEach((animation) => {
+      if (animation.playState === 'paused') animation.play()
+    })
+    pausedAnimationsRef.current = []
+  }, [gameState?.isGamePaused])
 
   // Hidden dev shortcuts: S = force race start, R = reset
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (gamePausedRef.current) return
       if (e.key === 's') startRace()
       if (e.key === 'r') resetRace()
     }
@@ -65,37 +131,40 @@ export default function TVPage() {
 
   return (
     <div className="relative h-full">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={showRace ? 'RACING' : displayPhase}
-          className="h-full"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.45 }}
-        >
-          {showRace ? (
-            <RaceScreen
-              state={gameState}
-              activeEvent={activeEvent}
-              eventResolution={eventResolution}
-              finished={finishHold}
-            />
-          ) : displayPhase === 'BETTING' ? (
-            <BettingScreen state={gameState} />
-          ) : displayPhase === 'RESULTS' ? (
-            <ResultsScreen state={gameState} />
-          ) : (
-            <IdleScreen state={gameState} />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <div ref={gameLayerRef} data-game-frozen={gameState.isGamePaused ? 'true' : 'false'} className="h-full">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={showRace ? 'RACING' : displayPhase}
+            className="h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45 }}
+          >
+            {showRace ? (
+              <RaceScreen
+                state={gameState}
+                activeEvent={activeEvent}
+                eventResolution={eventResolution}
+                finished={finishHold}
+              />
+            ) : displayPhase === 'BETTING' ? (
+              <BettingScreen state={gameState} />
+            ) : displayPhase === 'RESULTS' ? (
+              <ResultsScreen state={gameState} />
+            ) : (
+              <IdleScreen state={gameState} />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
       <ExperienceControls
         state={gameState}
         activeEventId={activeEvent?.id ?? null}
         showReset={!showRace}
         onResetSession={resetSession}
+        onRulesOpen={() => setRulesOpen(true)}
       />
 
       {!connected && (
@@ -103,6 +172,8 @@ export default function TVPage() {
           CONNEXION AU SERVEUR PERDUE — RECONNEXION...
         </div>
       )}
+
+      <RulebookViewer open={gameState.isRulesOpen} onClose={() => setRulesOpen(false)} />
     </div>
   )
 }

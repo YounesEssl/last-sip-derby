@@ -2,6 +2,7 @@ import type { GamePhase } from '@last-sip-derby/shared'
 
 export interface RaceAudioState {
   phase: GamePhase
+  gamePaused: boolean
   raceNumber: number
   raceProgress: number
   racePaused: boolean
@@ -91,6 +92,7 @@ export class RaceAudioDirector {
   private lastLeaderHitAt = -Infinity
   private leadChangeCount = 0
   private stopped = false
+  private globallyPaused = false
 
   constructor(private readonly onTrackChange?: (track: RaceTrackInfo | null) => void) {
     this.master.gain.value = 0.82
@@ -125,11 +127,24 @@ export class RaceAudioDirector {
     this.timer = window.setInterval(() => this.schedule(), 35)
     this.enterPhase(state.phase, state.raceNumber)
     this.updateMix(state)
-    await this.ctx.resume()
+    if (state.gamePaused) await this.pause()
+    else await this.ctx.resume()
   }
 
   async unlock() {
-    if (this.ctx.state !== 'closed') await this.ctx.resume()
+    if (!this.globallyPaused && this.ctx.state !== 'closed') await this.ctx.resume()
+  }
+
+  async pause() {
+    this.globallyPaused = true
+    if (this.ctx.state === 'running') await this.ctx.suspend()
+  }
+
+  async resume() {
+    this.globallyPaused = false
+    if (this.ctx.state === 'closed') return
+    this.nextStep = this.ctx.currentTime + 0.05
+    await this.ctx.resume()
   }
 
   stop() {
@@ -144,6 +159,12 @@ export class RaceAudioDirector {
     const prev = this.current
     this.current = next
     if (!prev) return
+
+    if (next.gamePaused !== prev.gamePaused) {
+      if (next.gamePaused) void this.pause()
+      else void this.resume()
+    }
+    if (next.gamePaused) return
 
     if (prev.phase !== next.phase) {
       this.step = 0

@@ -1,5 +1,7 @@
 export type GamePhase = 'BETTING' | 'RACING' | 'RESULTS' | 'IDLE'
 
+export type GamePauseReason = 'RULEBOOK'
+
 export type HorseAppearance = 'HORSE' | 'CAMEL' | 'MOTORCYCLE' | 'SCOOTER'
 
 export type MiniGameType = 'GRID' | 'CODE' | 'CAPITAL' | 'MAZE' | 'CLICKER' | 'ORDER' | 'PENALTY' | 'PRESSURE'
@@ -107,6 +109,10 @@ export interface GameEvent {
 
 export interface GameState {
   serverNow: number
+  isRulesOpen: boolean
+  isGamePaused: boolean
+  pausedAt: number | null
+  pauseReason: GamePauseReason | null
   phase: GamePhase
   raceNumber: number
   horses: Horse[]
@@ -146,6 +152,7 @@ export interface ClientToServerEvents {
   'dev:startRace': () => void
   'dev:resetRace': () => void
   'master:resetSession': () => void
+  'rules:setOpen': (open: boolean) => void
 }
 
 export interface ServerToClientEvents {

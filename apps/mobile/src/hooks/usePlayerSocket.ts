@@ -36,6 +36,11 @@ export function usePlayerSocket() {
   const [voteRequest, setVoteRequest] = useState<GameEvent | null>(null)
   const [eliminationNotice, setEliminationNotice] = useState<string | null>(null)
   const eliminationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const eliminationDeadlineRef = useRef(0)
+  const eliminationRemainingRef = useRef(0)
+  const eliminationNoticeRef = useRef<string | null>(null)
+  const pausedRef = useRef(false)
+  const lastStateRef = useRef<GameState | null>(null)
   // Loaded after mount: reading sessionStorage during the first render makes
   // the client HTML diverge from the server HTML (hydration error).
   const [pseudo, setPseudo] = useState<string | null>(null)
@@ -53,6 +58,24 @@ export function usePlayerSocket() {
 
     socketRef.current = socket
 
+    const clearEliminationTimer = () => {
+      if (eliminationTimerRef.current) clearTimeout(eliminationTimerRef.current)
+      eliminationTimerRef.current = null
+    }
+    const hideEliminationNotice = () => {
+      eliminationNoticeRef.current = null
+      eliminationRemainingRef.current = 0
+      setEliminationNotice(null)
+      clearEliminationTimer()
+    }
+    const armEliminationTimer = (durationMs: number) => {
+      clearEliminationTimer()
+      eliminationRemainingRef.current = Math.max(0, durationMs)
+      if (pausedRef.current || !eliminationNoticeRef.current) return
+      eliminationDeadlineRef.current = Date.now() + eliminationRemainingRef.current
+      eliminationTimerRef.current = setTimeout(hideEliminationNotice, eliminationRemainingRef.current)
+    }
+
     socket.on('connect', () => {
       setConnected(true)
       const savedPseudo = pseudo ?? sessionStorage.getItem('derby_pseudo')
@@ -64,6 +87,23 @@ export function usePlayerSocket() {
     socket.on('disconnect', () => setConnected(false))
 
     socket.on('game:stateUpdate', (state: GameState) => {
+      const previousState = lastStateRef.current
+      pausedRef.current = state.isGamePaused
+      if (state.isGamePaused && !previousState?.isGamePaused) {
+        if (eliminationTimerRef.current) {
+          eliminationRemainingRef.current = Math.max(0, eliminationDeadlineRef.current - Date.now())
+          clearEliminationTimer()
+        }
+      } else if (!state.isGamePaused && previousState?.isGamePaused) {
+        const pausedFor = Math.max(0, state.phaseStartedAt - previousState.phaseStartedAt)
+        if (pausedFor > 0) {
+          setDrinkNotification((current) => current?.deadline
+            ? { ...current, deadline: current.deadline + pausedFor }
+            : current)
+        }
+        if (eliminationNoticeRef.current) armEliminationTimer(eliminationRemainingRef.current)
+      }
+      lastStateRef.current = state
       setGameState(state)
       if (pseudo) {
         const me = state.players.find((p) => p.pseudo === pseudo)
@@ -82,7 +122,10 @@ export function usePlayerSocket() {
         }
       }
       // Clear vote/drink UI when event is resolved
-      if (!state.activeEvent) {
+      const myId = socket.id
+      if (state.activeEvent && myId && state.activeEvent.nonAffectedPlayerIds.includes(myId)) {
+        setVoteRequest(state.activeEvent)
+      } else if (!state.activeEvent) {
         setVoteRequest(null)
       }
     })
@@ -93,7 +136,7 @@ export function usePlayerSocket() {
 
     socket.on('player:drinkNotification', (data) => {
       setDrinkNotification(data)
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200])
+      if (!pausedRef.current && navigator.vibrate) navigator.vibrate([200, 100, 200])
     })
 
     socket.on('game:event', (event: GameEvent) => {
@@ -112,14 +155,14 @@ export function usePlayerSocket() {
     socket.on('game:phaseChange', () => {
       setVoteRequest(null)
       setDrinkNotification(null)
-      setEliminationNotice(null)
+      hideEliminationNotice()
     })
 
     socket.on('player:eliminated', ({ reason }) => {
+      eliminationNoticeRef.current = reason
       setEliminationNotice(reason)
-      if (eliminationTimerRef.current) clearTimeout(eliminationTimerRef.current)
-      eliminationTimerRef.current = setTimeout(() => setEliminationNotice(null), 5_000)
-      if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 500])
+      armEliminationTimer(5_000)
+      if (!pausedRef.current && navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 500])
     })
 
     socket.on('player:sessionReset', () => {
@@ -128,10 +171,11 @@ export function usePlayerSocket() {
       setPlayer(null)
       setVoteRequest(null)
       setDrinkNotification(null)
+      hideEliminationNotice()
     })
 
     return () => {
-      if (eliminationTimerRef.current) clearTimeout(eliminationTimerRef.current)
+      clearEliminationTimer()
       socket.disconnect()
     }
   }, [pseudo])
@@ -143,32 +187,41 @@ export function usePlayerSocket() {
   }, [])
 
   const placeBet = useCallback((bet: { horseId: string; amount: number }) => {
+    if (pausedRef.current) return
     socketRef.current?.emit('player:bet', bet)
   }, [])
 
   const confirmDrink = useCallback(() => {
+    if (pausedRef.current) return
     socketRef.current?.emit('player:confirmDrink')
     setDrinkNotification(null)
   }, [])
 
   const vote = useCallback((eventId: string, valid: boolean) => {
+    if (pausedRef.current) return
     socketRef.current?.emit('player:vote', { eventId, valid })
     setVoteRequest(null)
   }, [])
 
   const distributeSips = useCallback((allocations: { pseudo: string; sips: number }[]) => {
+    if (pausedRef.current) return
     socketRef.current?.emit('winner:distributeSips', allocations)
   }, [])
 
   const miniGameAction = useCallback((gameId: string, action: string, value?: number | string) => {
+    if (pausedRef.current) return
     socketRef.current?.emit('minigame:action', { gameId, action, value })
   }, [])
 
   const blackKnightKill = useCallback((horseId: string) => {
+    if (pausedRef.current) return
     socketRef.current?.emit('blackKnight:kill', { horseId })
   }, [])
 
-  const resetSession = useCallback(() => socketRef.current?.emit('master:resetSession'), [])
+  const resetSession = useCallback(() => {
+    if (pausedRef.current) return
+    socketRef.current?.emit('master:resetSession')
+  }, [])
 
   return {
     gameState,

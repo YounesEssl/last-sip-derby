@@ -6,8 +6,10 @@ import { useEffect, useRef } from 'react'
 import { drawHorse } from '../race/horse'
 import { COATS } from '../race/palette'
 
-export function RowHorse({ lane, silk, size = 64 }: { lane: number; silk: string; size?: number }) {
+export function RowHorse({ lane, silk, size = 64, paused = false }: { lane: number; silk: string; size?: number; paused?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const pausedRef = useRef(paused)
+  pausedRef.current = paused
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -17,10 +19,16 @@ export function RowHorse({ lane, silk, size = 64 }: { lane: number; silk: string
     let raf = 0
     let last = performance.now()
     let phase = Math.random()
+    let time = 0
 
     const frame = (t: number) => {
       const dt = Math.max(0, Math.min(0.05, (t - last) / 1000))
       last = t
+      if (pausedRef.current) {
+        raf = requestAnimationFrame(frame)
+        return
+      }
+      time += dt
       phase = (phase + dt * 2.1) % 1
 
       const dpr = Math.min(2, window.devicePixelRatio || 1)
@@ -43,7 +51,7 @@ export function RowHorse({ lane, silk, size = 64 }: { lane: number; silk: string
         number: lane + 1,
         phase,
         speedNorm: 0.72,
-        time: t / 1000 + lane * 1.3,
+        time: time + lane * 1.3,
         fall: 0,
         dizzy: false,
       })
