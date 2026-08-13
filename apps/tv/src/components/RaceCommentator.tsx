@@ -253,16 +253,40 @@ function bettorName(state: GameState, horse: Horse): string | null {
   return bettors[Math.abs(Math.round(horse.position * 10) + state.raceNumber) % bettors.length].pseudo
 }
 
-function useCommentLane(suppressed: boolean, raceNumber: number, cooldownMs: number) {
+function usePausableNow(paused: boolean): () => number {
+  const clockRef = useRef({ paused: false, pausedAt: 0, elapsedPauses: 0 })
+
+  useEffect(() => {
+    const wallNow = Date.now()
+    if (paused && !clockRef.current.paused) {
+      clockRef.current.paused = true
+      clockRef.current.pausedAt = wallNow
+    } else if (!paused && clockRef.current.paused) {
+      clockRef.current.elapsedPauses += Math.max(0, wallNow - clockRef.current.pausedAt)
+      clockRef.current.paused = false
+      clockRef.current.pausedAt = 0
+    }
+  }, [paused])
+
+  return useCallback(() => {
+    const currentWallTime = clockRef.current.paused ? clockRef.current.pausedAt : Date.now()
+    return currentWallTime - clockRef.current.elapsedPauses
+  }, [])
+}
+
+function useCommentLane(suppressed: boolean, paused: boolean, raceNumber: number, cooldownMs: number) {
   const queueRef = useRef<CommentMessage[]>([])
   const recentRef = useRef(new Map<string, number>())
   const recentTextRef = useRef(new Map<string, number>())
   const counterRef = useRef(0)
+  const displayDeadlineRef = useRef(0)
+  const displayRemainingRef = useRef(0)
   const [current, setCurrent] = useState<CommentMessage | null>(null)
   const [version, setVersion] = useState(0)
+  const commentNow = usePausableNow(paused)
 
   const enqueue = useCallback((message: Omit<CommentMessage, 'id' | 'createdAt'>) => {
-    const now = Date.now()
+    const now = commentNow()
     const last = recentRef.current.get(message.key) ?? 0
     const lastSameText = recentTextRef.current.get(message.text) ?? 0
     if (now - last < cooldownMs || now - lastSameText < 20_000) return false
@@ -277,7 +301,7 @@ function useCommentLane(suppressed: boolean, raceNumber: number, cooldownMs: num
       .slice(0, 5)
     setVersion((value) => value + 1)
     return true
-  }, [cooldownMs])
+  }, [commentNow, cooldownMs])
 
   useEffect(() => {
     queueRef.current = []
@@ -288,27 +312,42 @@ function useCommentLane(suppressed: boolean, raceNumber: number, cooldownMs: num
   }, [raceNumber])
 
   useEffect(() => {
-    if (suppressed || current || !queueRef.current.length) return
+    if (suppressed || paused || current || !queueRef.current.length) return
     const timer = window.setTimeout(() => {
       const next = queueRef.current.shift() ?? null
       setCurrent(next)
       setVersion((value) => value + 1)
     }, 180)
     return () => window.clearTimeout(timer)
-  }, [current, suppressed, version])
+  }, [current, paused, suppressed, version])
 
   useEffect(() => {
-    if (!current || suppressed) return
-    const timer = window.setTimeout(() => setCurrent(null), current.duration)
-    return () => window.clearTimeout(timer)
-  }, [current, suppressed])
+    if (!current) {
+      displayDeadlineRef.current = 0
+      displayRemainingRef.current = 0
+      return
+    }
+    if (suppressed || paused) return
+
+    const duration = displayRemainingRef.current > 0 ? displayRemainingRef.current : current.duration
+    displayDeadlineRef.current = Date.now() + duration
+    const timer = window.setTimeout(() => {
+      displayRemainingRef.current = 0
+      displayDeadlineRef.current = 0
+      setCurrent(null)
+    }, duration)
+    return () => {
+      window.clearTimeout(timer)
+      displayRemainingRef.current = Math.max(0, displayDeadlineRef.current - Date.now())
+    }
+  }, [current, paused, suppressed])
 
   return { current: suppressed ? null : current, enqueue }
 }
 
 export function RaceCommentator({ state, suppressed }: { state: GameState; suppressed: boolean }) {
-  const { current: mainComment, enqueue: enqueueMain } = useCommentLane(suppressed, state.raceNumber, 5_500)
-  const { current: villainComment, enqueue: enqueueVillain } = useCommentLane(suppressed, state.raceNumber, 8_000)
+  const { current: mainComment, enqueue: enqueueMain } = useCommentLane(suppressed, state.isGamePaused, state.raceNumber, 5_500)
+  const { current: villainComment, enqueue: enqueueVillain } = useCommentLane(suppressed, state.isGamePaused, state.raceNumber, 8_000)
   const snapshotsRef = useRef(new Map<string, HorseSnapshot>())
   const incidentAtRef = useRef(new Map<string, number>())
   const previousLeaderRef = useRef<string | null>(null)
@@ -318,6 +357,7 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
     FIRST: createVillainPhraseHistory(),
     LAST: createVillainPhraseHistory(),
   })
+  const commentNow = usePausableNow(state.isGamePaused)
 
   const ranking = useMemo(
     () => state.horses.filter((horse) => !horse.isEliminated).sort((a, b) => b.position - a.position),
@@ -329,15 +369,15 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
     incidentAtRef.current.clear()
     previousLeaderRef.current = null
     milestonesRef.current.clear()
-    stableLeaderRef.current = { id: null, since: Date.now(), praised: false }
+    stableLeaderRef.current = { id: null, since: commentNow(), praised: false }
     villainPhraseHistoryRef.current = {
       FIRST: createVillainPhraseHistory(),
       LAST: createVillainPhraseHistory(),
     }
-  }, [state.raceNumber])
+  }, [commentNow, state.raceNumber])
 
   useEffect(() => {
-    const now = Date.now()
+    const now = commentNow()
     const previous = snapshotsRef.current
     const next = new Map<string, HorseSnapshot>()
     const rankById = new Map(ranking.map((horse, index) => [horse.id, index]))
@@ -346,7 +386,7 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
 
     // Suppression still refreshes the baseline. Events hidden behind a modal
     // therefore never flood both queues when the race resumes.
-    const canComment = !suppressed && !state.racePaused && state.raceProgress >= 4 && state.raceProgress <= 97
+    const canComment = !suppressed && !state.isGamePaused && !state.racePaused && state.raceProgress >= 4 && state.raceProgress <= 97
 
     for (const horse of state.horses) {
       const rank = rankById.get(horse.id) ?? state.horses.length
@@ -495,7 +535,7 @@ export function RaceCommentator({ state, suppressed }: { state: GameState; suppr
     }
 
     snapshotsRef.current = next
-  }, [enqueueMain, enqueueVillain, ranking, state, suppressed])
+  }, [commentNow, enqueueMain, enqueueVillain, ranking, state, suppressed])
 
   return (
     <motion.div

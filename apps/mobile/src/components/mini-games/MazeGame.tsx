@@ -42,7 +42,7 @@ function hasFullyExited(side: MazeExitSide, size: number, x: number, y: number):
   return x + BALL_RADIUS < 0
 }
 
-export function MazeGame({ mazeIndex, active, onFinish }: { mazeIndex: number; active: boolean; onFinish: () => void }) {
+export function MazeGame({ mazeIndex, active, paused = false, onFinish }: { mazeIndex: number; active: boolean; paused?: boolean; onFinish: () => void }) {
   const layout = useMemo(() => getMazeLayout(mazeIndex), [mazeIndex])
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const joystickRef = useRef<HTMLDivElement>(null)
@@ -50,8 +50,10 @@ export function MazeGame({ mazeIndex, active, onFinish }: { mazeIndex: number; a
   const ballRef = useRef({ x: layout.start.x + 0.5, y: layout.start.y + 0.5, vx: 0, vy: 0 })
   const finishedRef = useRef(false)
   const onFinishRef = useRef(onFinish)
+  const pausedRef = useRef(paused)
   const [joystickVisual, setJoystickVisual] = useState<Vector>({ x: 0, y: 0 })
   const [finished, setFinished] = useState(false)
+  pausedRef.current = paused
 
   useEffect(() => {
     onFinishRef.current = onFinish
@@ -62,6 +64,12 @@ export function MazeGame({ mazeIndex, active, onFinish }: { mazeIndex: number; a
     finishedRef.current = false
     setFinished(false)
   }, [layout])
+
+  useEffect(() => {
+    if (!paused) return
+    joystickVectorRef.current = { x: 0, y: 0 }
+    setJoystickVisual({ x: 0, y: 0 })
+  }, [paused])
 
   useEffect(() => {
     let frame = 0
@@ -79,6 +87,14 @@ export function MazeGame({ mazeIndex, active, onFinish }: { mazeIndex: number; a
       if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
         canvas.width = pixelWidth
         canvas.height = pixelHeight
+      }
+
+      if (pausedRef.current) {
+        previous = time
+        const context = canvas.getContext('2d')
+        if (context) drawMaze(context, pixelWidth, pixelHeight, dpr, layout.cells, layout.exit, ballRef.current)
+        frame = requestAnimationFrame(render)
+        return
       }
 
       const rawDt = Math.min(0.035, Math.max(0, (time - previous) / 1000))
@@ -130,7 +146,7 @@ export function MazeGame({ mazeIndex, active, onFinish }: { mazeIndex: number; a
 
   const updateJoystick = (event: ReactPointerEvent<HTMLDivElement>) => {
     const element = joystickRef.current
-    if (!element || finished) return
+    if (!element || finished || pausedRef.current) return
     const rect = element.getBoundingClientRect()
     const rawX = event.clientX - (rect.left + rect.width / 2)
     const rawY = event.clientY - (rect.top + rect.height / 2)

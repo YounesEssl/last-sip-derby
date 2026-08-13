@@ -11,10 +11,10 @@ export function useNow(intervalMs = 250): number {
   return now
 }
 
-export function usePhaseCountdown(phaseStartedAt: number, phaseDuration: number, serverNow: number): number {
+export function usePhaseCountdown(phaseStartedAt: number, phaseDuration: number, serverNow: number, paused = false): number {
   const now = useNow(200)
   const anchor = useMemo(() => ({ server: serverNow, local: Date.now() }), [serverNow])
-  const estimatedServerNow = anchor.server + (now - anchor.local)
+  const estimatedServerNow = paused ? serverNow : anchor.server + (now - anchor.local)
   return Math.max(0, Math.ceil((phaseStartedAt + phaseDuration - estimatedServerNow) / 1000))
 }
 

@@ -40,12 +40,15 @@ function resultColor(score: number): string {
   return 'text-emerald-300'
 }
 
-export function PressureGame({ active, confirmedScore, onScore }: { active: boolean; confirmedScore?: number | null; onScore: (score: number) => void }) {
+export function PressureGame({ active, paused = false, confirmedScore, onScore }: { active: boolean; paused?: boolean; confirmedScore?: number | null; onScore: (score: number) => void }) {
   const clipId = useId().replace(/:/g, '')
-  const startedAtRef = useRef(0)
+  const elapsedRef = useRef(0)
+  const previousFrameRef = useRef(0)
+  const pausedRef = useRef(paused)
   const lockedRef = useRef(false)
   const [value, setValue] = useState(0)
   const [score, setScore] = useState<number | null>(null)
+  pausedRef.current = paused
 
   useEffect(() => {
     if (confirmedScore === null || confirmedScore === undefined || lockedRef.current) return
@@ -56,20 +59,23 @@ export function PressureGame({ active, confirmedScore, onScore }: { active: bool
   }, [confirmedScore])
 
   useEffect(() => {
-    if (active || lockedRef.current) return
+    if (paused || active || lockedRef.current) return
     lockedRef.current = true
     setValue(0)
     setScore(0)
-  }, [active])
+  }, [active, paused])
 
   useEffect(() => {
-    startedAtRef.current = performance.now()
     let frame = 0
     const tick = (time: number) => {
-      if (!lockedRef.current) {
+      if (previousFrameRef.current === 0) previousFrameRef.current = time
+      const elapsed = Math.max(0, time - previousFrameRef.current)
+      previousFrameRef.current = time
+      if (!pausedRef.current && !lockedRef.current) {
+        elapsedRef.current += elapsed
         // Quantize the visible value and the submitted score identically. The
         // modulo makes the 100 -> 0 reset immediate, with no trailing frame.
-        const next = clampAndRoundScore((((time - startedAtRef.current) % CYCLE_MS) / CYCLE_MS) * 100)
+        const next = clampAndRoundScore(((elapsedRef.current % CYCLE_MS) / CYCLE_MS) * 100)
         setValue(next)
       }
       frame = requestAnimationFrame(tick)

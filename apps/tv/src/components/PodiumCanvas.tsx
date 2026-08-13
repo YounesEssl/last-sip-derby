@@ -11,6 +11,7 @@ import { COATS } from '../race/palette'
 
 interface Props {
   top3: Horse[] // [winner, second, third]
+  paused?: boolean
 }
 
 // slot layout: [x fraction, block height fraction, horse scale, rank label]
@@ -24,8 +25,10 @@ const GOLDEN_COAT = { body: '#D9A943', dark: '#7A5518', light: '#FFE79A', mane: 
 const DIAMOND_COAT = { body: '#52B9E8', dark: '#1A6199', light: '#D8F7FF', mane: '#163C70' }
 const BLACK_COAT = { body: '#17191D', dark: '#050607', light: '#454A52', mane: '#010101' }
 
-export function PodiumCanvas({ top3 }: Props) {
+export function PodiumCanvas({ top3, paused = false }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const pausedRef = useRef(paused)
+  pausedRef.current = paused
   const horsesRef = useRef(top3)
   horsesRef.current = top3
 
@@ -49,6 +52,10 @@ export function PodiumCanvas({ top3 }: Props) {
     const frame = (t: number) => {
       const dt = Math.max(0, Math.min(0.05, (t - last) / 1000))
       last = t
+      if (pausedRef.current) {
+        raf = requestAnimationFrame(frame)
+        return
+      }
       time += dt
 
       const dpr = Math.min(2, window.devicePixelRatio || 1)

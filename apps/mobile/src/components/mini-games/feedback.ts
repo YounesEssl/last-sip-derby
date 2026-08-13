@@ -1,10 +1,18 @@
 type FeedbackKind = 'GOAL' | 'MISS' | 'LOCK' | 'SUCCESS'
 
 let audioContext: AudioContext | null = null
+let feedbackPaused = false
+
+export function setGameFeedbackPaused(paused: boolean) {
+  feedbackPaused = paused
+  if (!audioContext || audioContext.state === 'closed') return
+  if (paused && audioContext.state === 'running') void audioContext.suspend()
+  if (!paused && audioContext.state === 'suspended') void audioContext.resume()
+}
 
 /** Short, synthesized cues: no asset download and no long-lived oscillator. */
 export function playGameFeedback(kind: FeedbackKind) {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined' || feedbackPaused) return
   try {
     const AudioContextConstructor = window.AudioContext ??
       (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext

@@ -78,5 +78,9 @@ export function useGameSocket() {
 
   const resetSession = useCallback(() => socketRef.current?.emit('master:resetSession'), [])
 
-  return { gameState, activeEvent, eventResolution, connected, startRace, resetRace, resetSession }
+  const setRulesOpen = useCallback((open: boolean) => {
+    socketRef.current?.emit('rules:setOpen', open)
+  }, [])
+
+  return { gameState, activeEvent, eventResolution, connected, startRace, resetRace, resetSession, setRulesOpen }
 }

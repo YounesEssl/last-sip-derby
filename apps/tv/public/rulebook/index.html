@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Livret officiel des règles — L'Apérodrome</title>
+<link rel="stylesheet" href="./fonts.css" />
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  html { background: #d8d1c4; color-scheme: light; }
+  body { margin: 0; min-height: 100vh; }
+  x-dc, helmet { display: contents; }
+  a { color: #8c1d2c; text-decoration: none; }
+  a:hover { color: #c49a38; }
+  doc-page:not(:defined) { visibility: hidden; }
+</style>
+<script src="./doc-page.js"></script>
+<script src="./viewer.js" defer></script>
+</helmet>
+<doc-page size="a4">
+
+<section class="page" data-screen-label="Couverture" style="position:relative;overflow:hidden;background:#5e101c;color:#f7f0df;font-family:Karla,sans-serif">
+  <div style="position:absolute;inset:22px;border:2px solid #c49a38"></div>
+  <div style="position:absolute;inset:30px;border:1px solid rgba(196,154,56,.55)"></div>
+  <div style="position:absolute;left:0;right:0;top:0;height:10px;background:repeating-linear-gradient(90deg,#8c1d2c 0 22px,#5e101c 22px 44px)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;height:10px;background:repeating-linear-gradient(90deg,#8c1d2c 0 22px,#5e101c 22px 44px)"></div>
+  <div style="padding:96px 82px 0;text-align:center">
+    <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:12px;letter-spacing:.42em;color:#c49a38;text-transform:uppercase">Hippodrome depuis 1892</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 4px">
+      <span style="width:56px;border-top:1px solid #c49a38"></span>
+      <span style="width:9px;height:9px;background:#c49a38;transform:rotate(45deg)"></span>
+      <span style="width:56px;border-top:1px solid #c49a38"></span>
+    </div>
+    <h1 style="font-family:'Alfa Slab One',serif;font-weight:400;font-size:64px;line-height:1;letter-spacing:-.01em;margin:14px 0 0;color:#f7f0df;text-shadow:3px 3px 0 #c49a38">L'APÉRODROME</h1>
+    <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:14.5px;letter-spacing:.2em;color:#e8d39a;margin-top:18px;text-transform:uppercase">Courses truquées. Gorgées garanties.</div>
+
+    <div style="margin:44px 0 0;background:#f7f0df;color:#211c18;border:2px solid #c49a38;padding:26px 28px">
+      <div style="font-family:'Alfa Slab One',serif;font-size:22px;line-height:1.15;color:#8c1d2c;text-transform:uppercase">Livret officiel des règles</div>
+      <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:13px;letter-spacing:.1em;color:#6f665c;margin-top:8px;text-transform:uppercase">Cotes, pouvoirs, incidents et Défis Mignons</div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:14px;margin:38px 0 0">
+      <span style="width:56px;height:56px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:24px;display:flex;align-items:center;justify-content:center">1</span>
+      <span style="width:56px;height:56px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:24px;display:flex;align-items:center;justify-content:center">2</span>
+      <span style="width:56px;height:56px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:24px;display:flex;align-items:center;justify-content:center">3</span>
+      <span style="width:56px;height:56px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:24px;display:flex;align-items:center;justify-content:center">5</span>
+      <span style="width:56px;height:56px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:24px;display:flex;align-items:center;justify-content:center">7</span>
+    </div>
+    <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:11.5px;letter-spacing:.26em;color:#e8d39a;margin-top:20px;text-transform:uppercase">Une course. Cinq cotes. Aucune certitude.</div>
+  </div>
+
+  <div style="position:absolute;left:52px;right:52px;bottom:56px">
+    <div style="border-top:1px solid rgba(196,154,56,.5);padding-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:28px;text-align:left">
+      <div>
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.2em;color:#c49a38;text-transform:uppercase">Objet du livret</div>
+        <p style="margin:7px 0 0;font-size:12.5px;line-height:1.55;color:#f0e4cd;text-wrap:pretty">La règle jouable, les calculs de probabilité et les banques officielles, consolidés après les dernières mises à jour.</p>
+      </div>
+      <div>
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.2em;color:#c49a38;text-transform:uppercase">Version vérifiée &mdash; 13 août 2026</div>
+        <p style="margin:7px 0 0;font-size:12.5px;line-height:1.55;color:#f0e4cd;text-wrap:pretty">Jeu de soirée réservé à un cadre privé et responsable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page" data-screen-label="02" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 2</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">01</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:30px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Le jeu en 20 secondes</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">Le but est simple ; la course, beaucoup moins</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:26px 0 10px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>Le but</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <p style="margin:0;font-size:13.5px;line-height:1.6;text-wrap:pretty">Choisir un cheval, espérer qu'il gagne et survivre aux incidents. Si votre cheval gagne, vous distribuez des gorgées. S'il perd, vous buvez sa cote.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px">
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:13px 15px;position:relative">
+        <div style="position:absolute;top:0;left:0;width:26px;height:26px;background:#8c1d2c;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:12px;display:flex;align-items:center;justify-content:center">1</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c;padding-left:34px">Rejoindre</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:10px;letter-spacing:.12em;color:#a8842f;margin:2px 0 8px;padding-left:34px;text-transform:uppercase">Téléphone</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Scannez le QR code, choisissez un pseudo et entrez dans la tribune. Jusqu'à 10 joueurs actifs.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:13px 15px;position:relative">
+        <div style="position:absolute;top:0;left:0;width:26px;height:26px;background:#8c1d2c;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:12px;display:flex;align-items:center;justify-content:center">2</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c;padding-left:34px">Parier</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:10px;letter-spacing:.12em;color:#a8842f;margin:2px 0 8px;padding-left:34px;text-transform:uppercase">40 secondes</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Une course aligne toujours 5 chevaux : une cote 1, une cote 2, une cote 3, une cote 5 et une cote 7. Le pari peut être modifié avant fermeture.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:13px 15px;position:relative">
+        <div style="position:absolute;top:0;left:0;width:26px;height:26px;background:#8c1d2c;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:12px;display:flex;align-items:center;justify-content:center">3</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c;padding-left:34px">Regarder</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:10px;letter-spacing:.12em;color:#a8842f;margin:2px 0 8px;padding-left:34px;text-transform:uppercase">60 secondes</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">La course se déroule sur la TV. Pouvoirs, foudre, incidents et éventuellement un Défi Mignon peuvent tout renverser.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:13px 15px;position:relative">
+        <div style="position:absolute;top:0;left:0;width:26px;height:26px;background:#8c1d2c;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:12px;display:flex;align-items:center;justify-content:center">4</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c;padding-left:34px">Régler</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:10px;letter-spacing:.12em;color:#a8842f;margin:2px 0 8px;padding-left:34px;text-transform:uppercase">Résultats</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Le gagnant distribue. Les autres boivent. Le tableau cumule les gorgées bues et données pendant la soirée.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:22px;background:#5e101c;border:1px solid #c49a38;padding:16px 18px;display:flex;gap:18px;align-items:flex-start">
+      <span style="flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:2px solid #c49a38;color:#e8d39a;font-family:Oswald,sans-serif;font-weight:600;font-size:9px;letter-spacing:.08em;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.1">RÈGLE D'OR</span>
+      <div>
+        <div style="font-family:'Alfa Slab One',serif;font-size:15px;color:#f4e7bc;text-transform:uppercase">La cote est un risque</div>
+        <p style="margin:6px 0 0;font-size:12.5px;line-height:1.55;color:#f0e4cd;text-wrap:pretty">Cote élevée : plus à boire en cas de défaite, mais plus à distribuer en cas de victoire. La cote n'est jamais une garantie de classement.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;border:1px dashed #c49a38;background:#fdf8ea;padding:14px 16px">
+      <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8c1d2c">Jeu responsable</div>
+      <p style="margin:6px 0 0;font-size:12px;line-height:1.55;color:#3a332c;text-wrap:pretty">Les « gorgées » sont des unités de jeu. Elles peuvent être remplacées par une boisson sans alcool, des points ou des défis. Personne ne doit être poussé à boire ; chacun peut passer, ralentir ou arrêter. Sans ticket sur une course, le joueur reste spectateur et ne subit aucun dégât.</p>
+    </div>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">2</span>
+  </div>
+</section>
+<section class="page" data-screen-label="03" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 3</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">02</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:30px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Cotes et gorgées</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">Les montants exacts, sans calcul à faire pendant la partie</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:26px 0 10px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>Barème officiel</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #c49a38">
+      <thead>
+        <tr>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:left;border-right:1px solid rgba(247,240,223,.28)">Cheval</th>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Défaite :<br />boit</th>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Victoire normale :<br />donne</th>
+          <th style="background:#8c1d2c;color:#e8d39a;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Doré :<br />donne</th>
+          <th style="background:#8c1d2c;color:#dce8ef;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Diamant :<br />donne</th>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:right">Repère théorique</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:600;font-size:12px;color:#8c1d2c">Cote 1</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px">1</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px">2</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;background:rgba(196,154,56,.13)">3</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;background:rgba(45,88,112,.09)">5</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:right;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">45,95 %</td>
+        </tr>
+        <tr>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:600;font-size:12px;color:#8c1d2c">Cote 2</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px">2</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px">4</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;background:rgba(196,154,56,.13)">6</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;background:rgba(45,88,112,.09)">10</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:right;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">22,98 %</td>
+        </tr>
+        <tr>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:600;font-size:12px;color:#8c1d2c">Cote 3</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px">3</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px">6</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;background:rgba(196,154,56,.13)">9</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;background:rgba(45,88,112,.09)">15</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:right;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">15,32 %</td>
+        </tr>
+        <tr>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:600;font-size:12px;color:#8c1d2c">Cote 5</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px">5</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px">10</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;background:rgba(196,154,56,.13)">15</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;background:rgba(45,88,112,.09)">25</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:right;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">9,19 %</td>
+        </tr>
+        <tr>
+          <td style="padding:9px 10px;font-family:Oswald,sans-serif;font-weight:600;font-size:12px;color:#8c1d2c">Cote 7</td>
+          <td style="padding:9px 10px;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px">7</td>
+          <td style="padding:9px 10px;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px">14</td>
+          <td style="padding:9px 10px;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;background:rgba(196,154,56,.13)">21</td>
+          <td style="padding:9px 10px;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-size:14px;background:rgba(45,88,112,.09)">35</td>
+          <td style="padding:9px 10px;text-align:right;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">6,56 %</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:13px 15px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8c1d2c">Lecture</div>
+        <p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Exemple : jouer une cote 5 signifie boire 5 gorgées si elle perd ; distribuer 10 si elle gagne, 15 si elle est dorée et 25 si elle est diamant.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:13px 15px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8c1d2c">Distribution</div>
+        <p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Chaque parieur gagnant reçoit son propre total à distribuer. Il choisit les destinataires et la répartition sur son téléphone jusqu'à épuiser exactement ce total.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 10px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>D'où viennent les pourcentages ?</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <p style="margin:0;font-size:12.5px;line-height:1.6;text-wrap:pretty">Le moteur public ne fixe pas un pourcentage officiel de victoire par cote. Le repère ci-dessus est la conversion mathématique classique des cotes en poids inverses : poids = 1 / cote, puis normalisation pour obtenir 100 %. Il sert à comprendre la hiérarchie du risque ; ce n'est pas une promesse du moteur.</p>
+    <div style="margin-top:12px;background:#211c18;color:#f4e7bc;border-left:4px solid #c49a38;padding:12px 16px;font-family:Oswald,sans-serif;font-weight:400;font-size:13px;letter-spacing:.04em">Formule : P(cote c) = (1/c) / [1 + 1/2 + 1/3 + 1/5 + 1/7].</div>
+    <p style="margin:12px 0 0;font-size:11.5px;line-height:1.55;color:#6f665c;text-wrap:pretty">En course, la chance réelle évolue avec la vitesse aléatoire, les boosts, la foudre, les éliminations, le demi-tour et les actions du Cavalier noir.</p>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">3</span>
+  </div>
+</section>
+
+<section class="page" data-screen-label="04" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 4</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">03</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:30px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Probabilités de tirage</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">Toujours distinguer : par cheval, par course et conditionnel</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 10px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>Tirages effectués pour chaque cheval</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #c49a38">
+      <thead>
+        <tr>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:left;border-right:1px solid rgba(247,240,223,.28)">Effet</th>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Tirage</th>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Sur 1 cheval</th>
+          <th style="background:#8c1d2c;color:#e8d39a;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Au moins 1 sur les 5</th>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:left">Conséquence</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;font-weight:700">Jockey qui tombe</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">1/35</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">2,86 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">13,49 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1">+5 % à partir de la chute</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;font-weight:700">Chameau</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">1/30</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">3,33 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">15,59 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1">Visuel seulement ; 0 % de boost</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;font-weight:700">Moto cross</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">1/30</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">3,33 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">15,59 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1">+3,5 % de vitesse</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;font-weight:700">Course à l'envers</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">1/40</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">2,50 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">11,89 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1">Le cheval repart vers l'arrière</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;font-weight:700;color:#a8842f">Cheval doré</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">1/30</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">3,33 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">15,59 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1">Victoire : distribution x3</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;font-weight:700;color:#2d5870">Cheval diamant</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">1/60</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">1,67 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">8,06 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1">Victoire : distribution x5</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;font-weight:700;color:#211c18">Cavalier noir</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">1/35</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">2,86 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">13,49 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1">2 coups de hache ; risque x3</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px;font-weight:700">Adrien Hourmand</td>
+          <td style="padding:8px 10px;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">1/50</td>
+          <td style="padding:8px 10px;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">2,00 %</td>
+          <td style="padding:8px 10px;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">9,61 %</td>
+          <td style="padding:8px 10px">+6,5 % de vitesse</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:12px;border:1px solid #ded4c1;background:#fdf8ea;padding:12px 15px">
+      <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8c1d2c">Comment lire</div>
+      <p style="margin:5px 0 0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">« 1/30 par cheval » signifie cinq tirages indépendants dans une course. La chance d'en voir au moins un parmi cinq vaut 1 - (29/30)^5 = 15,59 %.</p>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 10px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>Tirages globaux par course</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #c49a38">
+      <thead>
+        <tr>
+          <th style="background:#5e101c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:left;border-right:1px solid rgba(247,240,223,.28)">Événement</th>
+          <th style="background:#5e101c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Probabilité</th>
+          <th style="background:#5e101c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:left">Portée</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;font-weight:700">Orage / foudre</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600">1/8 = 12,5 %</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1">Un seul tirage pour toute la course</td>
+        </tr>
+        <tr>
+          <td style="padding:9px 10px;font-weight:700">Défi Mignon</td>
+          <td style="padding:9px 10px;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600">1/2 = 50 %</td>
+          <td style="padding:9px 10px">Un seul tirage pour toute la course</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin:12px 0 0;font-size:11.5px;line-height:1.55;color:#6f665c;text-wrap:pretty">Les tirages sont indépendants et peuvent se cumuler. Un même participant visuel peut donc combiner plusieurs skins ou effets.</p>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">4</span>
+  </div>
+</section>
+<section class="page" data-screen-label="05" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 5</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">04</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:30px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Pouvoirs et skins</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">Ce qui change la course, et ce qui ne change que son apparence</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:26px">
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px;border-top:4px solid #8c1d2c">
+        <div style="font-family:'Alfa Slab One',serif;font-size:14px;color:#8c1d2c;text-transform:uppercase">Jockey à terre</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.12em;color:#a8842f;margin:5px 0 8px;text-transform:uppercase">1/35 par cheval &nbsp;|&nbsp; +5 %</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">La chute survient à un moment aléatoire. Le boost de 5 % commence exactement à cet instant ; il ne s'applique jamais rétroactivement depuis le départ.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px;border-top:4px solid #6f665c">
+        <div style="font-family:'Alfa Slab One',serif;font-size:14px;color:#8c1d2c;text-transform:uppercase">Chameau</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.12em;color:#a8842f;margin:5px 0 8px;text-transform:uppercase">1/30 par cheval &nbsp;|&nbsp; +0 %</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Remplace visuellement le cheval dès le départ. Il ne modifie ni vitesse, ni endurance, ni chance de gagner. C'est un skin purement cosmétique.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px;border-top:4px solid #2f6b55">
+        <div style="font-family:'Alfa Slab One',serif;font-size:14px;color:#8c1d2c;text-transform:uppercase">Moto cross</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.12em;color:#a8842f;margin:5px 0 8px;text-transform:uppercase">1/30 par cheval &nbsp;|&nbsp; +3,5 %</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Remplace le cheval par une moto cross et ajoute 3,5 % à sa vitesse. Le bonus est léger mais réel.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px;border-top:4px solid #c49a38">
+        <div style="font-family:'Alfa Slab One',serif;font-size:14px;color:#8c1d2c;text-transform:uppercase">Adrien Hourmand</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.12em;color:#a8842f;margin:5px 0 8px;text-transform:uppercase">1/50 par cheval &nbsp;|&nbsp; +6,5 %</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Adrien Hourmand apparaît en trottinette. Son avantage de vitesse est de 6,5 %.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px;border-top:4px solid #2d5870">
+        <div style="font-family:'Alfa Slab One',serif;font-size:14px;color:#8c1d2c;text-transform:uppercase">Course à l'envers</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.12em;color:#a8842f;margin:5px 0 8px;text-transform:uppercase">1/40 par cheval</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Le concurrent fait demi-tour et continue réellement dans l'autre sens. Le radar et l'aperçu mobile doivent afficher cette orientation. Il peut ne jamais franchir l'arrivée.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px;border-top:4px solid #211c18">
+        <div style="font-family:'Alfa Slab One',serif;font-size:14px;color:#8c1d2c;text-transform:uppercase">Cumul des skins</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.12em;color:#a8842f;margin:5px 0 8px;text-transform:uppercase">Tirages indépendants</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Les effets peuvent se superposer. Exemple : une moto, un chameau ou Hourmand peut aussi devenir Cavalier noir ; le véhicule et le personnage fusionnent visuellement.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;background:#5e101c;border:1px solid #c49a38;padding:16px 18px">
+      <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#c49a38">À ne pas confondre</div>
+      <div style="font-family:'Alfa Slab One',serif;font-size:15px;color:#f4e7bc;text-transform:uppercase;margin-top:6px">Deux chutes de jockey</div>
+      <p style="margin:6px 0 0;font-size:12.5px;line-height:1.55;color:#f0e4cd;text-wrap:pretty">Chute aléatoire du skin = boost +5 %. Jockey retiré après l'élimination d'un parieur au Défi Mignon = information visuelle seulement, sans boost.</p>
+    </div>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">5</span>
+  </div>
+</section>
+
+<section class="page" data-screen-label="06" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 6</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">05</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:28px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Jackpots et Cavalier noir</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">Les gros multiplicateurs et le pouvoir le plus dangereux</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 10px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>Cheval doré et cheval diamant</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #c49a38">
+      <thead>
+        <tr>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:left;border-right:1px solid rgba(247,240,223,.28)">Skin</th>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Tirage</th>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Performance</th>
+          <th style="background:#8c1d2c;color:#e8d39a;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Si victoire</th>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:left">Si les deux se cumulent</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:600;color:#a8842f;text-transform:uppercase;font-size:12px">Doré</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">1/30 par cheval</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;color:#6f665c">Aucun boost</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-weight:700;background:rgba(196,154,56,.13)">Distribue 3 x la cote</td>
+          <td style="padding:9px 10px;border-bottom:1px solid #ded4c1">Le diamant prend priorité</td>
+        </tr>
+        <tr>
+          <td style="padding:9px 10px;font-family:Oswald,sans-serif;font-weight:600;color:#2d5870;text-transform:uppercase;font-size:12px">Diamant</td>
+          <td style="padding:9px 10px;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">1/60 par cheval</td>
+          <td style="padding:9px 10px;text-align:center;color:#6f665c">Aucun boost</td>
+          <td style="padding:9px 10px;text-align:center;font-weight:700;background:rgba(45,88,112,.1)">Distribue 5 x la cote</td>
+          <td style="padding:9px 10px">Multiplicateur x5</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 12px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:#211c18">
+      <span style="width:9px;height:9px;background:#211c18;transform:rotate(45deg)"></span><span>Cavalier noir</span><span style="flex:1;border-top:1px solid #211c18"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div style="background:#211c18;border:1px solid #c49a38;padding:13px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#c49a38">Tirage</div>
+        <div style="font-family:'Alfa Slab One',serif;font-size:12.5px;color:#f7f0df;text-transform:uppercase;margin:4px 0 7px">1/35 par cheval</div>
+        <p style="margin:0;font-size:11.5px;line-height:1.5;color:#ded4c1;text-wrap:pretty">Un cheval noir aux yeux rouges, monté par un chevalier en armure avec une hache. L'interface du joueur qui le contrôle devient noire.</p>
+      </div>
+      <div style="background:#211c18;border:1px solid #c49a38;padding:13px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#c49a38">Pouvoir actif</div>
+        <div style="font-family:'Alfa Slab One',serif;font-size:12.5px;color:#f7f0df;text-transform:uppercase;margin:4px 0 7px">2 coups de hache</div>
+        <p style="margin:0;font-size:11.5px;line-height:1.5;color:#ded4c1;text-wrap:pretty">Il peut éliminer deux autres chevaux encore en course, à n'importe quel moment. Le joueur choisit une cible par couleur sur le radar et confirme. Le cheval ciblé tombe immédiatement ; aucun vote.</p>
+      </div>
+      <div style="background:#211c18;border:1px solid #c49a38;padding:13px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#c49a38">Recharge</div>
+        <div style="font-family:'Alfa Slab One',serif;font-size:12.5px;color:#f7f0df;text-transform:uppercase;margin:4px 0 7px">15 secondes</div>
+        <p style="margin:0;font-size:11.5px;line-height:1.5;color:#ded4c1;text-wrap:pretty">Après le premier coup, le radar est bloqué pendant 15 secondes. Le second peut être conservé et utilisé plus tard.</p>
+      </div>
+      <div style="background:#211c18;border:1px solid #c49a38;padding:13px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#c49a38">Sans parieur</div>
+        <div style="font-family:'Alfa Slab One',serif;font-size:12.5px;color:#f7f0df;text-transform:uppercase;margin:4px 0 7px">Action automatique</div>
+        <p style="margin:0;font-size:11.5px;line-height:1.5;color:#ded4c1;text-wrap:pretty">Si personne n'a parié sur le Cavalier noir, le serveur choisit quand même une cible au hasard pendant la course.</p>
+      </div>
+      <div style="background:#211c18;border:1px solid #c49a38;padding:13px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#c49a38">Victoire</div>
+        <div style="font-family:'Alfa Slab One',serif;font-size:12.5px;color:#f7f0df;text-transform:uppercase;margin:4px 0 7px">Gain normal</div>
+        <p style="margin:0;font-size:11.5px;line-height:1.5;color:#ded4c1;text-wrap:pretty">S'il gagne, ses parieurs distribuent 2 x la cote, sauf s'il porte aussi un skin doré ou diamant.</p>
+      </div>
+      <div style="background:#8c1d2c;border:1px solid #c49a38;padding:13px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#e8d39a">Retour de flamme</div>
+        <div style="font-family:'Alfa Slab One',serif;font-size:12.5px;color:#f7f0df;text-transform:uppercase;margin:4px 0 7px">Boit 3 x la cote</div>
+        <p style="margin:0;font-size:11.5px;line-height:1.5;color:#f0e4cd;text-wrap:pretty">Le parieur du Cavalier noir boit 3 x sa cote s'il termine dernier OU s'il ne franchit pas la ligne : foudre, mini-jeu, incident, demi-tour ou autre élimination.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;border:1px dashed #c49a38;background:#fdf8ea;padding:14px 16px">
+      <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8c1d2c">Qui boit x3 ?</div>
+      <p style="margin:6px 0 0;font-size:12px;line-height:1.55;color:#3a332c;text-wrap:pretty">Uniquement le joueur qui avait parié sur le Cavalier noir. La victime de la hache n'hérite pas de cette pénalité.</p>
+    </div>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">6</span>
+  </div>
+</section>
+<section class="page" data-screen-label="07" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 7</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">06</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:30px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Orage et incidents</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">Quand la course s'arrête et que le public devient juge</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 10px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>L'orage</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <p style="margin:0;font-size:13px;line-height:1.6;text-wrap:pretty">Probabilité d'apparition : 1/8 par course, soit 12,5 %. Lorsqu'il est tiré, l'écran s'assombrit, la foudre frappe des chevaux choisis aléatoirement et les élimine immédiatement.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #c49a38;margin-top:14px">
+      <thead>
+        <tr>
+          <th style="background:#211c18;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:left;border-right:1px solid rgba(247,240,223,.28)">Chevaux foudroyés</th>
+          <th style="background:#211c18;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center;border-right:1px solid rgba(247,240,223,.28)">Chance conditionnelle si orage</th>
+          <th style="background:#211c18;color:#e8d39a;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;text-align:center">Chance par course</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;font-weight:700">1 cheval</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">67 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">8,375 %</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;font-weight:700">2 chevaux</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">25 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">3,125 %</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;font-weight:700">3 chevaux</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">5 %</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #ded4c1;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">0,625 %</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px;font-weight:700">4 chevaux</td>
+          <td style="padding:8px 10px;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums">3 %</td>
+          <td style="padding:8px 10px;text-align:center;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(196,154,56,.13)">0,375 %</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin:12px 0 0;font-size:12px;line-height:1.55;color:#3a332c;text-wrap:pretty">En moyenne, un orage élimine 1,44 cheval. La chance d'orage reste 12,5 %, quel que soit le nombre finalement touché.</p>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 12px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>Incidents « à boire »</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:13px 15px;border-left:4px solid #8c1d2c">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#6f665c">Fréquence</div>
+        <div style="font-family:'Alfa Slab One',serif;font-size:13px;color:#8c1d2c;text-transform:uppercase;margin:3px 0 7px">0 à 2 par course</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Le déclenchement exact reste aléatoire. Un incident ne peut survenir qu'entre 13 s et 46 s de course, avec au moins 14 s entre deux incidents.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:13px 15px;border-left:4px solid #8c1d2c">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#6f665c">Sanction</div>
+        <div style="font-family:'Alfa Slab One',serif;font-size:13px;color:#8c1d2c;text-transform:uppercase;margin:3px 0 7px">1 gorgée</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Tous les joueurs ayant parié sur le cheval concerné doivent boire une gorgée pendant l'incident.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:13px 15px;border-left:4px solid #c49a38">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#6f665c">Vote du public</div>
+        <div style="font-family:'Alfa Slab One',serif;font-size:13px;color:#8c1d2c;text-transform:uppercase;margin:3px 0 7px">30 secondes</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Les joueurs non concernés votent « ont bu » ou « pas bu ». Le résultat du vote sauve le cheval ou l'élimine.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:13px 15px;border-left:4px solid #c49a38">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#6f665c">Banque narrative</div>
+        <div style="font-family:'Alfa Slab One',serif;font-size:13px;color:#8c1d2c;text-transform:uppercase;margin:3px 0 7px">49 entrées</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Chaque entrée ordinaire pèse 1/49. « Spectateur bourré » et « dindon » apparaissent deux fois : chacun pèse 2/49 dans le choix du texte.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;background:#5e101c;border:1px solid #c49a38;padding:15px 17px">
+      <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#c49a38">Précision honnête</div>
+      <p style="margin:6px 0 0;font-size:12.5px;line-height:1.55;color:#f0e4cd;text-wrap:pretty">Le client public révèle le maximum, les délais et la banque de 49 entrées, mais pas la probabilité serveur exacte qu'un incident se déclenche. Le livret ne lui attribue donc pas de faux pourcentage.</p>
+    </div>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">7</span>
+  </div>
+</section>
+
+<section class="page" data-screen-label="08" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 8</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">07</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:30px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Défis Mignons 1 à 4</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">Un tirage par course : 1/2, soit 50 %</div>
+      </div>
+    </div>
+
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;text-wrap:pretty">La course se met en pause. Tous les joueurs concernés jouent simultanément sur leur téléphone. Le dernier ou le moins bon est éliminé selon le mini-jeu.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px">
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px;position:relative">
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-family:'Alfa Slab One',serif;font-size:20px;color:#c49a38">1</span>
+          <span style="font-family:'Alfa Slab One',serif;font-size:15px;color:#8c1d2c;text-transform:uppercase">La grille</span>
+        </div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.14em;color:#6f665c;margin:4px 0 8px;text-transform:uppercase">20 s &nbsp;|&nbsp; 36 cases</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Trouver le nombre cible dans une grille 6 x 6 mélangée. Une erreur ne pénalise pas mais fait perdre du temps. Le dernier à trouver, ou ceux qui n'ont pas fini, perdent.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px">
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-family:'Alfa Slab One',serif;font-size:20px;color:#c49a38">2</span>
+          <span style="font-family:'Alfa Slab One',serif;font-size:15px;color:#8c1d2c;text-transform:uppercase">Le code</span>
+        </div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.14em;color:#6f665c;margin:4px 0 8px;text-transform:uppercase">25 s &nbsp;|&nbsp; multiplication</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Résoudre une multiplication de 1 à 12 puis saisir le résultat au pavé numérique. La validation est automatique au bon résultat. Le dernier ou les non-répondants perdent.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px">
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-family:'Alfa Slab One',serif;font-size:20px;color:#c49a38">3</span>
+          <span style="font-family:'Alfa Slab One',serif;font-size:15px;color:#8c1d2c;text-transform:uppercase">Les capitales</span>
+        </div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.14em;color:#6f665c;margin:4px 0 8px;text-transform:uppercase">20 s &nbsp;|&nbsp; 2 vies</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Choisir la bonne capitale parmi quatre réponses, sans emoji. Une erreur retire une vie ; la deuxième élimine immédiatement. Tirage des questions : facile 60 %, intermédiaire/piège 30 %, difficile 10 %.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px">
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-family:'Alfa Slab One',serif;font-size:20px;color:#c49a38">4</span>
+          <span style="font-family:'Alfa Slab One',serif;font-size:15px;color:#8c1d2c;text-transform:uppercase">Le labyrinthe</span>
+        </div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.14em;color:#6f665c;margin:4px 0 8px;text-transform:uppercase">60 s &nbsp;|&nbsp; 50 circuits</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Tous jouent le même labyrinthe 23 x 23. Une bille lourde, avec inertie, se pilote au joystick. Franchir la sortie ; cible de conception autour de 30 s. Les non-sortis au chrono perdent.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 12px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>Conséquence sur le pari</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="background:#8c1d2c;border:1px solid #c49a38;padding:13px 15px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#e8d39a">Un seul parieur</div>
+        <p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:#f7f0df;text-wrap:pretty">Si le perdant était seul sur son cheval, le cheval tombe et est éliminé.</p>
+      </div>
+      <div style="background:#211c18;border:1px solid #c49a38;padding:13px 15px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#c49a38">Plusieurs parieurs</div>
+        <p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:#f0e4cd;text-wrap:pretty">Seul le pari du perdant est éliminé. Le cheval continue ; son jockey disparaît visuellement, sans bonus de vitesse.</p>
+      </div>
+    </div>
+    <div style="margin-top:12px;border:1px dashed #c49a38;background:#fdf8ea;padding:13px 15px">
+      <p style="margin:0;font-size:12px;line-height:1.55;color:#3a332c;text-wrap:pretty">Un joueur éliminé au mini-jeu boit la cote de son cheval aux résultats, même si ce cheval gagne ensuite pour les autres parieurs.</p>
+    </div>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">8</span>
+  </div>
+</section>
+<section class="page" data-screen-label="09" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 9</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">08</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:30px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Défis Mignons 5 à 8</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">Score, précision et sang-froid</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px">
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px">
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-family:'Alfa Slab One',serif;font-size:20px;color:#c49a38">5</span>
+          <span style="font-family:'Alfa Slab One',serif;font-size:15px;color:#8c1d2c;text-transform:uppercase">Le clicker</span>
+        </div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.14em;color:#6f665c;margin:4px 0 8px;text-transform:uppercase">10 s &nbsp;|&nbsp; max. 300</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Taper le plus de fois possible. Le plus petit score est éliminé ; tous les derniers ex aequo sont éliminés. Le classement évolue en direct sur la TV.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px">
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-family:'Alfa Slab One',serif;font-size:20px;color:#c49a38">6</span>
+          <span style="font-family:'Alfa Slab One',serif;font-size:15px;color:#8c1d2c;text-transform:uppercase">La suite</span>
+        </div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.14em;color:#6f665c;margin:4px 0 8px;text-transform:uppercase">45 s &nbsp;|&nbsp; de 1 à 16</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Toucher les nombres mélangés dans l'ordre exact de 1 à 16. Un mauvais nombre est ignoré. Le dernier à finir ou ceux qui n'ont pas terminé perdent.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px">
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-family:'Alfa Slab One',serif;font-size:20px;color:#c49a38">7</span>
+          <span style="font-family:'Alfa Slab One',serif;font-size:15px;color:#8c1d2c;text-transform:uppercase">Les tirs au but</span>
+        </div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.14em;color:#6f665c;margin:4px 0 8px;text-transform:uppercase">30 s &nbsp;|&nbsp; 10 ballons</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Le ballon mobile ne s'arrête jamais. Touchez l'écran pour tirer : animation rapide, trace verte ou rouge. Le centre du ballon doit être entre 36 % et 64 % de la largeur. Les tirs non joués valent ratés. Plus petit total éliminé ; égalité basse = tous éliminés.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:14px 16px">
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-family:'Alfa Slab One',serif;font-size:20px;color:#c49a38">8</span>
+          <span style="font-family:'Alfa Slab One',serif;font-size:15px;color:#8c1d2c;text-transform:uppercase">La jauge</span>
+        </div>
+        <div style="font-family:Oswald,sans-serif;font-weight:500;font-size:10px;letter-spacing:.14em;color:#6f665c;margin:4px 0 8px;text-transform:uppercase">15 s &nbsp;|&nbsp; 1 essai</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Une jauge conique monte très vite puis revient instantanément à 0 à 100 %. Un seul clic verrouille le score au dixième. Aucun clic = 0 %. Plus petit score éliminé ; égalité basse = tous éliminés.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:26px 0 12px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>Messages de la jauge</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #c49a38">
+      <thead>
+        <tr>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:8px 12px;text-align:left;width:26%;border-right:1px solid rgba(247,240,223,.28)">Score</th>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:8px 12px;text-align:left">Message</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">Moins de 20 %</td><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-weight:700">Ptdrrr la honte</td></tr>
+        <tr><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">20 à 39,9 %</td><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-weight:700">T'es vraiment mauvais</td></tr>
+        <tr><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">40 à 59,9 %</td><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-weight:700">C'est moyen tout ça chef</td></tr>
+        <tr><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">60 à 79,9 %</td><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-weight:700">Pas trop mal</td></tr>
+        <tr><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">80 à 89,9 %</td><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-weight:700">Bien !</td></tr>
+        <tr><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">90 à 94,9 %</td><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-weight:700;color:#8c1d2c">Excellent !!</td></tr>
+        <tr><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">95 à 97,9 %</td><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-weight:700;color:#8c1d2c">INCROYABLE !!!</td></tr>
+        <tr><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#6f665c">98 à 99,9 %</td><td style="padding:6px 12px;border-bottom:1px solid #ded4c1;font-weight:700;color:#8c1d2c">C'est EXCEPTIONNEL.</td></tr>
+        <tr><td style="padding:6px 12px;font-family:Oswald,sans-serif;font-variant-numeric:tabular-nums;color:#211c18;font-weight:600;background:rgba(196,154,56,.16)">100 %</td><td style="padding:6px 12px;font-family:'Alfa Slab One',serif;font-size:12.5px;color:#8c1d2c;background:rgba(196,154,56,.16)">TU ES LE GOAT</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">9</span>
+  </div>
+</section>
+
+<section class="page" data-screen-label="10" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 10</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">09</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:28px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Arbitrage et cas limites</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">La page à ouvrir quand la table commence à contester</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 10px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>Égalités des mini-jeux</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #c49a38">
+      <thead>
+        <tr>
+          <th style="background:#211c18;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 12px;text-align:left;width:30%;border-right:1px solid rgba(247,240,223,.28)">Jeux</th>
+          <th style="background:#211c18;color:#e8d39a;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 12px;text-align:left">Règle effective</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:9px 12px;border-bottom:1px solid #ded4c1;font-weight:700">Grille, code, capitales, labyrinthe, suite</td>
+          <td style="padding:9px 12px;border-bottom:1px solid #ded4c1">Tous les non-qualifiés au chrono perdent. Si tout le monde finit, le dernier temps perd. Si toute la table a un état strictement identique, aucune élimination.</td>
+        </tr>
+        <tr>
+          <td style="padding:9px 12px;border-bottom:1px solid #ded4c1;font-weight:700">Clicker</td>
+          <td style="padding:9px 12px;border-bottom:1px solid #ded4c1">Tous les joueurs au plus petit score perdent. Si toute la table termine dans un état strictement identique, aucune élimination.</td>
+        </tr>
+        <tr>
+          <td style="padding:9px 12px;font-weight:700">Tirs au but et jauge</td>
+          <td style="padding:9px 12px">Tous les joueurs au plus petit score perdent, y compris si toute la table partage ce score minimum.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:26px 0 12px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>Rappels qui évitent les litiges</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:12px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c">Pari modifiable</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.12em;color:#a8842f;margin:2px 0 6px;text-transform:uppercase">Avant fermeture</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Le pari peut être changé tant que la phase de pari n'est pas fermée.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:12px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c">Cinq cotes</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.12em;color:#a8842f;margin:2px 0 6px;text-transform:uppercase">À chaque course</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Chaque course aligne exactement une cote 1, 2, 3, 5 et 7.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:12px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c">Cheval éliminé</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.12em;color:#a8842f;margin:2px 0 6px;text-transform:uppercase">Hors course</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Il ne peut plus gagner. Ses parieurs règlent la défaite selon la règle applicable.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:12px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c">Personne sur le gagnant</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.12em;color:#a8842f;margin:2px 0 6px;text-transform:uppercase">Aucun distributeur</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Aucun joueur ne distribue ; la TV annonce que toute la table trinque.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:12px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c">Doré + diamant</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.12em;color:#a8842f;margin:2px 0 6px;text-transform:uppercase">Priorité diamant</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Le multiplicateur diamant x5 prend le dessus sur le doré x3.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:12px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c">Cavalier noir</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.12em;color:#a8842f;margin:2px 0 6px;text-transform:uppercase">Sans vote</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">La hache élimine sans vote. Le retour de flamme x3 vise son propre parieur, pas sa victime.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:12px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c">Jockey +5 %</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.12em;color:#a8842f;margin:2px 0 6px;text-transform:uppercase">Après la chute</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Le bonus commence à la chute aléatoire seulement. Le jockey visuel retiré par mini-jeu ne donne aucun bonus.</p>
+      </div>
+      <div style="border:1px solid #ded4c1;background:#fdf8ea;padding:12px 14px">
+        <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c1d2c">Chameau</div>
+        <div style="font-family:Oswald,sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.12em;color:#a8842f;margin:2px 0 6px;text-transform:uppercase">Cosmétique</div>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#3a332c;text-wrap:pretty">Il n'améliore jamais la performance, même si son apparence semble plus imposante.</p>
+      </div>
+    </div>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">10</span>
+  </div>
+</section>
+<section class="page" data-screen-label="11" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 11</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">10</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:30px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Écurie officielle</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">85 noms verrouillés par cote &mdash; 17 noms par groupe</div>
+      </div>
+    </div>
+
+    <div style="margin-top:26px;border:1px solid #ded4c1">
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#8c1d2c;padding:9px 14px">
+        <span style="font-family:'Alfa Slab One',serif;font-size:16px;color:#f7f0df;text-transform:uppercase;letter-spacing:.02em">Favoris</span>
+        <span style="font-family:Oswald,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.18em;color:#e8d39a;text-transform:uppercase">Cote 1</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;column-gap:28px;padding:10px 14px 12px;background:#fdf8ea">
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">01</span><span>L'arracheur de piste</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">02</span><span>Sabot doré</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">03</span><span>Le péteur fou</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">04</span><span>Le génie d'la lampe</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">05</span><span>La fusée</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">06</span><span>Le filou</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">07</span><span>Boosté</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">08</span><span>Déjà dans la poche</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">09</span><span>Intouchable</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">10</span><span>C'est plié</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">11</span><span>Trop facile</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">12</span><span>Les doigts dans le nez</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">13</span><span>Thanos</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">14</span><span>Flash McQueen</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">15</span><span>RIP les autres</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">16</span><span>Payé d'avance</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">17</span><span>Sans forcer</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top:22px;border:1px solid #ded4c1">
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#2d5870;padding:9px 14px">
+        <span style="font-family:'Alfa Slab One',serif;font-size:16px;color:#f7f0df;text-transform:uppercase;letter-spacing:.02em">Solides</span>
+        <span style="font-family:Oswald,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.18em;color:#dce8ef;text-transform:uppercase">Cote 2</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;column-gap:28px;padding:10px 14px 12px;background:#fdf8ea">
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">01</span><span>Le bousilleur</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">02</span><span>Démouleur de cake</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">03</span><span>Tous dans le rétro</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">04</span><span>Tagadatagada</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">05</span><span>Ferrari rose</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">06</span><span>Le monstre</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">07</span><span>Le français</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">08</span><span>Le bandit</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">09</span><span>Le crack</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">10</span><span>Le Prometteur</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">11</span><span>Bonne pioche</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">12</span><span>Gandalf</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">13</span><span>La caution</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">14</span><span>Sangoku</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">15</span><span>Le Diesel</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">16</span><span>Le bon élève</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">17</span><span>Costaud du dimanche</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">11</span>
+  </div>
+</section>
+
+<section class="page" data-screen-label="12" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 12</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">11</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:30px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Écurie officielle</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">85 noms verrouillés par cote &mdash; 17 noms par groupe</div>
+      </div>
+    </div>
+
+    <div style="margin-top:26px;border:1px solid #ded4c1">
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#2f6b55;padding:9px 14px">
+        <span style="font-family:'Alfa Slab One',serif;font-size:16px;color:#f7f0df;text-transform:uppercase;letter-spacing:.02em">Audacieux</span>
+        <span style="font-family:Oswald,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.18em;color:#dfeae4;text-transform:uppercase">Cote 3</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;column-gap:28px;padding:10px 14px 12px;background:#fdf8ea">
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">01</span><span>KykydeBondy</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">02</span><span>Sous-coke</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">03</span><span>Mírame el culo</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">04</span><span>Belek</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">05</span><span>Le coupeur de queue</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">06</span><span>Le chanceux</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">07</span><span>L'audacieux</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">08</span><span>Diarrhée folle</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">09</span><span>L'inattendu</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">10</span><span>Le raciste</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">11</span><span>Le coup du siècle</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">12</span><span>Le Joker</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">13</span><span>Pépito</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">14</span><span>Kylian</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">15</span><span>Ça passe ou ça casse</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">16</span><span>Pile ou face</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">17</span><span>Sheitan sur sabots</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top:22px;border:1px solid #ded4c1">
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#c49a38;padding:9px 14px">
+        <span style="font-family:'Alfa Slab One',serif;font-size:16px;color:#211c18;text-transform:uppercase;letter-spacing:.02em">Outsiders</span>
+        <span style="font-family:Oswald,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.18em;color:#5e101c;text-transform:uppercase">Cote 5</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;column-gap:28px;padding:10px 14px 12px;background:#fdf8ea">
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">01</span><span>Oh pétard</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">02</span><span>Homer Simpson</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">03</span><span>L'enculé</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">04</span><span>Le baveur dégueu</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">05</span><span>Le P4</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">06</span><span>Le couillu</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">07</span><span>Le singe</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">08</span><span>Nonchalant</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">09</span><span>Coureur de jupons</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">10</span><span>Le Kamikaze</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">11</span><span>Le Miraculé</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">12</span><span>Inch'Allah</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">13</span><span>L'outsider</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">14</span><span>Pablo Escabot</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">15</span><span>Gollum</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">16</span><span>Le mulet magique</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">17</span><span>Tocard mais fier</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">12</span>
+  </div>
+</section>
+<section class="page" data-screen-label="13" style="position:relative;overflow:hidden;background:#f7f0df;color:#211c18;font-family:Karla,sans-serif;font-size:12.5px;line-height:1.55">
+  <div style="padding:44px 54px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:#6f665c">
+      <span>L'Apérodrome &mdash; Livret officiel des règles</span><span>Page 13</span>
+    </div>
+    <div style="margin-top:9px;border-top:2.5px solid #8c1d2c"></div>
+    <div style="margin-top:2px;border-top:1px solid #c49a38"></div>
+
+    <div style="display:flex;gap:18px;align-items:center;margin-top:26px">
+      <span style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:#8c1d2c;border:2px solid #c49a38;color:#f4e7bc;font-family:'Alfa Slab One',serif;font-size:19px;display:flex;align-items:center;justify-content:center">12</span>
+      <div>
+        <h2 style="margin:0;font-family:'Alfa Slab One',serif;font-weight:400;font-size:30px;line-height:1.04;color:#8c1d2c;text-transform:uppercase">Écurie officielle</h2>
+        <div style="font-family:Oswald,sans-serif;font-weight:300;font-size:12px;letter-spacing:.08em;color:#6f665c;margin-top:5px;text-transform:uppercase">85 noms verrouillés par cote &mdash; 17 noms par groupe</div>
+      </div>
+    </div>
+
+    <div style="margin-top:26px;border:1px solid #ded4c1">
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#5c4b7d;padding:9px 14px">
+        <span style="font-family:'Alfa Slab One',serif;font-size:16px;color:#f7f0df;text-transform:uppercase;letter-spacing:.02em">Cas désespérés</span>
+        <span style="font-family:Oswald,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.18em;color:#e8e0f2;text-transform:uppercase">Cote 7</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;column-gap:28px;padding:10px 14px 12px;background:#fdf8ea">
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">01</span><span>Le bouffon du roi</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">02</span><span>Mitraillette sans balle</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">03</span><span>Le nul</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">04</span><span>Mangeur de crotte</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">05</span><span>L'aveugle</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">06</span><span>Le raté</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">07</span><span>Le remplaçant</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">08</span><span>L'amputé</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">09</span><span>Pourquoi pas</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">10</span><span>Espoir</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">11</span><span>Le Bouche-trou</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">12</span><span>Pétard mouillé</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">13</span><span>Zéro pointé</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">14</span><span>Le brancardier</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">15</span><span>Trois pattes et demie</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0;border-bottom:1px dotted #d7cdbb"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">16</span><span>Déjà à l'abattoir</span></div>
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4.5px 0"><span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:500;color:#c49a38;min-width:18px">17</span><span>Sous morphine</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;border:1px dashed #c49a38;background:#fdf8ea;padding:13px 15px">
+      <div style="font-family:Oswald,sans-serif;font-weight:600;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8c1d2c">Correspondance fixe</div>
+      <p style="margin:6px 0 0;font-size:12px;line-height:1.55;color:#3a332c;text-wrap:pretty">Les noms ne changent jamais de groupe : un nom de cote 7 reste une cote 7. À chaque course, un nom est tiré dans chacun des cinq groupes.</p>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 10px;font-family:Oswald,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase">
+      <span>Couleurs de piste</span><span style="flex:1;border-top:1px solid #d7cdbb"></span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #c49a38">
+      <thead>
+        <tr>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 12px;text-align:left;border-right:1px solid rgba(247,240,223,.28)">Numéro</th>
+          <th style="background:#8c1d2c;color:#f7f0df;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 12px;text-align:left;border-right:1px solid rgba(247,240,223,.28)">Couleur</th>
+          <th style="background:#8c1d2c;color:#e8d39a;font-family:Oswald,sans-serif;font-weight:500;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:9px 12px;text-align:left">Cote</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:500">Piste 1</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1"><span style="display:inline-flex;align-items:center;gap:9px"><span style="width:13px;height:13px;border-radius:50%;background:#8c1d2c;border:1px solid #211c18"></span>Rouge</span></td>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:600;color:#8c1d2c">Cote 1</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:500">Piste 2</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1"><span style="display:inline-flex;align-items:center;gap:9px"><span style="width:13px;height:13px;border-radius:50%;background:#2d5870;border:1px solid #211c18"></span>Bleu</span></td>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:600;color:#2d5870">Cote 2</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:500">Piste 3</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1"><span style="display:inline-flex;align-items:center;gap:9px"><span style="width:13px;height:13px;border-radius:50%;background:#2f6b55;border:1px solid #211c18"></span>Vert</span></td>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:600;color:#2f6b55">Cote 3</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:500">Piste 4</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1"><span style="display:inline-flex;align-items:center;gap:9px"><span style="width:13px;height:13px;border-radius:50%;background:#c49a38;border:1px solid #211c18"></span>Or</span></td>
+          <td style="padding:8px 12px;border-bottom:1px solid #ded4c1;font-family:Oswald,sans-serif;font-weight:600;color:#a8842f">Cote 5</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-family:Oswald,sans-serif;font-weight:500">Piste 5</td>
+          <td style="padding:8px 12px"><span style="display:inline-flex;align-items:center;gap:9px"><span style="width:13px;height:13px;border-radius:50%;background:#5c4b7d;border:1px solid #211c18"></span>Violet</span></td>
+          <td style="padding:8px 12px;font-family:Oswald,sans-serif;font-weight:600;color:#5c4b7d">Cote 7</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="position:absolute;left:54px;right:54px;bottom:34px;border-top:1px solid #d7cdbb;padding-top:9px;display:flex;justify-content:space-between;align-items:center;font-family:Oswald,sans-serif;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#6f665c">
+    <span>L'Apérodrome &mdash; Livret officiel</span>
+    <span style="width:24px;height:24px;border-radius:50%;background:#c49a38;color:#5e101c;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0;font-weight:600">13</span>
+  </div>
+</section>
+<!--PAGES-->
+</doc-page>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;paperSize&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;a4&quot;,&quot;letter&quot;],&quot;default&quot;:&quot;a4&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Impression&quot;},&quot;paperTexture&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Impression&quot;},&quot;pageNumbers&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Impression&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() { this.apply(); }
+  componentDidUpdate() { this.apply(); }
+  apply() {
+    const dp = document.querySelector('doc-page');
+    if (!dp) return;
+    dp.setAttribute('size', this.props.paperSize ?? 'a4');
+    const texture = this.props.paperTexture ?? true;
+    const numbers = this.props.pageNumbers ?? true;
+    dp.querySelectorAll(':scope > .page').forEach((p, i) => {
+      p.style.backgroundImage = texture && i > 0
+        ? 'repeating-linear-gradient(0deg,rgba(111,102,92,.035) 0 1px,transparent 1px 4px)'
+        : '';
+    });
+    dp.querySelectorAll('.page > div:last-child > span:last-child').forEach(s => {
+      if (s.style.borderRadius === '50%') s.style.visibility = numbers ? 'visible' : 'hidden';
+    });
+  }
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

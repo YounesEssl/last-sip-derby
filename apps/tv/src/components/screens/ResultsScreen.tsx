@@ -6,7 +6,7 @@ import { PodiumCanvas } from '../PodiumCanvas'
 import { SilkDot, Ticker, usePhaseCountdown } from '../shared'
 
 export function ResultsScreen({ state }: { state: GameState }) {
-  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow)
+  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow, state.isGamePaused)
 
   const ranking = useMemo(() => {
     const alive = [...state.horses].filter((h) => !h.isEliminated).sort((a, b) => b.position - a.position)
@@ -44,7 +44,7 @@ export function ResultsScreen({ state }: { state: GameState }) {
       <div className="relative z-10 flex flex-1 items-stretch gap-[2vw] px-[3.6vw] pb-[6.5vh] pt-[1vh]">
         {/* winners' circle */}
         <div className="relative w-[30vw] shrink-0 animate-rise" style={{ animationDelay: '0.15s' }}>
-          <PodiumCanvas top3={ranking.slice(0, 3)} />
+          <PodiumCanvas top3={ranking.slice(0, 3)} paused={state.isGamePaused} />
         </div>
 
         {/* the bill */}

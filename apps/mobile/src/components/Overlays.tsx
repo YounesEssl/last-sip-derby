@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { GameEvent } from '@last-sip-derby/shared'
 import { useNow } from './ui'
 
@@ -10,28 +10,35 @@ export function DrinkOverlay({
   sips,
   reason,
   deadline: deadlineProp,
+  paused = false,
+  serverNow,
   onConfirm,
 }: {
   sips: number
   reason: string
   deadline?: number
+  paused?: boolean
+  serverNow?: number
   onConfirm: () => void
 }) {
   // Server-provided deadline (events: the whole 30s voting window;
   // tournée: 15s) or the default 10s local window.
-  const [deadline] = useState(() => deadlineProp ?? Date.now() + DRINK_TIMEOUT_S * 1000)
+  const fallbackDeadlineRef = useRef(deadlineProp ?? Date.now() + DRINK_TIMEOUT_S * 1000)
+  const deadline = deadlineProp ?? fallbackDeadlineRef.current
   const [totalS] = useState(() => Math.max(1, (deadline - Date.now()) / 1000))
   const now = useNow(100)
-  const left = Math.max(0, (deadline - now) / 1000)
+  const clockNow = paused && serverNow !== undefined ? serverNow : now
+  const left = Math.max(0, (deadline - clockNow) / 1000)
   const frac = left / totalS
   const isEventDrink = totalS > 16 // event drinks ride the 30s vote window
 
   // This is an information screen, not an extra validation step: recording the
   // drink automatically keeps the notice visible without asking for a tap.
   useEffect(() => {
+    if (paused) return
     const timer = window.setTimeout(onConfirm, Math.min(3500, Math.max(1800, deadline - Date.now())))
     return () => window.clearTimeout(timer)
-  }, [deadline, onConfirm])
+  }, [deadline, onConfirm, paused])
 
   return (
     <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-derby-red/95 px-6 backdrop-blur-sm">
@@ -64,14 +71,19 @@ export function DrinkOverlay({
 export function VoteOverlay({
   event,
   players,
+  paused = false,
+  serverNow,
   onVote,
 }: {
   event: GameEvent
   players: { id: string; pseudo: string }[]
+  paused?: boolean
+  serverNow?: number
   onVote: (valid: boolean) => void
 }) {
   const now = useNow(200)
-  const left = Math.max(0, Math.ceil((event.votingDeadline - now) / 1000))
+  const clockNow = paused && serverNow !== undefined ? serverNow : now
+  const left = Math.max(0, Math.ceil((event.votingDeadline - clockNow) / 1000))
   const suspects = event.affectedPlayerIds
     .map((id) => players.find((p) => p.id === id)?.pseudo)
     .filter((p): p is string => !!p)

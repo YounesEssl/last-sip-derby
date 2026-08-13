@@ -5,14 +5,14 @@ import { AmbientScene } from '../AmbientScene'
 import { Bulbs, JoinQR, Ticker, usePhaseCountdown } from '../shared'
 
 export function IdleScreen({ state }: { state: GameState }) {
-  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow)
+  const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow, state.isGamePaused)
   const players = state.players
   const hasPlayers = players.length > 0
   const board = [...state.eveningLeaderboard].sort((a, b) => b.totalSipsDrunk - a.totalSipsDrunk).slice(0, 7)
 
   return (
     <div className="relative h-full overflow-hidden bg-derby-night">
-      <AmbientScene />
+      <AmbientScene paused={state.isGamePaused} />
 
       <div className="relative z-10 flex h-full flex-col items-center">
         {/* ── Marquee ── */}

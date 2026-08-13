@@ -21,6 +21,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+[data-game-frozen='true'] *,
+[data-game-frozen='true'] *::before,
+[data-game-frozen='true'] *::after {
+  animation-play-state: paused !important;
+}
+
 /* ── Film grain + vignette, applied once on the app shell ── */
 .tv-frame {
   position: fixed;

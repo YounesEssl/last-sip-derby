@@ -9,7 +9,6 @@ import {
 } from '@nestjs/websockets'
 import { OnModuleInit } from '@nestjs/common'
 import { Server, Socket } from 'socket.io'
-import { DRINK_CONFIRM_TIMEOUT_MS } from '@last-sip-derby/shared'
 import { GameService } from './game.service'
 import { GameLoop } from './game.loop'
 import { PersistenceService } from '../persistence/persistence.service'
@@ -53,10 +52,22 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
           if (player) {
             player.debt += event.sipsAmount
             player.totalSipsDrunk += event.sipsAmount
+            this.gameService.setPendingDrinkNotice(player.pseudo, {
+              sips: event.sipsAmount,
+              reason: event.description,
+              deadline: event.votingDeadline,
+            })
           }
         }
       },
       onEventResolved: (data) => {
+        const event = this.gameService.getActiveEvent()
+        if (event?.id === data.eventId) {
+          for (const playerId of event.affectedPlayerIds) {
+            const player = this.gameService.getAllPlayers().find((candidate) => candidate.id === playerId)
+            if (player) this.gameService.clearPendingDrinkNotice(player.pseudo)
+          }
+        }
         this.server.emit('game:eventResolved', data)
       },
       onRaceFinished: () => {
@@ -95,10 +106,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   ) {
     if (!pseudo || typeof pseudo !== 'string' || pseudo.trim().length === 0) return
     const sanitized = pseudo.trim().slice(0, 20)
+    // Reconnection is allowed so a known player can recover the pause screen.
+    // A brand-new entry waits until the organiser closes the rulebook.
+    if (this.gameService.isGamePaused() && !this.gameService.getPlayerByPseudo(sanitized)) {
+      client.emit('game:stateUpdate', this.gameService.getState())
+      return
+    }
 
     const player = this.gameService.joinPlayer(client.id, sanitized)
 
     client.emit('player:joined', player)
+    const pendingDrink = this.gameService.getPendingDrinkNotice(player.pseudo)
+    if (pendingDrink) client.emit('player:drinkNotification', pendingDrink)
     this.broadcastState()
     this.gameLoop.onPlayerJoined()
   }
@@ -108,6 +127,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { horseId: string; amount: number },
   ) {
+    if (this.gameService.isGamePaused()) return
     if (!data?.horseId || !data?.amount) return
 
     const bet = this.gameService.placeBet(client.id, data.horseId, data.amount)
@@ -122,6 +142,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { gameId: string; action: string; value?: number | string },
   ) {
+    if (this.gameService.isGamePaused()) return
     if (!data?.gameId || !data?.action) return
     if (this.gameService.handleMiniGameAction(client.id, data.gameId, data.action, data.value)) {
       this.gameLoop.handleMiniGameAction()
@@ -130,6 +151,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
   @SubscribeMessage('blackKnight:kill')
   handleBlackKnightKill(@ConnectedSocket() client: Socket, @MessageBody() data: { horseId: string }) {
+    if (this.gameService.isGamePaused()) return
     if (!data?.horseId) return
     const execution = this.gameService.useBlackKnightPower(client.id, data.horseId)
     if (!execution) return
@@ -141,6 +163,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
   @SubscribeMessage('player:confirmDrink')
   handleConfirmDrink(@ConnectedSocket() client: Socket) {
+    if (this.gameService.isGamePaused()) return
     const confirmed = this.gameService.confirmDrink(client.id)
     if (confirmed > 0) {
       this.broadcastState()
@@ -152,6 +175,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { eventId: string; valid: boolean },
   ) {
+    if (this.gameService.isGamePaused()) return
     if (!data?.eventId || typeof data.valid !== 'boolean') return
     const player = this.gameService.getPlayerBySocket(client.id)
     if (!player) return
@@ -163,15 +187,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() client: Socket,
     @MessageBody() allocations: Array<{ pseudo: string; sips: number }>,
   ) {
+    if (this.gameService.isGamePaused()) return
     const applied = this.gameService.distributeSips(client.id, allocations)
     if (!applied) return
 
     const winner = this.gameService.getPlayerBySocket(client.id)
     for (const target of applied) {
+      const deadline = Date.now() + 15_000
+      const reason = `🏆 ${winner?.pseudo ?? 'Le vainqueur'} t'envoie ${target.sips} gorgée${target.sips > 1 ? 's' : ''} — santé !`
+      this.gameService.setPendingDrinkNotice(target.pseudo, { sips: target.sips, reason, deadline })
       this.server.to(target.id).emit('player:drinkNotification', {
         sips: target.sips,
-        reason: `🏆 ${winner?.pseudo ?? 'Le vainqueur'} t'envoie ${target.sips} gorgée${target.sips > 1 ? 's' : ''} — santé !`,
-        deadline: Date.now() + 15_000,
+        reason,
+        deadline,
       })
     }
     this.broadcastState()
@@ -179,20 +207,30 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
   @SubscribeMessage('dev:startRace')
   handleDevStartRace() {
+    if (this.gameService.isGamePaused()) return
     this.gameLoop.forceStartRace()
   }
 
   @SubscribeMessage('dev:resetRace')
   handleDevResetRace() {
+    if (this.gameService.isGamePaused()) return
     this.gameLoop.forceResetRace()
   }
 
   @SubscribeMessage('master:resetSession')
   handleMasterResetSession() {
+    if (this.gameService.isGamePaused()) return
     this.server.emit('player:sessionReset')
     this.gameLoop.forceResetRace()
     this.gameService.resetSession()
     this.broadcastState()
+  }
+
+  @SubscribeMessage('rules:setOpen')
+  handleRulesSetOpen(@MessageBody() open: boolean) {
+    if (typeof open !== 'boolean') return
+    if (open) this.gameLoop.pauseForRules()
+    else this.gameLoop.resumeFromRules()
   }
 
   private broadcastState() {

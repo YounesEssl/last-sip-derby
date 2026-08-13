@@ -15,8 +15,10 @@ const PAN_SPEED = 26 // px/s camera drift
 const HORSE_SPEED = 430 // px/s
 const WORLD_LOOP = 11000
 
-export function AmbientScene({ dim = 0.42 }: { dim?: number }) {
+export function AmbientScene({ dim = 0.42, paused = false }: { dim?: number; paused?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const pausedRef = useRef(paused)
+  pausedRef.current = paused
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -38,6 +40,10 @@ export function AmbientScene({ dim = 0.42 }: { dim?: number }) {
       // clamp to 0 or `time` goes negative and array indices break.
       const dt = Math.max(0, Math.min(0.05, (t - last) / 1000))
       last = t
+      if (pausedRef.current) {
+        raf = requestAnimationFrame(frame)
+        return
+      }
       time += dt
 
       const dpr = Math.min(2, window.devicePixelRatio || 1)

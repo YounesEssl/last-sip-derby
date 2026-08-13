@@ -9,15 +9,18 @@ import { PressureGame } from './mini-games/PressureGame'
 interface Props {
   game: MiniGameState
   playerId: string
+  paused?: boolean
+  serverNow?: number
   onAction: (gameId: string, action: string, value?: number | string) => void
 }
 
-export function MiniGameOverlay({ game, playerId, onAction }: Props) {
+export function MiniGameOverlay({ game, playerId, paused = false, serverNow, onAction }: Props) {
   const me = game.players.find((row) => row.playerId === playerId)
   const [now, setNow] = useState(Date.now())
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 50); return () => clearInterval(timer) }, [])
-  const seconds = Math.max(0, Math.ceil((game.endsAt - now) / 1000))
-  const active = game.status === 'PLAYING' && now < game.endsAt
+  const clockNow = paused && serverNow !== undefined ? serverNow : now
+  const seconds = Math.max(0, Math.ceil((game.endsAt - clockNow) / 1000))
+  const active = !paused && game.status === 'PLAYING' && clockNow < game.endsAt
   const send = (action: string, value?: number | string) => onAction(game.id, action, value)
   const keepPressureResultVisible = game.type === 'PRESSURE' && !!me?.finishedAt && game.status === 'PLAYING'
 
@@ -35,12 +38,12 @@ export function MiniGameOverlay({ game, playerId, onAction }: Props) {
          (me?.finishedAt || me?.eliminated) && !keepPressureResultVisible ? <Qualified eliminated={!!me.eliminated} /> :
          game.type === 'GRID' ? <GridGame values={game.payload.values as number[]} target={game.payload.target as number} onPick={(v) => send('pick', v)} /> :
          game.type === 'CODE' ? <CodeGame prompt={game.prompt} answerLength={String(game.payload.answer).length} onAnswer={(v) => send('answer', v)} /> :
-         game.type === 'CAPITAL' ? <CapitalGame choices={game.payload.choices as string[]} answer={game.payload.answer as string} lives={me?.lives ?? 2} onAnswer={(v) => send('answer', v)} /> :
-         game.type === 'MAZE' ? <MazeGame key={game.id} mazeIndex={Number(game.payload.mazeIndex ?? 0)} active={active} onFinish={() => send('finish')} /> :
+         game.type === 'CAPITAL' ? <CapitalGame choices={game.payload.choices as string[]} answer={game.payload.answer as string} lives={me?.lives ?? 2} paused={paused} onAnswer={(v) => send('answer', v)} /> :
+         game.type === 'MAZE' ? <MazeGame key={game.id} mazeIndex={Number(game.payload.mazeIndex ?? 0)} active={active} paused={paused} onFinish={() => send('finish')} /> :
          game.type === 'CLICKER' ? <ClickerGame score={me?.score ?? 0} onClick={() => send('click')} /> :
          game.type === 'ORDER' ? <GridGame values={game.payload.values as number[]} target={(me?.progress ?? 0) + 1} onPick={(v) => send('pick', v)} order /> :
-         game.type === 'PENALTY' ? <PenaltyGame key={game.id} shots={me?.progress ?? 0} goals={me?.score ?? 0} active={active} onShot={(centerPercent) => send('shot', centerPercent)} /> :
-         <PressureGame key={game.id} active={active} confirmedScore={me?.finishedAt ? me.score : null} onScore={(score) => send('score', score)} />}
+         game.type === 'PENALTY' ? <PenaltyGame key={game.id} shots={me?.progress ?? 0} goals={me?.score ?? 0} active={active} paused={paused} onShot={(centerPercent) => send('shot', centerPercent)} /> :
+         <PressureGame key={game.id} active={active} paused={paused} confirmedScore={me?.finishedAt ? me.score : null} onScore={(score) => send('score', score)} />}
       </div>
     </div>
   )
@@ -64,17 +67,27 @@ function CodeGame({ prompt, answerLength, onAnswer }: { prompt: string; answerLe
   return <><div className="font-display text-5xl text-derby-gold">{prompt} =</div><div className="my-4 h-14 rounded-xl border-2 border-derby-gold bg-black/40 font-terminal text-4xl tracking-[.3em]">{digits || '•••'}</div><div className="grid grid-cols-3 gap-3">{[1,2,3,4,5,6,7,8,9].map(n => <button key={n} onClick={() => push(n)} className="btn-big rounded-xl bg-derby-cream py-4 font-terminal text-3xl text-derby-coal">{n}</button>)}<button onClick={() => setDigits(digits.slice(0,-1))} className="rounded-xl bg-derby-red py-4 text-2xl">⌫</button><button onClick={() => push(0)} className="rounded-xl bg-derby-cream py-4 font-terminal text-3xl text-derby-coal">0</button></div></>
 }
 
-function CapitalGame({ choices, answer, lives, onAnswer }: { choices: string[]; answer: string; lives: number; onAnswer: (value: string) => void }) {
+function CapitalGame({ choices, answer, lives, paused, onAnswer }: { choices: string[]; answer: string; lives: number; paused: boolean; onAnswer: (value: string) => void }) {
   const [wrong, setWrong] = useState<string | null>(null)
   const clearWrongTimer = useRef<number | null>(null)
-  useEffect(() => () => {
-    if (clearWrongTimer.current !== null) window.clearTimeout(clearWrongTimer.current)
-  }, [])
+  const wrongRemainingRef = useRef(650)
+  useEffect(() => {
+    if (!wrong || paused) return
+    const startedAt = performance.now()
+    clearWrongTimer.current = window.setTimeout(() => {
+      wrongRemainingRef.current = 650
+      setWrong(null)
+    }, wrongRemainingRef.current)
+    return () => {
+      if (clearWrongTimer.current !== null) window.clearTimeout(clearWrongTimer.current)
+      clearWrongTimer.current = null
+      wrongRemainingRef.current = Math.max(0, wrongRemainingRef.current - (performance.now() - startedAt))
+    }
+  }, [paused, wrong])
   const choose = (choice: string) => {
     if (choice !== answer) {
+      wrongRemainingRef.current = 650
       setWrong(choice)
-      if (clearWrongTimer.current !== null) window.clearTimeout(clearWrongTimer.current)
-      clearWrongTimer.current = window.setTimeout(() => setWrong((current) => current === choice ? null : current), 650)
     }
     onAnswer(choice)
   }

@@ -56,6 +56,7 @@ export class RaceEngine {
   private lastT = 0
   private simTime = 0
   private timeScale = 1
+  private frozenAt: number | null = null
 
   private horses = new Map<string, HorseMeta>()
   private order: string[] = [] // stable lane order for drawing
@@ -175,6 +176,25 @@ export class RaceEngine {
     this.spotlightId = horseId
   }
 
+  setFrozen(frozen: boolean) {
+    if (frozen && this.frozenAt === null) {
+      this.frozenAt = performance.now()
+      return
+    }
+    if (!frozen && this.frozenAt !== null) {
+      const pausedFor = performance.now() - this.frozenAt
+      for (const horse of this.horses.values()) {
+        if (horse.fallStart !== null) horse.fallStart += pausedFor
+        if (horse.jockeyFallStart !== null) horse.jockeyFallStart += pausedFor
+      }
+      if (this.celebration) this.celebration.start += pausedFor
+      if (this.punch) this.punch.until += pausedFor
+      if (this.lastPunchAt > 0) this.lastPunchAt += pausedFor
+      this.frozenAt = null
+      this.lastT = performance.now()
+    }
+  }
+
   celebrate(winnerId: string | null) {
     if (this.celebration) return
     this.celebration = { start: performance.now(), winnerId, cannonsFired: 0 }
@@ -205,6 +225,7 @@ export class RaceEngine {
   private frame(t: number) {
     const rawDt = Math.max(0, Math.min(0.05, (t - this.lastT) / 1000))
     this.lastT = t
+    if (this.frozenAt !== null) return
 
     // Slow-mo recovery after the finish flash
     if (this.celebration) {

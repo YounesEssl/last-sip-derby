@@ -29,6 +29,7 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
   const engineRef = useRef<RaceEngine | null>(null)
   const [showStart, setShowStart] = useState(true)
   const celebratedRef = useRef(false)
+  const startRemainingRef = useRef(2400)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -36,9 +37,7 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
     const engine = new RaceEngine(canvas, state.raceNumber * 1013 + 7)
     engineRef.current = engine
     engine.start()
-    const t = setTimeout(() => setShowStart(false), 2400)
     return () => {
-      clearTimeout(t)
       engine.destroy()
       engineRef.current = null
     }
@@ -46,8 +45,22 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
   }, [])
 
   useEffect(() => {
-    engineRef.current?.ingest(state.horses, state.raceProgress, state.racePaused, state.serverNow)
+    if (!showStart || state.isGamePaused) return
+    const startedAt = performance.now()
+    const timer = window.setTimeout(() => setShowStart(false), startRemainingRef.current)
+    return () => {
+      window.clearTimeout(timer)
+      startRemainingRef.current = Math.max(0, startRemainingRef.current - (performance.now() - startedAt))
+    }
+  }, [showStart, state.isGamePaused])
+
+  useEffect(() => {
+    engineRef.current?.ingest(state.horses, state.raceProgress, state.racePaused || state.isGamePaused, state.serverNow)
   }, [state])
+
+  useEffect(() => {
+    engineRef.current?.setFrozen(state.isGamePaused)
+  }, [state.isGamePaused])
 
   useEffect(() => {
     const spotlight = activeEvent && !activeEvent.resolved ? activeEvent.targetHorseId : null
