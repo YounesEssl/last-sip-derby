@@ -89,7 +89,7 @@ export const SPONSORS = [
   'Jägermeister, pour oublier ta cote',
   'Despé le soir, regrets le matin',
   '8 morts, 6 blessés',
-  'Tkt frère, bois',
+  'T’inquiète le frère, bois une liche',
   'Sah quel plaisir de te voir boire',
   'Zidane coup de boule',
   'VAR : Verre À Reboire',

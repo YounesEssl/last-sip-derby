@@ -50,8 +50,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
           // Add drink debt
           const player = this.gameService.getConnectedPlayers().find((p) => p.id === playerId)
           if (player) {
-            player.debt += event.sipsAmount
-            player.totalSipsDrunk += event.sipsAmount
+            this.gameService.addEventSips(player.pseudo, event.sipsAmount)
             this.gameService.setPendingDrinkNotice(player.pseudo, {
               sips: event.sipsAmount,
               reason: event.description,

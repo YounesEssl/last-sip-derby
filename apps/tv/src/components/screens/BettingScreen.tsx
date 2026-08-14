@@ -8,8 +8,8 @@ const FLAVOR: Record<number, string> = {
   1: 'le chouchou du bookmaker',
   2: 'sérieux comme un percheron',
   3: 'capable du meilleur comme du pire',
-  5: 'un pari de poète',
-  7: 'le tocard au grand cœur',
+  4: 'un pari de poète',
+  5: 'le tocard au grand cœur',
 }
 
 export function BettingScreen({ state }: { state: GameState }) {
@@ -120,6 +120,8 @@ export function BettingScreen({ state }: { state: GameState }) {
               → gagnant : distribue <b className="text-derby-gold">2× la cote</b> (3× doré, 5× diamant)
               <br />
               → perdant : boit <b className="text-derby-red">la cote</b> de son cheval
+              <br />
+              → deuxième : <b className="text-derby-green">mise sauvée</b>
               <br />
               → sans ticket : simple spectateur
             </div>

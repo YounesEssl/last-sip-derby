@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import type { GameEvent, GameState, Horse, LightningEvent, Player } from '@last-sip-derby/shared'
+import { getWinSips, type GameEvent, type GameState, type Horse, type LightningEvent, type Player } from '@last-sip-derby/shared'
 import { RaceEngine } from '../../race/engine'
 import { SilkDot, useNow } from '../shared'
 import { RaceCommentator } from '../RaceCommentator'
@@ -217,7 +217,7 @@ export function RaceScreen({ state, activeEvent, eventResolution, finished }: Pr
                 </div>
                 <div className="mt-2 font-mono text-lg text-derby-coal/80">
                   {winnerBettors.length > 0
-                    ? `${winnerBettors.join(', ')} distribue${winnerBettors.length > 1 ? 'nt' : ''} ${winner.odds * (winner.isDiamond ? 5 : winner.isGolden ? 3 : 2)} gorgées${winner.isDiamond ? ' — JACKPOT DIAMANT ×5 !' : winner.isGolden ? ' — JACKPOT DORÉ ×3 !' : ' !'}`
+                    ? `${winnerBettors.join(', ')} distribue${winnerBettors.length > 1 ? 'nt' : ''} ${getWinSips(winner.odds, winner.isDiamond ? 5 : winner.isGolden ? 3 : 2)} gorgées${winner.isDiamond ? ' — JACKPOT DIAMANT ×5 !' : winner.isGolden ? ' — JACKPOT DORÉ ×3 !' : ' !'}`
                     : 'Personne ne l’avait joué... tout le monde trinque !'}
                 </div>
               </div>

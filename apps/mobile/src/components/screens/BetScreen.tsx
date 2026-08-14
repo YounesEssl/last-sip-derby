@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { GameState, Player } from '@last-sip-derby/shared'
+import { getWinSips, type GameState, type Player } from '@last-sip-derby/shared'
 import { Header, CountdownPill, SilkChip, usePhaseCountdown } from '../ui'
 
 interface Props {
@@ -33,7 +33,7 @@ export function BetScreen({ state, player, onBet }: Props) {
             </div>
             <div className="mt-4 border-t-2 border-dashed border-derby-coal/30 pt-3 font-mono text-sm text-derby-coal">
               <div>
-                🏆 il gagne → tu distribues <b>{betHorse.odds * 2} gorgées</b> (×3 doré, ×5 diamant)
+                🏆 il gagne → tu distribues <b>{getWinSips(betHorse.odds)} gorgées</b> (×3 doré, ×5 diamant)
               </div>
               <div className="mt-1">
                 💀 il perd → tu bois <b>{betHorse.odds} gorgée{betHorse.odds > 1 ? 's' : ''}</b>
@@ -57,7 +57,7 @@ export function BetScreen({ state, player, onBet }: Props) {
       <Header raceNumber={state.raceNumber} right={<CountdownPill seconds={seconds} label="FERMETURE" />} />
       <div className="px-5 pt-3">
         <h2 className="font-headline text-2xl tracking-[0.2em] text-derby-cream">CHOISIS TON CANASSON</h2>
-        <p className="font-body text-xs text-derby-smoke">Gagnant : distribue 2× la cote (3× doré, 5× diamant) · Perdant : boit la cote</p>
+        <p className="font-body text-xs text-derby-smoke">Gagnant : distribue 2× la cote (3× doré, 5× diamant) · 2e : mise sauvée · Autres : boivent la cote</p>
       </div>
 
       <div className="mt-3 flex-1 overflow-y-auto px-5 pb-40">
@@ -69,13 +69,13 @@ export function BetScreen({ state, player, onBet }: Props) {
         <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-derby-night via-derby-night/95 to-transparent px-5 pb-[max(1.2rem,env(safe-area-inset-bottom))] pt-8">
           <button
             onClick={() => onBet(selected.id)}
-            className="btn-big w-full rounded-xl bg-derby-red py-4 text-center shadow-lg"
+            className="btn-big flex min-h-[5.75rem] w-full flex-col items-center justify-center rounded-xl bg-derby-red px-5 py-3.5 text-center shadow-lg"
           >
-            <span className="font-headline text-2xl tracking-[0.15em] text-derby-cream">
+            <span className="line-clamp-2 max-w-full break-words font-headline text-[clamp(1.15rem,5.8vw,1.5rem)] leading-[1.08] tracking-[0.11em] text-derby-cream">
               MISER SUR {selected.name.toUpperCase()}
             </span>
-            <span className="mt-0.5 block font-mono text-xs text-derby-cream/80">
-              risque : {selected.odds} gorgée{selected.odds > 1 ? 's' : ''} · gain : tu en distribues {selected.odds * 2}
+            <span className="mt-2 block max-w-full px-2 font-mono text-[clamp(.68rem,3vw,.78rem)] leading-snug text-derby-cream/85">
+              risque : {selected.odds} gorgée{selected.odds > 1 ? 's' : ''} · gain : tu en distribues {getWinSips(selected.odds)}
             </span>
           </button>
         </div>

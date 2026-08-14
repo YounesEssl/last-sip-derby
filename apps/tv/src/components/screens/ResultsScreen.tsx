@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import type { GameState } from '@last-sip-derby/shared'
+import { getWinSips, type GameState } from '@last-sip-derby/shared'
 import { PodiumCanvas } from '../PodiumCanvas'
 import { SilkDot, Ticker, usePhaseCountdown } from '../shared'
 
@@ -16,15 +16,15 @@ export function ResultsScreen({ state }: { state: GameState }) {
 
   const winner = ranking[0]
   const winnerBettors = state.players.filter((p) => p.currentBet?.horseId === winner?.id && !p.miniGameEliminated)
-  const losers = state.roundDrinks
+  const drinkers = state.roundDrinks
     .map((drink) => {
       const player = state.players.find((p) => p.pseudo === drink.pseudo)
       const horse = player?.currentBet ? state.horses.find((h) => h.id === player.currentBet!.horseId) : undefined
-      return { pseudo: drink.pseudo, horse, sips: drink.sips }
+      return { ...drink, horse }
     })
     .sort((a, b) => b.sips - a.sips)
   const compactWinners = winnerBettors.length > 5
-  const compactLosers = losers.length > 5
+  const compactLosers = drinkers.length > 5
   const denseTicket = compactWinners || compactLosers
 
   return (
@@ -67,7 +67,7 @@ export function ResultsScreen({ state }: { state: GameState }) {
                   <div key={p.pseudo} className="flex min-w-0 items-baseline justify-between gap-2">
                     <span className={`truncate font-hand font-bold text-derby-coal ${denseTicket ? 'text-[2.35vh]' : 'text-[3vh]'}`}>{p.pseudo}</span>
                     <span className={`shrink-0 font-body font-bold text-derby-green ${denseTicket ? 'text-[1.55vh]' : 'text-[2vh]'}`}>
-                      {denseTicket ? 'donne' : 'distribue'} {(winner?.odds ?? 1) * (winner?.isDiamond ? 5 : winner?.isGolden ? 3 : 2)}{denseTicket ? '' : ' gorgées'}{winner?.isDiamond ? ' ×5' : winner?.isGolden ? ' ×3' : ''}
+                      {denseTicket ? 'donne' : 'distribue'} {getWinSips(winner?.odds ?? 1, winner?.isDiamond ? 5 : winner?.isGolden ? 3 : 2)}{denseTicket ? '' : ' gorgées'}{winner?.isDiamond ? ' ×5' : winner?.isGolden ? ' ×3' : ''}
                     </span>
                   </div>
                 ))}
@@ -76,18 +76,28 @@ export function ResultsScreen({ state }: { state: GameState }) {
 
             <div className={`${denseTicket ? 'mt-2 pt-1' : 'mt-3 pt-2'} border-t border-dashed border-derby-coal/30`}>
               <div className={`font-headline font-medium tracking-[0.3em] text-derby-red ${denseTicket ? 'text-[2.15vh]' : 'text-[2.7vh]'}`}>🍺 À BOIRE MAINTENANT 🍺</div>
-              {losers.length === 0 && (
+              {drinkers.length === 0 && (
                 <div className="font-hand text-[2.4vh] text-derby-coal/70">aucun perdant... suspect.</div>
               )}
               <div className={compactLosers ? 'grid grid-cols-2 gap-x-6 gap-y-[.35vh]' : ''}>
-                {losers.map((l) => (
-                  <div key={l.pseudo} className="flex min-w-0 items-center justify-between gap-2">
+                {drinkers.map((l) => (
+                  <div key={l.pseudo} className="flex min-w-0 items-center justify-between gap-2 border-b border-derby-coal/10 py-[.15vh] last:border-b-0">
                     <span className="flex min-w-0 items-center gap-2">
                       {l.horse && <SilkDot color={l.horse.color} size={denseTicket ? 9 : 11} />}
                       <span className={`truncate font-hand font-bold text-derby-coal ${denseTicket ? 'text-[2.75vh]' : 'text-[4.4vh]'}`}>{l.pseudo}</span>
                     </span>
-                    <span className={`shrink-0 whitespace-nowrap rounded-md bg-derby-red font-body font-bold text-derby-cream ${denseTicket ? 'px-2 py-[.2vh] text-[1.9vh]' : 'px-3 py-1 text-[3.2vh]'}`}>
-                      {l.sips} gorgée{l.sips > 1 ? 's' : ''} 🍺
+                    <span className="flex shrink-0 flex-col items-end leading-tight">
+                      {l.betSavedBySecondPlace && (
+                        <span className={`font-headline font-bold tracking-[.08em] text-derby-green ${denseTicket ? 'text-[1.15vh]' : 'text-[1.45vh]'}`}>2e · MISE SAUVÉE</span>
+                      )}
+                      <span className={`whitespace-nowrap rounded-md font-body font-bold ${l.sips > 0 ? 'bg-derby-red text-derby-cream' : 'bg-derby-green/20 text-derby-green'} ${denseTicket ? 'px-2 py-[.2vh] text-[1.9vh]' : 'px-3 py-1 text-[3.2vh]'}`}>
+                        {l.sips} gorgée{l.sips > 1 ? 's' : ''}
+                      </span>
+                      {(l.betSavedBySecondPlace || l.eventSips > 0 || l.receivedSips > 0) && (
+                        <span className={`whitespace-nowrap font-body text-derby-coal/60 ${denseTicket ? 'text-[.85vh]' : 'text-[1.05vh]'}`}>
+                          mise {l.betSips} · événement {l.eventSips} · reçues {l.receivedSips}
+                        </span>
+                      )}
                     </span>
                   </div>
                 ))}

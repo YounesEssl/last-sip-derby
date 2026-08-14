@@ -118,7 +118,7 @@ export interface GameState {
   horses: Horse[]
   players: Player[]
   eveningLeaderboard: Player[]
-  roundDrinks: SipAllocation[]
+  roundDrinks: RoundDrinkSummary[]
   queue: string[]
   activeEvent: GameEvent | null
   lightningEvent: LightningEvent | null
@@ -138,6 +138,13 @@ export interface GameState {
 export interface SipAllocation {
   pseudo: string
   sips: number
+}
+
+export interface RoundDrinkSummary extends SipAllocation {
+  betSips: number
+  eventSips: number
+  receivedSips: number
+  betSavedBySecondPlace: boolean
 }
 
 export interface ClientToServerEvents {
