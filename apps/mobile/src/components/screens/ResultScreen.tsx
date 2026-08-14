@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { GameState, Player } from '@last-sip-derby/shared'
+import { getWinSips, type GameState, type Player, type RoundDrinkSummary } from '@last-sip-derby/shared'
 import { Header, CountdownPill, SilkChip, usePhaseCountdown } from '../ui'
 
 export function ResultScreen({
@@ -15,14 +15,23 @@ export function ResultScreen({
 }) {
   const seconds = usePhaseCountdown(state.phaseStartedAt, state.phaseDuration, state.serverNow, state.isGamePaused)
 
-  const winner = useMemo(() => {
+  const ranking = useMemo(() => {
     const alive = state.horses.filter((h) => !h.isEliminated)
-    return [...alive].sort((a, b) => b.position - a.position)[0] ?? null
+    return [...alive].sort((a, b) => b.position - a.position)
   }, [state.horses])
+  const winner = ranking[0] ?? null
+  const second = ranking[1] ?? null
 
   const myBetHorse = player?.currentBet ? state.horses.find((h) => h.id === player.currentBet!.horseId) : null
   const won = !!(winner && myBetHorse && winner.id === myBetHorse.id && !player?.miniGameEliminated)
-  const myRoundSips = state.roundDrinks.find((drink) => drink.pseudo === player?.pseudo)?.sips ?? myBetHorse?.odds ?? 0
+  const myRound = state.roundDrinks.find((drink) => drink.pseudo === player?.pseudo)
+  const savedBySecondPlace = !!(
+    myBetHorse &&
+    second &&
+    myBetHorse.id === second.id &&
+    myRound?.betSavedBySecondPlace
+  )
+  const myRoundSips = myRound?.sips ?? 0
 
   const losers = useMemo(
     () =>
@@ -30,7 +39,7 @@ export function ResultScreen({
         .map((drink) => {
           const drinker = state.players.find((p) => p.pseudo === drink.pseudo)
           const horse = drinker?.currentBet ? state.horses.find((h) => h.id === drinker.currentBet!.horseId) : undefined
-          return { pseudo: drink.pseudo, color: horse?.color ?? '#5a544a', sips: drink.sips }
+          return { ...drink, color: horse?.color ?? '#5a544a' }
         })
         .sort((a, b) => b.sips - a.sips),
     [state.players, state.horses, state.roundDrinks],
@@ -55,9 +64,19 @@ export function ResultScreen({
             <WinnerPanel
               state={state}
               player={player}
-              totalSips={(winner?.odds ?? 1) * (winner?.isDiamond ? 5 : winner?.isGolden ? 3 : 2)}
+              totalSips={getWinSips(winner?.odds ?? 1, winner?.isDiamond ? 5 : winner?.isGolden ? 3 : 2)}
               onDistribute={onDistribute}
             />
+          ) : savedBySecondPlace ? (
+            <div
+              className="w-full max-w-sm rounded-2xl border-4 border-derby-gold bg-gradient-to-b from-derby-green/25 to-derby-ink px-5 py-5 text-center shadow-lg animate-rise"
+              style={{ animationDelay: '0.1s' }}
+            >
+              <div className="font-display text-[1.8rem] leading-tight text-derby-gold">2e PLACE — MISE SAUVÉE</div>
+              <div className="mt-1 font-hand text-xl text-derby-cream/90">{myBetHorse.name} sauve ton ticket</div>
+              <div className="mt-4 font-headline text-base tracking-[0.14em] text-derby-cream">0 GORGÉE DE MISE À BOIRE</div>
+              <RoundBreakdown summary={myRound!} saved />
+            </div>
           ) : (
             <div
               className="w-full max-w-sm rounded-2xl border-4 border-derby-red bg-gradient-to-b from-derby-red/20 to-derby-ink px-6 py-6 text-center shadow-lg animate-rise"
@@ -72,6 +91,7 @@ export function ResultScreen({
               <div className="font-headline text-xl tracking-[0.35em] text-derby-cream">
                 GORGÉE{myRoundSips > 1 ? 'S' : ''}
               </div>
+              {myRound && <RoundBreakdown summary={myRound} />}
             </div>
           )
         ) : (
@@ -100,8 +120,18 @@ export function ResultScreen({
                     {l.pseudo === player?.pseudo ? ' (toi)' : ''}
                   </span>
                 </span>
-                <span className="whitespace-nowrap font-body text-base font-bold text-derby-red">
-                  {l.sips} gorgée{l.sips > 1 ? 's' : ''} 🍺
+                <span className="flex shrink-0 flex-col items-end text-right">
+                  {l.betSavedBySecondPlace && (
+                    <span className="font-headline text-[11px] font-bold tracking-[.08em] text-derby-green">2e · MISE SAUVÉE</span>
+                  )}
+                  <span className={`whitespace-nowrap font-body text-base font-bold ${l.sips > 0 ? 'text-derby-red' : 'text-derby-green'}`}>
+                    {l.sips} gorgée{l.sips > 1 ? 's' : ''}
+                  </span>
+                  {(l.betSavedBySecondPlace || l.eventSips > 0 || l.receivedSips > 0) && (
+                    <span className="whitespace-nowrap font-mono text-[9px] text-derby-coal/60">
+                      mise {l.betSips} · événement {l.eventSips} · reçues {l.receivedSips}
+                    </span>
+                  )}
                 </span>
               </div>
             ))}
@@ -115,6 +145,17 @@ export function ResultScreen({
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function RoundBreakdown({ summary, saved = false }: { summary: RoundDrinkSummary; saved?: boolean }) {
+  return (
+    <div className="mt-4 space-y-1.5 rounded-xl border border-derby-cream/20 bg-black/20 px-4 py-3 text-left font-body text-sm text-derby-cream/85">
+      <div className="flex justify-between gap-3"><span>{saved ? 'Mise sauvée' : 'Mise à boire'}</span><b>{summary.betSips} gorgée{summary.betSips > 1 ? 's' : ''}</b></div>
+      <div className="flex justify-between gap-3"><span>Événements / sanctions</span><b>{summary.eventSips}</b></div>
+      <div className="flex justify-between gap-3"><span>Gorgées reçues</span><b>{summary.receivedSips}</b></div>
+      <div className="flex justify-between gap-3 border-t border-derby-cream/20 pt-1.5 text-derby-gold"><span>Total à boire</span><b>{summary.sips} gorgée{summary.sips > 1 ? 's' : ''}</b></div>
     </div>
   )
 }

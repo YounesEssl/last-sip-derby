@@ -8,7 +8,6 @@ import {
   Bet,
   GameEvent,
   horseNamesBySips,
-  HORSE_COLORS,
   MAX_ACTIVE_PLAYERS,
   DRINK_CONFIRM_TIMEOUT_MS,
   DRINK_PENALTY_SIPS,
@@ -19,6 +18,11 @@ import {
   MiniGameType,
   RACE_EVENT_ODDS,
   RACE_SPEED_BONUSES,
+  RACE_ODDS_CONFIG,
+  getRaceWinWeight,
+  getLossSips,
+  getWinSips,
+  RoundDrinkSummary,
   MINI_GAME_DURATIONS,
   MINI_GAME_TYPES,
   applyMiniGameAction,
@@ -36,12 +40,8 @@ import { PersistenceService } from "../persistence/persistence.service";
 // finish line). Positions are computed directly from race progress — never
 // integrated — so horses can NEVER stall, teleport or overshoot. Lead changes
 // happen early while the base curves are still close; the script wins late.
-const SIPS_ODDS = [1, 2, 3, 5, 7] as const;
 const RACE_TICKS = 600; // ~60s race — snappier
 const FINISH_POSITIONS = [100, 98, 95.5, 92.5, 89]; // winner → last: everyone in the picture
-
-// Win probability weights per sip value
-const WIN_WEIGHTS: Record<number, number> = { 1: 35, 2: 25, 3: 18, 5: 13, 7: 8 };
 
 interface Wave {
   amp: number;
@@ -402,7 +402,7 @@ export class GameService implements OnModuleInit {
   }
 
   // Betting
-  placeBet(socketId: string, horseId: string, amount: number): Bet | null {
+  placeBet(socketId: string, horseId: string, _amount: number): Bet | null {
     if (this.state.isGamePaused || this.state.phase !== "BETTING") return null;
 
     const player = this.getPlayerBySocket(socketId);
@@ -411,12 +411,12 @@ export class GameService implements OnModuleInit {
     const horse = this.state.horses.find((h) => h.id === horseId);
     if (!horse) return null;
 
-    const clampedAmount = Math.max(1, Math.min(5, Math.round(amount)));
-
     const bet: Bet = {
       playerId: player.id,
       horseId,
-      amount: clampedAmount,
+      // Le serveur ne fait jamais confiance au montant envoyé par le client :
+      // la mise est exactement la cote centrale du cheval sélectionné.
+      amount: getLossSips(horse.odds),
     };
 
     player.currentBet = bet;
@@ -440,21 +440,21 @@ export class GameService implements OnModuleInit {
     this.state.raceProgress = 0;
     this.pendingDrinkNotices.clear();
 
-    // Pick one random name per sip tier [1, 2, 3, 5, 7]
+    // Pick one random name per centrally configured tier [1, 2, 3, 4, 5].
     const names = horseNamesBySips as Record<string, string[]>;
-    this.state.horses = SIPS_ODDS.map((sips, i) => {
-      const pool = names[String(sips)] ?? ['???'];
+    this.state.horses = RACE_ODDS_CONFIG.map((rule, i) => {
+      const pool = names[String(rule.odds)] ?? ['???'];
       const name = pool[Math.floor(Math.random() * pool.length)];
       return {
         id: uuid(),
         name,
         speed: 0,
         endurance: 0,
-        odds: sips,
+        odds: rule.odds,
         position: 0,
         lane: i,
         isEliminated: false,
-        color: HORSE_COLORS[i],
+        color: rule.color,
         effectiveSpeed: 0,
         appearance: 'HORSE',
         isGolden: false,
@@ -733,7 +733,7 @@ export class GameService implements OnModuleInit {
     const order: string[] = [];
 
     while (remaining.length > 0) {
-      const weights = remaining.map((h) => WIN_WEIGHTS[h.odds] ?? 10);
+      const weights = remaining.map((h) => getRaceWinWeight(h.odds));
       const totalWeight = weights.reduce((a, b) => a + b, 0);
 
       let roll = Math.random() * totalWeight;
@@ -766,26 +766,54 @@ export class GameService implements OnModuleInit {
     let winnerPlayer: Player | undefined;
     let sipsToDistribute = 0;
 
+    const officialFinishers = this.state.horses
+      .filter((horse) => !horse.isEliminated)
+      .sort((a, b) => b.position - a.position);
+    const secondHorseId = officialFinishers.length >= 2 ? officialFinishers[1].id : null;
+    const lastHorseId = officialFinishers.at(-1)?.id ?? null;
+
     for (const player of this.playersByPseudo.values()) {
       if (!player.currentBet) continue;
 
       if (player.currentBet.horseId === winnerHorse.id && !player.miniGameEliminated) {
         // A golden winner distributes triple the odds instead of double.
-        sipsToDistribute = winnerHorse.odds * (winnerHorse.isDiamond ? 5 : winnerHorse.isGolden ? 3 : 2);
+        sipsToDistribute = getWinSips(
+          winnerHorse.odds,
+          winnerHorse.isDiamond ? 5 : winnerHorse.isGolden ? 3 : 2,
+        );
         player.totalSipsGiven += sipsToDistribute;
         winnerPlayer = player;
       } else {
-        // Loser: drinks the odds of the horse they bet on
         const betHorse = this.state.horses.find(
           (h) => h.id === player.currentBet!.horseId,
         );
-        const blackKnightBackfire = !!betHorse?.isBlackKnight;
-        const sips = blackKnightBackfire
-          ? player.currentBet.amount * 3
-          : betHorse ? betHorse.odds : player.currentBet.amount;
-        player.debt += sips;
-        player.totalSipsDrunk += sips;
-        losers.push({ player, sips });
+        const stake = getLossSips(betHorse?.odds ?? player.currentBet.amount);
+        const isOfficialSecond = !!betHorse && !betHorse.isEliminated && betHorse.id === secondHorseId;
+        const blackKnightBackfire = !!betHorse?.isBlackKnight && (
+          betHorse.isEliminated || betHorse.id === lastHorseId || player.miniGameEliminated
+        );
+        const lostOnlyBecauseOfMiniGame = betHorse?.id === winnerHorse.id && player.miniGameEliminated;
+
+        // La deuxième place annule uniquement la mise. Les sanctions restent
+        // indépendantes : élimination au mini-jeu et retour de flamme du
+        // Cavalier noir continuent donc à compter dans eventSips.
+        const betSips = isOfficialSecond || lostOnlyBecauseOfMiniGame ? 0 : stake;
+        const eventSips =
+          (lostOnlyBecauseOfMiniGame || (isOfficialSecond && player.miniGameEliminated) ? stake : 0) +
+          (blackKnightBackfire ? stake * 2 : 0);
+        const sips = betSips + eventSips;
+
+        const round = this.ensureRoundDrink(player.pseudo);
+        round.betSips += betSips;
+        round.eventSips += eventSips;
+        round.betSavedBySecondPlace = isOfficialSecond;
+        round.sips += sips;
+
+        if (sips > 0) {
+          player.debt += sips;
+          player.totalSipsDrunk += sips;
+          losers.push({ player, sips });
+        }
       }
     }
 
@@ -796,8 +824,6 @@ export class GameService implements OnModuleInit {
         sipsToDistribute,
       };
     }
-
-    this.state.roundDrinks = losers.map(({ player, sips }) => ({ pseudo: player.pseudo, sips }));
 
     // A completed race is a durable checkpoint for the whole evening.
     this.persistence.dump(this.getDumpData());
@@ -1024,13 +1050,42 @@ export class GameService implements OnModuleInit {
         target.debt += a.sips;
         target.totalSipsDrunk += a.sips;
       }
-      const existing = this.state.roundDrinks.find((drink) => drink.pseudo === a.pseudo);
-      if (existing) existing.sips += a.sips;
-      else this.state.roundDrinks.push({ pseudo: a.pseudo, sips: a.sips });
+      const round = this.ensureRoundDrink(a.pseudo);
+      round.receivedSips += a.sips;
+      round.sips += a.sips;
     }
     this.tourneeDistributed = true;
     this.persistence.dump(this.getDumpData());
     return applied;
+  }
+
+  addEventSips(pseudo: string, sips: number): boolean {
+    const player = this.playersByPseudo.get(pseudo);
+    const amount = Math.max(0, Math.round(sips));
+    if (!player || amount <= 0) return false;
+
+    player.debt += amount;
+    player.totalSipsDrunk += amount;
+    const round = this.ensureRoundDrink(pseudo);
+    round.eventSips += amount;
+    round.sips += amount;
+    return true;
+  }
+
+  private ensureRoundDrink(pseudo: string): RoundDrinkSummary {
+    const existing = this.state.roundDrinks.find((drink) => drink.pseudo === pseudo);
+    if (existing) return existing;
+
+    const created: RoundDrinkSummary = {
+      pseudo,
+      sips: 0,
+      betSips: 0,
+      eventSips: 0,
+      receivedSips: 0,
+      betSavedBySecondPlace: false,
+    };
+    this.state.roundDrinks.push(created);
+    return created;
   }
 
   // Drink management

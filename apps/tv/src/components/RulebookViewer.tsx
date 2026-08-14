@@ -88,7 +88,7 @@ export function RulebookViewer({ open, onClose }: RulebookViewerProps) {
             <iframe
               data-testid="rulebook-frame"
               title="Livret officiel des règles de L'Apérodrome"
-              src="/rulebook/index.html"
+              src="/rulebook/index.html?v=2026.08.14-odds-v2"
               className="min-h-0 flex-1 border-0 bg-[#d8d1c4]"
             />
           </motion.aside>
