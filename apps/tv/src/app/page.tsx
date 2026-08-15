@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import type { GamePhase } from '@last-sip-derby/shared'
 import { useGameSocket } from '@/hooks/useGameSocket'
 import { IdleScreen } from '@/components/screens/IdleScreen'
@@ -132,31 +131,30 @@ export default function TVPage() {
   return (
     <div className="relative h-full">
       <div ref={gameLayerRef} data-game-frozen={gameState.isGamePaused ? 'true' : 'false'} className="h-full">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={showRace ? 'RACING' : displayPhase}
-            className="h-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.45 }}
-          >
-            {showRace ? (
-              <RaceScreen
-                state={gameState}
-                activeEvent={activeEvent}
-                eventResolution={eventResolution}
-                finished={finishHold}
-              />
-            ) : displayPhase === 'BETTING' ? (
-              <BettingScreen state={gameState} />
-            ) : displayPhase === 'RESULTS' ? (
-              <ResultsScreen state={gameState} />
-            ) : (
-              <IdleScreen state={gameState} />
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {/*
+          Phase screens must swap atomically. AnimatePresence with mode="wait"
+          first removed the race screen, then waited for its exit animation
+          before mounting results. If that animation was interrupted by the
+          browser, the TV could remain on the bare black app background until
+          a reload. The photo-finish already provides the visual transition,
+          so keeping an empty interstitial frame brings no value here.
+        */}
+        <div key={showRace ? 'RACING' : displayPhase} data-tv-phase={showRace ? 'RACING' : displayPhase} className="h-full">
+          {showRace ? (
+            <RaceScreen
+              state={gameState}
+              activeEvent={activeEvent}
+              eventResolution={eventResolution}
+              finished={finishHold}
+            />
+          ) : displayPhase === 'BETTING' ? (
+            <BettingScreen state={gameState} />
+          ) : displayPhase === 'RESULTS' ? (
+            <ResultsScreen state={gameState} />
+          ) : (
+            <IdleScreen state={gameState} />
+          )}
+        </div>
       </div>
 
       <ExperienceControls
